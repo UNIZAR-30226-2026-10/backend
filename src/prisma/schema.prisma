@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  email   String  @id
+  nombre  String
+  passwordHash String
+  SEP     Int @default(0)
+  ELO     Int @default(500)
+  partidasJugadas Int @default(0)
+  victorias Int @default(0)
+  derrotas Int @default(0)
+  fechaCreacion DateTime @default(now())
+  cartasJugadas Int @default(0)
+
+  amigos Usuario[] @relation("Amigos")
+  usuarios Usuario[] @relation("Amigos")
+
+  logros Logros[] @relation("LogrosConseguidos")
+
+  cartas Carta[] @relation("CartasUsuario")
+
+  partidas Partida[] @relation("partidaJugadores")
+
+  partidasGanadas Partida[] @relation("partidaGanador")
+
+  barajas Baraja[] @relation("crea")
+
+  cosmeticos Cosmeticos[] @relation("CosmeticosObtenidos")
+}
+
+enum Tipo_Carta {
+  Ofensiva
+  Defensiva
+  Apoyo
+}
+
+enum Rareza {
+  Comun
+  Rara
+  Epica
+  Legendaria
+}
+
+model Carta {
+  nombre String @id
+  tipo   Tipo_Carta
+  calidad Rareza
+  descripcion String
+  Efectos Efecto[] @relation("CartaEfectos")
+
+  usuarios Usuario[] @relation("CartasUsuario")
+
+  logros Logros? @relation("RecompensaJugable")
+
+  barajas BarajaCarta[]
+}
+
+enum Tipo_Afeccion {
+  Jugador
+  Casilla
+}
+
+enum Tipo_Efecto {
+  Dados
+  Cartas
+  Bufo
+  Debufo
+  Movimiento
+}
+
+model Efecto {
+  nombre String @id
+  descripcion String
+  Afecta Tipo_Afeccion
+  tipo Tipo_Efecto
+
+  cartas Carta[] @relation("CartaEfectos")
+}
+
+enum Tipo_Logro {
+  SEP
+  ELO
+  Partidas
+  Victorias
+  Derrotas
+  CartasJugadas
+  CartasColeccionadas
+  LogrosDesbloqueados
+}
+
+model Logros {
+  nombre String @id
+  descripcion String
+  requisito Int
+  tipo Tipo_Logro
+  cartaID String? @unique
+  carta Carta? @relation(fields: [cartaID], references: [nombre], "RecompensaJugable")
+
+  usuarios Usuario[] @relation("LogrosConseguidos")
+}
+
+enum Estado {
+  EnEspera
+  EnCurso
+  Finalizada
+}
+
+model Partida {
+  ID String @id @default(uuid())
+  Estado Estado
+  SnapshotJugadores Json
+  FechaInicio DateTime @default(now())
+  FechaFin DateTime?
+  Configuracion Json
+  SnapshotTablero Json
+
+  tableroInicial TableroInicial? @relation(fields: [tableroInicialNombre], references: [Nombre],"inicio")
+  tableroInicialNombre String?
+
+  partidaJugadores Usuario[] @relation("partidaJugadores") // RESTRICTION 2-4 players
+
+  ganador Usuario? @relation("partidaGanador", fields: [ganadorEmail], references: [email]) 
+  ganadorEmail String?
+
+
+  barajas BarajaPartida[]
+} 
+
+model TableroInicial {
+  Nombre String @id
+  SnapshotTableroInicial Json
+
+  partidas Partida[] @relation("inicio")
+}
+
+model Baraja {
+  Nombre String @unique
+
+  Usuario Usuario @relation("crea", fields: [usuarioEmail], references: [email])
+  usuarioEmail String
+  @@id([Nombre, usuarioEmail])
+
+  BarajaCartas BarajaCarta[] // RESTRICCION 10 CARTAS MIN-MAX
+
+  UsadaEn BarajaPartida[]
+
+}
+
+model BarajaCarta {
+  barajaNombre String
+  barajaUsuarioEmail String
+  cartaNombre String
+
+  baraja Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [Nombre, usuarioEmail])
+  carta Carta @relation(fields: [cartaNombre], references: [nombre])
+
+  @@id([barajaNombre, barajaUsuarioEmail, cartaNombre])
+}
+
+model BarajaPartida {
+  barajaNombre String
+  barajaUsuarioEmail String
+  partidaID String
+
+  baraja Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [Nombre, usuarioEmail])
+  partida Partida @relation(fields: [partidaID], references: [ID])
+
+  @@id([barajaNombre, barajaUsuarioEmail, partidaID])
+
+}
+
+enum Tipo_Cosmetico {
+  Icono
+  Skin_Ficha
+  Skin_Serpiente
+  Skin_Escalera
+}
+
+model Cosmeticos {
+  nombre String @id
+  tipo Tipo_Cosmetico
+  descripcion String
+  
+  usuarios Usuario[] @relation("CosmeticosObtenidos")
+}

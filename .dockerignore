@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+*.md
+.vscode
+.github
+docker
+compose_*.yaml
+*.ps1
+*.sh

@@ -1,0 +1,40 @@
+services:
+  postgres_db:
+    image: postgres:17-alpine
+    container_name: postgres_prod_ag
+    restart: always
+    shm_size: 256mb
+    env_file:
+      - .env
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prisma_network
+
+  server:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: server_prod_ag
+    restart: always
+    expose:
+      - "3000"
+    env_file:
+      - .env
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - prisma_network
+
+networks:
+  prisma_network:
+    name: prisma_network_prod
+
+volumes:
+  postgres_data_prod:

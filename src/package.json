@@ -1,0 +1,41 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:deploy": "npx prisma migrate deploy && npx prisma generate",
+    "db:dev": "npx prisma migrate dev --name init"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UNIZAR-30226-2026-10/backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/UNIZAR-30226-2026-10/backend/issues"
+  },
+  "homepage": "https://github.com/UNIZAR-30226-2026-10/backend#readme",
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "@types/pg": "^8.16.0",
+    "prisma": "^7.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "@types/pg-pool": "^2.0.6"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.2.0",
+    "pg": "^8.18.0"
+  }
+}
