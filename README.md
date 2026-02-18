@@ -3,8 +3,8 @@
 ## Entorno de Desarrollo
 
 ### Características
-- **Hot reload automático** con `tsx watch` - cualquier cambio en `src/` se recarga instantáneamente
-- Código montado como volumen - editas en local, se refleja en el contenedor
+- **Hot reload** con `tsx watch`, cualquier cambio en `src/` se recarga instantáneamente
+- Código montado como volumen, editas en local, se refleja en el contenedor
 - Logs detallados con `pino-pretty`
 - Puerto 3000 expuesto para acceso directo desde el host
 
@@ -37,6 +37,11 @@ docker compose -f compose_dev.yaml down
 2. `tsx watch` detecta cambios y recarga automáticamente
 3. Ves los logs en tiempo real
 4. No necesitas reconstruir nada
+
+### Comentarios Extras (CLAVE)
+# SI QUIERES INSTALAR PAQUETES NUEVOS ES CLAVE QUE EJECUTES EL NPM INSTALL -D ... EN LA RUTA ...\backend\src O DE LO CONTRARIO SE CREARA UN PROYECTO DE NPM NUEVO (MUY MALO MUY MALO MUY MALO) Y TENDRÁS QUE BORRAR EL NUEVO PROYECTO Y DESISNTALAR LO QUE INSTALASTE ERRONEAMENTE
+
+# PARA PODER EJECUTAR CUALQUIER COMANDO QUE NECESITE LA BASE DE DATOS TIENES QUE HACERLO DESDE EL CONTENEDOR DE DOCKER Y NO EN LOCAL POR QUE LA IP ES UNA VARIABLE DE ENTORNO PARA MAYOR SEGURIDAD Y NO ESTA HARDCODEADA POR LO QUE SI LO EJECUTAS EN LOCAL TE DARÁ UN ERROR
 
 ## Entorno de Producción
 
@@ -75,6 +80,7 @@ En `src/package.json`:
 - `npm run build` - Compilar TypeScript a JavaScript
 - `npm run start` - Ejecutar versión compilada (producción)
 - `npm run db:deploy` - Aplicar migraciones de Prisma
+- `npm run db:dev` - Aplicar migraciones de prisma en modo dev
 
 ## Arquitectura
 
