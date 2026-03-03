@@ -17,6 +17,8 @@ src/dist/
 logs
 *.log
 npm-debug.log*
+/Agentic_Logs/*
+!/Agentic_Logs/README.md
 
 # IDE
 .vscode/
