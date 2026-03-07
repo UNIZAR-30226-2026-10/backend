@@ -42,14 +42,14 @@ model Carta {
   descripcion String
   barajas     BarajaCarta[]
   logros      Logros?       @relation("RecompensaJugable")
-  Efectos     Efecto[]      @relation("CartaEfectos")
+  efectos     Efecto[]      @relation("CartaEfectos")
   usuarios    Usuario[]     @relation("cartasUsuario")
 }
 
 model Efecto {
   nombre      String        @id
   descripcion String
-  Afecta      Tipo_Afeccion
+  afecta      Tipo_Afeccion
   tipo        Tipo_Efecto
   cartas      Carta[]       @relation("CartaEfectos")
 }
@@ -60,7 +60,7 @@ model Logros {
   requisito   Int
   tipo        Tipo_Logro
   cartaID     String?    @unique
-  carta       Carta?     @relation("RecompensaJugable", fields: [cartaID], references: [nombre])
+  carta       Carta?     @relation("RecompensaJugable", fields: [cartaID], references: [nombre], onDelete: SetNull)
   usuarios    Usuario[]  @relation("logrosConseguidos")
 }
 
@@ -100,8 +100,8 @@ model BarajaCarta {
   barajaNombre       String
   barajaUsuarioEmail String
   cartaNombre        String
-  baraja             Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail])
-  carta              Carta  @relation(fields: [cartaNombre], references: [nombre])
+  baraja             Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail], onDelete: Cascade)
+  carta              Carta  @relation(fields: [cartaNombre], references: [nombre], onDelete: Cascade)
 
   @@id([barajaNombre, barajaUsuarioEmail, cartaNombre])
 }
@@ -110,8 +110,8 @@ model BarajaPartida {
   barajaNombre       String
   barajaUsuarioEmail String
   partidaID          String
-  baraja             Baraja  @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail])
-  partida            Partida @relation(fields: [partidaID], references: [ID])
+  baraja             Baraja  @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail], onDelete: Cascade)
+  partida            Partida @relation(fields: [partidaID], references: [ID], onDelete: Cascade)
 
   @@id([barajaNombre, barajaUsuarioEmail, partidaID])
 }

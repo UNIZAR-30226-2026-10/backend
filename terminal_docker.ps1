@@ -1,0 +1,1 @@
+docker exec -it server_dev_ag sh

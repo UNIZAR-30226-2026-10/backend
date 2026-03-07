@@ -1,6 +1,7 @@
-import { Baraja, Carta, Partida, Cosmeticos, Logros, Usuario } from "../generated/prisma/client.js";
+import { Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
+import { UsuarioReturnType } from "./ReturnTypes.js";
 
 type RelacionConfig = {
     disconnect: (prisma: any, userEmail: string, relatedId: string) => Promise<any>
@@ -170,14 +171,14 @@ const Relaciones : Record<string, RelacionConfig> = {
 
 }
 
-export async function createUser(data: { email:string, password:string, nombre:string }) {
+export async function createUser(data: { email:string, password:string, nombre:string }) : Promise<UsuarioReturnType | { error: string }> {
     data.email = data.email.toLowerCase()
     // Verificar correctitud del email
     if(!await emailHelper(data.email)) return { error: "Email no válido o ya registrado" }
 
     // Verificar correctitud de la contraseña
     let passwordCheck = passwordHelper(data.password)
-    if(passwordCheck && "error" in passwordCheck) return passwordCheck.error
+    if(passwordCheck && "error" in passwordCheck) return{ error: passwordCheck.error }
 
     // Verificar longitud del nombre
     if(data.nombre.length < 3) return { error: "El nombre debe tener al menos 3 caracteres" }
@@ -202,6 +203,15 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 email: data.email,
                 passwordHash: passwordHash,
                 nombre: data.nombre
+            },
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true
             }
         })
         return user
@@ -211,10 +221,19 @@ export async function createUser(data: { email:string, password:string, nombre:s
     }
 }
 
-export async function getUserByEmail(email:string) {
+export async function getUserByEmail(email:string) : Promise<UsuarioReturnType | null> {
     try {
         const user = await prisma.usuario.findUnique({
-            where: { email }
+            where: { email },
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true
+            }
         })
         return user
     } catch (error) {
@@ -223,11 +242,11 @@ export async function getUserByEmail(email:string) {
     }
 }
 
-export async function deleteUserByEmail(email:string) {
+export async function deleteUserByEmail(email:string) : Promise<{ message: string } | { error: string }> {
     try {
         await prisma.usuario.delete({
             where: { email }
-        })
+        });
         return { message: "Usuario eliminado correctamente" }
     } catch (error) {
         console.error("Error al eliminar el usuario:", error)
@@ -236,13 +255,13 @@ export async function deleteUserByEmail(email:string) {
 }
 
 export async function modifyUserByEmail(email:string, data: { password?:string, SEP?:number, ELO?:number, 
-    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number}) {
+    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number}) : Promise<UsuarioReturnType | { error: string }> {
 
     let updateData:any = {}
 
     if(data.password) {
         let passwordCheck = passwordHelper(data.password)
-        if(passwordCheck && "error" in passwordCheck) return passwordCheck.error
+        if(passwordCheck && "error" in passwordCheck) return{ error: passwordCheck.error }
         const saltRounds = 10
         updateData.passwordHash = await bcrypt.hash(data.password, saltRounds)
     }
@@ -256,7 +275,16 @@ export async function modifyUserByEmail(email:string, data: { password?:string, 
     try {
         const user = await prisma.usuario.update({
             where: { email },
-            data: updateData
+            data: updateData,
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true
+            }
         })
         return user
     } catch (error) {
@@ -266,9 +294,20 @@ export async function modifyUserByEmail(email:string, data: { password?:string, 
 
 }
 
-export async function getAllUsers() {
+export async function getAllUsers() : Promise<UsuarioReturnType[] | { error: string }> {
     try {
-        const users = await prisma.usuario.findMany()
+        const users = await prisma.usuario.findMany({
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true
+            }
+        }
+        )
         return users
     } catch (error) {
         console.error("Error al obtener los usuarios:", error)
@@ -276,7 +315,7 @@ export async function getAllUsers() {
     }
 }
 
-export async function addAmigo(userEmail:string, amigoEmail:string) {
+export async function addAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string } | { error: string }> {
     try {
         const result = await Relaciones["amigos"].connect(prisma, userEmail, amigoEmail)
         if(result && "error" in result) return result
@@ -289,7 +328,7 @@ export async function addAmigo(userEmail:string, amigoEmail:string) {
     }
 }
 
-export async function removeAmigo(userEmail:string, amigoEmail:string) {
+export async function removeAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string } | { error: string }> {
     try {
         const result = await Relaciones["amigos"].disconnect(prisma, userEmail, amigoEmail)
         if(result && "error" in result) return result
@@ -302,7 +341,7 @@ export async function removeAmigo(userEmail:string, amigoEmail:string) {
     }
 }
 
-export async function connectRelacion(userEmail:string, relatedId:string, relacion:string) {
+export async function connectRelacion(userEmail:string, relatedId:string, relacion:string) : Promise<{ message: string } | { error: string }> {
     if(!(relacion in Relaciones)) return { error: "Relación no válida" }
     try {
         const result = await Relaciones[relacion].connect(prisma, userEmail, relatedId)
@@ -314,7 +353,7 @@ export async function connectRelacion(userEmail:string, relatedId:string, relaci
     }
 }
 
-export async function disconnectRelacion(userEmail:string, relatedId:string, relacion:string) {
+export async function disconnectRelacion(userEmail:string, relatedId:string, relacion:string) : Promise<{ message: string } | { error: string }> {
     if(!(relacion in Relaciones)) return { error: "Relación no válida" }
     try {
         const result = await Relaciones[relacion].disconnect(prisma, userEmail, relatedId)

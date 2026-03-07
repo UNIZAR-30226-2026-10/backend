@@ -76,7 +76,7 @@ test("Contraseña insegura", async () => {
     nombre: "Test User"
   })
 
-  assert.match(String(result), /La contraseña debe tener al menos 8 caracteres/)
+  assert.match(result?.error || "", /La contraseña debe tener al menos 8 caracteres/)
 })
 
 test("Ñ y acentos en el email", async () => {
