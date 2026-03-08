@@ -3,13 +3,13 @@ generator client {
   output   = "../generated/prisma"
 }
 
-/* generator erd {
+generator erd {
   provider = "prisma-erd-generator"
   output   = "../generated/ERD.png"
   format   = "png"
   theme    = "dark"
 }
- */
+
 datasource db {
   provider = "postgresql"
 }
@@ -25,7 +25,7 @@ model Usuario {
   derrotas        Int          @default(0)
   fechaCreacion   DateTime     @default(now())
   cartasJugadas   Int          @default(0)
-  barajas         Baraja[]     @relation("crea")
+  barajas         Baraja[]     @relation("crea") 
   partidasGanadas Partida[]    @relation("partidaGanador")
   amigos       Usuario[]    @relation("amigos")
   amigosDe       Usuario[]    @relation("amigos")
@@ -33,6 +33,7 @@ model Usuario {
   cosmeticos      Cosmeticos[] @relation("cosmeticosObtenidos")
   logros          Logros[]     @relation("logrosConseguidos")
   partidas        Partida[]    @relation("partidaJugadores")
+  online          Boolean      @default(false)
 }
 
 model Carta {
