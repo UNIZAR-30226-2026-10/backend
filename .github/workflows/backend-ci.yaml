@@ -3,8 +3,13 @@ name: Backend CI (Quality Gate)
 on:
   push:
     branches: [ main ]
+    ignore:
+      - '**.md' # Ignoramos cambios .md
+
   pull_request:
     branches: [ main ]
+    ignore:
+      - '**.md' # Ignoramos cambios .md
 
 jobs:
   test-and-build:
