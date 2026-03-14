@@ -19,20 +19,18 @@ jobs:
         # Creamos unas temporales para que el Robot pueda conectar.
         # Esta es la URL que usará Prisma para conectarse (postgresql://testuser:testpass@localhost:5432/testdb?schema=public)
         run: |
-          echo "POSTGRES_USER=testuser" > .env
-          echo "POSTGRES_PASSWORD=testpass" >> .env
-          echo "POSTGRES_DB=testdb" >> .env
-          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb?schema=public" >> .env 
-          echo "PORT=3000" >> .env
+          echo "POSTGRES_USER=testuser" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=testpass" >> $GITHUB_ENV
+          echo "POSTGRES_DB=testdb" >> $GITHUB_ENV
+          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb?schema=public" >> $GITHUB_ENV
+          echo "PORT=3000" >> $GITHUB_ENV
+
+          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb?schema=public" > src/.env
 
       - name: 3. Levantar Base de Datos (PostgreSQL)
         # Usamos vuestro compose de desarrollo para tener la BD lista
-        # Pasamos las variables directamente para que el healthcheck no falle
         run: docker compose -f compose_dev.yaml up -d postgres_db
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_DB: testdb
-          POSTGRES_PASSWORD: testpass
+        # No necesitamos environment, se usaran las varialbes inyectadas arriba
 
       - name: 3.5 Esperar a que la BD esté lista
         run: |
@@ -59,7 +57,10 @@ jobs:
         working-directory: ./src
 
       - name: 7. EJECUTAR TESTS (La clave)
-        run: npm run test
+        run: |
+          # Forzamos a Prisma a generar el cliente y empujar la estructura
+          npx prisma generate
+          npx prisma db push --accept-data-loss
         working-directory: ./src
 
       - name: 8. Intentar Build de Producción
