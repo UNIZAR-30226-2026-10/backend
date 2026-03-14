@@ -64,7 +64,7 @@ jobs:
         run: npx prisma db push
         working-directory: ./src
 
-      - name: 7. EJECUTAR TESTS (La clave)
+      - name: 7. EJECUTAR TESTS
         run: |
           # Forzamos a Prisma a generar el cliente y empujar la estructura
           npx prisma generate
