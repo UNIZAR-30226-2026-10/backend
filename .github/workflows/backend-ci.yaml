@@ -47,18 +47,22 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: './src/package.json' # Ajustar si cambia la ubicación del package.json
+          cache-dependency-path: 'src/package-lock.json' # Ajustar si cambia la ubicación
 
       - name: 5. Instalar dependencias
         run: npm install
+        working-directory: ./src
 
       - name: 6. Preparar Prisma (Migraciones)
         # Esto genera el cliente de Prisma y prepara la BD del CI
         run: npx prisma db push
+        working-directory: ./src
 
       - name: 7. EJECUTAR TESTS (La clave)
         run: npm run test
+        working-directory: ./src
 
       - name: 8. Intentar Build de Producción
         # Verificamos que el código compila para producción sin errores
         run: npm run build
+        working-directory: ./src
