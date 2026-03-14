@@ -1,0 +1,47 @@
+name: Backend CI (Quality Gate)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar código
+        uses: actions/checkout@v4
+
+      - name: 2. Crear archivo .env para el CI
+        # Prisma y el servidor necesitan variables de entorno. 
+        # Creamos unas temporales para que el Robot pueda conectar.
+        run: |
+          echo "DATABASE_URL=postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public" > .env
+          echo "PORT=3000" >> .env
+
+      - name: 3. Levantar Base de Datos (PostgreSQL)
+        # Usamos vuestro compose de desarrollo para tener la BD lista
+        run: docker compose -f compose_dev.yaml up -d db
+
+      - name: 4. Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './src/package.json' # Ajustar si cambia la ubicación del package.json
+
+      - name: 5. Instalar dependencias
+        run: npm install
+
+      - name: 6. Preparar Prisma (Migraciones)
+        # Esto genera el cliente de Prisma y prepara la BD del CI
+        run: npx prisma db push
+
+      - name: 7. EJECUTAR TESTS (La clave)
+        run: npm run test
+
+      - name: 8. Intentar Build de Producción
+        # Verificamos que el código compila para producción sin errores
+        run: npm run build
