@@ -61,7 +61,9 @@ jobs:
           cache-dependency-path: 'src/package-lock.json' # Ajustar si cambia la ubicación
 
       - name: 5. Instalar dependencias
-        run: npm install
+        run: |
+          npm audit fix
+          npm install
         working-directory: ./src
 
       - name: 6. Preparar Prisma (Migraciones)
