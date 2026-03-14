@@ -113,6 +113,7 @@ model BarajaPartida {
 model Cosmeticos {
   nombre      String         @id
   tipo        Tipo_Cosmetico
+  precio       Int
   descripcion String
   usuarios    Usuario[]      @relation("cosmeticosObtenidos")
 }

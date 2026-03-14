@@ -1,5 +1,4 @@
 import { Prisma } from "../generated/prisma/client.js"
-import * as Enums from "../generated/prisma/enums.js"
 
 export type BarajaReturnType = Prisma.BarajaGetPayload<{
     include: {
