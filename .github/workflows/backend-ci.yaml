@@ -17,13 +17,30 @@ jobs:
       - name: 2. Crear archivo .env para el CI
         # Prisma y el servidor necesitan variables de entorno. 
         # Creamos unas temporales para que el Robot pueda conectar.
+        # Esta es la URL que usará Prisma para conectarse (postgresql://testuser:testpass@localhost:5432/testdb?schema=public)
         run: |
-          echo "DATABASE_URL=postgresql://johndoe:randompassword@localhost:5432/mydb?schema=public" > .env
+          echo "POSTGRES_USER=testuser" > .env
+          echo "POSTGRES_PASSWORD=testpass" >> .env
+          echo "POSTGRES_DB=testdb" >> .env
+          echo "DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb?schema=public" >> .env 
           echo "PORT=3000" >> .env
 
       - name: 3. Levantar Base de Datos (PostgreSQL)
         # Usamos vuestro compose de desarrollo para tener la BD lista
-        run: docker compose -f compose_dev.yaml up -d db
+        # Pasamos las variables directamente para que el healthcheck no falle
+        run: docker compose -f compose_dev.yaml up -d postgres_db
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+          POSTGRES_PASSWORD: testpass
+
+      - name: 3.5 Esperar a que la BD esté lista
+        run: |
+          sudo apt-get install -y postgresql-client
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            echo "Esperando a Postgres..."
+            sleep 2
+          done
 
       - name: 4. Configurar Node.js
         uses: actions/setup-node@v4
