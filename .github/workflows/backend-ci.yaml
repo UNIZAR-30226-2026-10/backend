@@ -62,8 +62,8 @@ jobs:
 
       - name: 5. Instalar dependencias
         run: |
-          npm audit fix
-          npm install
+          npm ci
+          npm audit --audit-level=high
         working-directory: ./src
 
       - name: 6. Preparar Prisma (Migraciones)
