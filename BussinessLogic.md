@@ -22,9 +22,10 @@
 
 1.7- Bloqueos: Los bloqueos se producirán cuando en una misma casilla hay dos fichas de cualquier jugador. Un bloqueo puede ser saltado por una ficha si el usuario usa una carta de salto de casilla. El bloqueo se romperá cuando el usuario quiera mover voluntariamente una ficha de ese bloqueo o cuando saque en una tirada un 6, momento en el cual la ficha movida será la que conforma el bloqueo. 
 
-1.8- En el lobby se verá primeramente un tablero predefinido, al igual que el mazo asociado a cada usuario, el cual podrá ser cambiado en el menú antes de iniciar la partida. El tablero también se podrá cambiar antes de iniciar la partida.
+1.8- En el lobby se verá primeramente el nombre de un tablero predefinido, el cual podrá ser cambiado en el menú antes de iniciar la partida.
 
 1.8.1 - El tablero mostrado en el lobby será el mismo que el de la partida, sin embargo se mostrará una imagen estática del mismo.
 
+1.8.2 - El tablero que se vaya a jugar solo será visto por el líder.
 
-### 2-  
+1.9 - Todos los usuarios de la partida deberán seleccionar un mazo que tengan creado antes de poder empezar la partida. 
