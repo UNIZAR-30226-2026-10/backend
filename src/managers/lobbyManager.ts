@@ -4,7 +4,8 @@ import nombresBots from "../data/nombresBots.json" with {type: "json"}
 interface jugadorLobby {
     idJugador: string, // Si jugador real = email, si bot id inventado
     nombre: string,    // nombre de usuario para mostrar en pantalla
-    esIA: boolean
+    esIA: boolean,
+    estaListo: boolean,
     nombreMazo?: string
 }
 
@@ -33,7 +34,7 @@ export class LobbyManager {
         const nuevaLobby: Lobby = {
             idLobby: id,
             idCreador: _idCreador,
-            jugadores: [{ idJugador: _idCreador, nombre: username, esIA: false }],
+            jugadores: [{ idJugador: _idCreador, nombre: username, esIA: false, estaListo: false }],
             numJugadores: 1,
             numBots: 0
         }
@@ -47,7 +48,7 @@ export class LobbyManager {
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
         if (this.jugadoresEnCola.has(_idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
-        lobby.jugadores.push({ idJugador: _idJugador, nombre: username, esIA: false })
+        lobby.jugadores.push({ idJugador: _idJugador, nombre: username, esIA: false, estaListo: false })
         lobby.numJugadores++
         this.jugadoresEnCola.set(_idJugador, lobbyID)
         return lobby
@@ -62,7 +63,7 @@ export class LobbyManager {
         if (lobby.idCreador !== requestBy) throw new Error("CANT_ADD")
         const nombre = 'BOT ' + nombresBots[Math.floor(Math.random() * nombresBots.length)]
         const idBot = `BOT-${nombre}-${crypto.randomUUID()}`
-        lobby.jugadores.push({ idJugador: idBot, nombre, esIA: true, nombreMazo: "mazoPorDefecto" })
+        lobby.jugadores.push({ idJugador: idBot, nombre, esIA: true, estaListo: true, nombreMazo: "mazoPorDefecto" })
         lobby.numBots++
         lobby.numJugadores++
         return lobby
@@ -136,6 +137,15 @@ export class LobbyManager {
         });
         this.lobbies.delete(lobbyID)
         return "LOBBY_DELETED"
+    }
+
+    setReady( lobbyID: string, idJugador: string, ready: boolean) {
+        const lobby = this.lobbies.get(lobbyID)
+        if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+        if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")
+        const jugador = lobby.jugadores.find(i => i.idJugador === idJugador)
+        if (!jugador) throw new Error("NOT_IN_LOBBY")
+        jugador.estaListo = ready
     }
 }
 
