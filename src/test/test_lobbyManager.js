@@ -127,12 +127,12 @@ describe("Lobby Manager", () => {
     test("Seleccionar mazo sin estar en el lobby", () => {
         let lobby = manager.createLobby("ag@gmail.com", "ag")
         assert.throws(() => {
-            lobby = manager.selectDeck("aplayer@gmail.com", lobby.idLobby, "mazo1")
+            manager.selectDeck("aplayer@gmail.com", lobby.idLobby, "mazo1")
         }, new Error("WRONG_LOBBY"))
     })
     test("Seleccionar mazo en un lobby que no existe", () => {
         assert.throws(() => {
-            let lobby = manager.selectDeck("ag@gmail.com", "noexiste", "mazo1")
+            manager.selectDeck("ag@gmail.com", "noexiste", "mazo1")
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Obtener una lobby existente",  () => {
@@ -155,4 +155,20 @@ describe("Lobby Manager", () => {
             manager.deleteLobby("noexiste")
         }, new Error("LOBBY_NOT_FOUND"))
     })
+    test("Poner jugador listo", () => {
+        let lobby = manager.createLobby("ag@gmail.com", "ag")
+        manager.setReady(lobby.idLobby, "ag@gmail.com", true)
+        assert.equal(lobby.jugadores[0].estaListo, true)   
     })
+    test("Poner jugador listo sin estar en el lobby", () => {
+        let lobby = manager.createLobby("ag@gmail.com", "ag")
+        assert.throws(() => {
+            manager.setReady(lobby.idLobby, "aplayer@gmail.com", true)
+        }, new Error("WRONG_LOBBY"))
+    })
+    test("Poner jugador listo en un lobby que no existe", () => {
+        assert.throws(() => {
+            manager.setReady("noexiste", "ag@gmail.com", true)
+        }, new Error("LOBBY_NOT_FOUND"))
+    })
+})
