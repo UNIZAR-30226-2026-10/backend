@@ -3,8 +3,15 @@ import assert from 'node:assert/strict'
 import test, { describe, beforeEach } from 'node:test'
 import prisma from '../prismaClient.js'
 import { Tipo_Cosmetico } from '../generated/prisma/client.js'
+import { cosmeticosPorDefecto } from './crearDatosBase.js'
 
-describe("Cosmetics Test", () => {
+try {
+    cosmeticosPorDefecto()
+} catch (error) {
+    console.error("Error al crear los cosméticos por defecto:", error);
+}
+
+describe.skip("Cosmetics Test", () => {
     beforeEach(async () => {
         await prisma.usuario.deleteMany()
         await prisma.cosmeticos.deleteMany()

@@ -14,10 +14,17 @@ export type BarajaReturnType = Prisma.BarajaGetPayload<{
 
 export type UsuarioReturnType = Prisma.UsuarioGetPayload<{
     include: {
+        amigos: true,
+        cartas: true,
         barajas: true,
         logros: true,
         cosmeticos: true,
-        partidas: true
+        partidas: true,
+        partidasGanadas: true,
+        iconoActual: true,
+        fichaActual: true,
+        serpienteActual: true,
+        escaleraActual: true
     }
 }>
 
