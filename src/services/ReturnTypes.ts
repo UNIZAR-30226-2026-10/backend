@@ -12,12 +12,19 @@ export type BarajaReturnType = Prisma.BarajaGetPayload<{
     }
 }>
 
-export type UsuarioReturnType =  Prisma.UsuarioGetPayload<{
+export type UsuarioReturnType = Prisma.UsuarioGetPayload<{
     include: {
+        amigos: true,
+        cartas: true,
         barajas: true,
         logros: true,
         cosmeticos: true,
-        partidas: true
+        partidas: true,
+        partidasGanadas: true,
+        iconoActual: true,
+        fichaActual: true,
+        serpienteActual: true,
+        escaleraActual: true
     }
 }>
 
@@ -74,5 +81,24 @@ export type BarajaPartidaReturnType = Prisma.BarajaPartidaGetPayload<{
     include: {
         partida: true,
         baraja: true
+    }
+}>
+
+export type CosmeticosEquipadosReturnType = Prisma.UsuarioGetPayload<{
+    select: {
+        fichaActual: true,
+        iconoActual: true,
+        serpienteActual: true,
+        escaleraActual: true
+    }
+}>
+
+export type CosmeticosDisponiblesUsuarioReturnType = Prisma.UsuarioGetPayload<{
+    select: {
+        cosmeticos: {
+            select: {
+                nombre: true
+            }
+        }
     }
 }>
