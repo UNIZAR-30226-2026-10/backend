@@ -27,6 +27,10 @@ model Usuario {
   logros          Logros[]     @relation("logrosConseguidos")
   partidas        Partida[]    @relation("partidaJugadores")
   online          Boolean      @default(false)
+  iconoActual     String      @default("icono_default")
+  fichaActual     String      @default("ficha_default")
+  serpienteActual String      @default("serpiente_default")
+  escaleraActual  String      @default("escalera_default")
 }
 
 model Carta {
