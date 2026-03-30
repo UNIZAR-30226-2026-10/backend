@@ -1,6 +1,6 @@
 import Cosmetics from '../services/Cosmetics.js'
 import assert from 'node:assert/strict'
-import test, { describe, beforeEach } from 'node:test'
+import test, { describe, afterEach } from 'node:test'
 import prisma from '../prismaClient.js'
 import { Tipo_Cosmetico } from '../generated/prisma/client.js'
 import { cosmeticosPorDefecto } from './crearDatosBase.js'
@@ -11,12 +11,15 @@ try {
     console.error("Error al crear los cosméticos por defecto:", error);
 }
 
-describe.skip("Cosmetics Test", () => {
-    beforeEach(async () => {
-        await prisma.usuario.deleteMany()
-        await prisma.cosmeticos.deleteMany()
+describe("Cosmetics Test", () => {
+    afterEach(async () => {
+        try {
+            await prisma.usuario.delete({ where: { email: "user@gmail.com" } })
+        } catch (e) {}
+        try {
+            await prisma.cosmeticos.delete({ where: { nombre: "Ficha de dragón" } })
+        } catch (e) {}
     })
-
     test("Crear cosmético", async () => {
         const cosmetic = await Cosmetics.createCosmetic({
             nombre: "Ficha de dragón",
@@ -83,10 +86,31 @@ describe.skip("Cosmetics Test", () => {
         })
         const equipped = await Cosmetics.getEquippedCosmetics("user@gmail.com")
         assert.deepStrictEqual(equipped, {
-            fichaActual: "ficha_default",
-            iconoActual: "icono_default",
-            serpienteActual: "serpiente_default",
-            escaleraActual: "escalera_default"
+            iconoActual: {
+                nombre: "icono_default",
+                tipo: Tipo_Cosmetico.Icono,
+                precio: 0,
+                descripcion: "Icono por defecto"
+            },
+            fichaActual: {
+                nombre: "ficha_default",
+                tipo: Tipo_Cosmetico.Skin_Ficha,
+                precio: 0,
+                descripcion: "Ficha por defecto"
+            },
+            serpienteActual: {
+                nombre: "serpiente_default",
+                tipo: Tipo_Cosmetico.Skin_Serpiente,
+                precio: 0,
+                descripcion: "Serpiente por defecto"
+            },
+            escaleraActual: {
+                nombre: "escalera_default",
+                tipo: Tipo_Cosmetico.Skin_Escalera,
+                precio: 0,
+                descripcion: "Escalera por defecto"
+            }
+
         })
     })
 
@@ -103,9 +127,25 @@ describe.skip("Cosmetics Test", () => {
         assert.deepStrictEqual(cosmetics.cosmeticos, [])
     })
 
+    test("Obtener un cosmético mediante su nombre", async () => {
+        await Cosmetics.createCosmetic({
+            nombre: "Ficha de dragón",
+            tipo: Tipo_Cosmetico.Skin_Ficha,
+            precio: 300,
+            descripcion: "Es una ficha de dragón"
+        })
+        const cosmetic = await Cosmetics.getCosmeticByName("Ficha de dragón")
+        assert.equal(cosmetic.nombre, "Ficha de dragón")
+    })
+
+    test("Obtener un cosmético que no existe mediante su nombre", async () => {
+        const result = await Cosmetics.getCosmeticByName("No existe")
+        assert.equal(result.error, "Cosmético no encontrado")
+    })
+
     test("Obtener cosméticos para mostrar en la tienda", async () => {
         await prisma.usuario.create({
-            data: { email: "user@gmail.com", nombre: "user", passwordHash: "123" }
+            data: { email: "user@gmail.com", nombre: "user", passwordHash: "123", SEP: 1000 }
         })
         await Cosmetics.createCosmetic({
             nombre: "Ficha de dragón",
@@ -113,13 +153,15 @@ describe.skip("Cosmetics Test", () => {
             precio: 300,
             descripcion: "Es una ficha de dragón"
         })
+        await Cosmetics.purchaseCosmetic("user@gmail.com", "Ficha de dragón")
         const cosmetics = await Cosmetics.getStoreCosmetics("user@gmail.com")
-        assert.deepStrictEqual(cosmetics, [{
+        const ficha = cosmetics.find(c => c.nomCosmetico === "Ficha de dragón");
+        assert.deepStrictEqual(ficha, {
             nomCosmetico: "Ficha de dragón",
             precio: 300,
             desc: "Es una ficha de dragón",
-            loTiene: false
-        }])
+            loTiene: true
+    })
     })
 
     test("Comprar cosmético", async () => {
@@ -171,49 +213,5 @@ describe.skip("Cosmetics Test", () => {
         await Cosmetics.purchaseCosmetic("user@gmail.com", "Ficha de dragón")
         const result = await Cosmetics.purchaseCosmetic("user@gmail.com", "Ficha de dragón")
         assert.equal(result.error, "Ya tienes este cosmético")
-    })
-
-    test("Equipar cosmético", async () => {
-        await prisma.usuario.create({
-            data: { email: "user@gmail.com", nombre: "user", passwordHash: "123", SEP: 1000 }
-        })
-        await Cosmetics.createCosmetic({
-            nombre: "Ficha de dragón",
-            tipo: Tipo_Cosmetico.Skin_Ficha,
-            precio: 300,
-            descripcion: "Es una ficha de dragón"
-        })
-        await Cosmetics.purchaseCosmetic("user@gmail.com", "Ficha de dragón")
-        const equipped = await Cosmetics.equipCosmetic("user@gmail.com", Tipo_Cosmetico.Skin_Ficha, "Ficha de dragón")
-        assert.equal(equipped.fichaActual, "Ficha de dragón")
-    })
-
-    test("Equipar cosmético que no tiene el usuario", async () => {
-        await prisma.usuario.create({
-            data: { email: "user@gmail.com", nombre: "user", passwordHash: "123", SEP: 1000 }
-        })
-        await Cosmetics.createCosmetic({
-            nombre: "Ficha de dragón",
-            tipo: Tipo_Cosmetico.Skin_Ficha,
-            precio: 300,
-            descripcion: "Es una ficha de dragón"
-        })
-        const result = await Cosmetics.equipCosmetic("user@gmail.com", Tipo_Cosmetico.Skin_Ficha, "Ficha de dragón")
-        assert.equal(result.error, "El usuario no tiene este cosmético")
-    })
-
-    test("Equipar tipo de cosmético invalido", async () => {
-        await prisma.usuario.create({
-            data: { email: "user@gmail.com", nombre: "user", passwordHash: "123", SEP: 1000 }
-        })
-        await Cosmetics.createCosmetic({
-            nombre: "Ficha de dragón",
-            tipo: Tipo_Cosmetico.Skin_Ficha,
-            precio: 300,
-            descripcion: "Es una ficha de dragón"
-        })
-        await Cosmetics.purchaseCosmetic("user@gmail.com", "Ficha de dragón")
-        const result = await Cosmetics.equipCosmetic("user@gmail.com", "TipoInvalido", "Ficha de dragón")
-        assert.equal(result.error, "Tipo de cosmético inválido")
     })
 })

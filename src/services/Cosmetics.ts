@@ -1,3 +1,4 @@
+import { get } from "node:http";
 import { Cosmeticos, Tipo_Cosmetico} from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import { CosmeticosDisponiblesUsuarioReturnType, CosmeticosEquipadosReturnType } from "./ReturnTypes.js";
@@ -55,8 +56,8 @@ export async function getEquippedCosmetics(email: string): Promise<CosmeticosEqu
         const user = await prisma.usuario.findUnique({
             where: { email },
             select: {
-                fichaActual: true,
                 iconoActual: true,
+                fichaActual: true,
                 serpienteActual: true,
                 escaleraActual: true
             }
@@ -116,9 +117,26 @@ async function getCosmeticsByUser(email: string): Promise<CosmeticosDisponiblesU
     }
 }
 
+export async function getCosmeticByName(nombre: string): Promise<Cosmeticos | { error: string }> {
+    try {
+        const cosmetic = await prisma.cosmeticos.findUnique({
+            where: { nombre }
+        });
+        if (!cosmetic) {
+            return { error: "Cosmético no encontrado" };
+        }
+        return cosmetic;
+    } catch (error) {
+        console.error("Error al obtener el cosmético por nombre:", error);
+        return { error: "Error al obtener el cosmético por nombre" };
+    }
+}
+
+
 export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: string, precio: number, desc: string, loTiene: boolean }[] | { error: string }> {
     try {
         const Cosmetics = await prisma.cosmeticos.findMany({
+            where : { precio: { gt: 0 } },
             select: {
                 nombre: true,
                 precio: true,
@@ -178,45 +196,14 @@ export async function purchaseCosmetic(email: string, nombreCosmetico: string): 
     }
 }
 
-export async function equipCosmetic(email: string, tipo: Tipo_Cosmetico, nombreCosmetico: string): Promise<CosmeticosEquipadosReturnType | null | { error: string }> {
-    try {
-        const isAvailable = await prisma.usuario.findFirst({
-            where: { email, cosmeticos: { some: { nombre: nombreCosmetico } } }
-        });
-        if (!isAvailable) {
-            return { error: "El usuario no tiene este cosmético" };
-        }
-        const updateData: any = {};
-        if (tipo === Tipo_Cosmetico.Icono) updateData.iconoActual = nombreCosmetico;
-        else if (tipo === Tipo_Cosmetico.Skin_Ficha) updateData.fichaActual = nombreCosmetico;
-        else if (tipo === Tipo_Cosmetico.Skin_Serpiente) updateData.serpienteActual = nombreCosmetico;
-        else if (tipo === Tipo_Cosmetico.Skin_Escalera) updateData.escaleraActual = nombreCosmetico;
-        else return { error: "Tipo de cosmético inválido" };
-
-        const updated = await prisma.usuario.update({
-            where: { email },
-            data: updateData,
-            select: {
-                fichaActual: true,
-                iconoActual: true,
-                serpienteActual: true,
-                escaleraActual: true
-            }
-        });
-        return updated;
-    } catch (error) {
-        console.error("Error al equipar el cosmético:", error);
-        return { error: "Error al equipar el cosmético" };
-    }
-}
 
 export default {
     createCosmetic,
     updateCosmetic,
     deleteCosmetic,
     getEquippedCosmetics,
-    equipCosmetic,
     getCosmeticsByTypeAndUser,
+    getCosmeticByName,
     getStoreCosmetics,
     purchaseCosmetic
 }
