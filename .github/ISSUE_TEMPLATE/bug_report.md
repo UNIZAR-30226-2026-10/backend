@@ -1,38 +1,38 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: "Reporte de Error (Bug)"
+about: "Crea un informe para ayudarnos a mejorar"
+title: "[BUG] "
+labels: bug
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**Descripción del error**
+Una descripción clara y concisa de lo que está ocurriendo.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**Pasos para reproducir**
+Pasos exactos para ver el error:
+1. Ir a '...'
+2. Hacer clic en '....'
+3. Desplazarse hasta '....'
+4. Ver el error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**Comportamiento esperado**
+Una descripción clara de lo que debería haber pasado.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Capturas de pantalla**
+Si es posible, añade capturas de pantalla para ayudar a explicar el problema.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Información del Entorno (Escritorio):**
+- **SO:** [ej. Windows 11, macOS]
+- **Navegador:** [ej. Chrome, Safari]
+- **Versión:** [ej. 22]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Información del Entorno (Móvil):**
+- **Dispositivo:** [ej. iPhone 13]
+- **SO:** [ej. iOS 17.1]
+- **Navegador:** [ej. Safari]
+- **Versión:** [ej. 22]
 
-**Additional context**
-Add any other context about the problem here.
+**Contexto adicional**
+Añade cualquier otro detalle técnico o contexto aquí (ej. logs de la consola, enlaces, etc.).
