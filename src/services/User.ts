@@ -1,4 +1,4 @@
-import { Usuario } from "../generated/prisma/client.js";
+import { Tipo_Cosmetico, Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
 import { UsuarioReturnType } from "./ReturnTypes.js";
@@ -202,7 +202,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
             data: {
                 email: data.email,
                 passwordHash: passwordHash,
-                nombre: data.nombre
+                nombre: data.nombre,
             },
             include: {
                 amigos: true,
@@ -211,7 +211,11 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 logros: true,
                 barajas: true,
                 partidas: true,
-                partidasGanadas: true
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
             }
         })
         return user
@@ -232,7 +236,11 @@ export async function getUserByEmail(email:string) : Promise<UsuarioReturnType |
                 logros: true,
                 barajas: true,
                 partidas: true,
-                partidasGanadas: true
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
             }
         })
         return user
@@ -283,7 +291,11 @@ export async function modifyUserByEmail(email:string, data: { password?:string, 
                 logros: true,
                 barajas: true,
                 partidas: true,
-                partidasGanadas: true
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
             }
         })
         return user
@@ -304,7 +316,11 @@ export async function getAllUsers() : Promise<UsuarioReturnType[] | { error: str
                 logros: true,
                 barajas: true,
                 partidas: true,
-                partidasGanadas: true
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
             }
         }
         )
@@ -365,6 +381,49 @@ export async function disconnectRelacion(userEmail:string, relatedId:string, rel
     }
 }
 
+export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cosmetico, nombre: string }): Promise<UsuarioReturnType | { error: string }> {
+    try {
+        let updateData:any = {}
+        switch (data.tipo) {
+            case Tipo_Cosmetico.Icono:
+                updateData.iconoActual = { connect: { nombre: data.nombre } }
+                break
+            case Tipo_Cosmetico.Skin_Ficha:
+                updateData.fichaActual = { connect: { nombre: data.nombre } }
+                break
+            case Tipo_Cosmetico.Skin_Serpiente:
+                updateData.serpienteActual = { connect: { nombre: data.nombre } }
+                break
+            case Tipo_Cosmetico.Skin_Escalera:
+                updateData.escaleraActual = { connect: { nombre: data.nombre } }
+                break
+        }
+
+        const user = await prisma.usuario.update({
+            where: { email },
+            data: updateData,
+                    include: {
+                        amigos: true,
+                        cartas: true,
+                        cosmeticos: true,
+                        logros: true,
+                        barajas: true,
+                        partidas: true,
+                        partidasGanadas: true,
+                        iconoActual: true,
+                        fichaActual: true,
+                        serpienteActual: true,
+                        escaleraActual: true,
+                    }
+                })
+
+        return user
+    } catch (error) {
+        console.error("Error al actualizar el cosmético equipado:", error)
+        return { error: "Error al actualizar el cosmético equipado" }
+    }
+}
+
 const emailHelper = async (email:string) => {
     // Sigue convenciones estandar de email, mas info en: https://stackoverflow.com/questions/2049502/what-characters-are-allowed-in-an-email-address
     email = email.toLowerCase()
@@ -421,5 +480,6 @@ export default {
     addAmigo,
     removeAmigo,
     connectRelacion,
-    disconnectRelacion
+    disconnectRelacion,
+    updateCosmeticOnUser
 }
