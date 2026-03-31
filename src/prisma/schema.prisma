@@ -27,10 +27,14 @@ model Usuario {
   logros          Logros[]     @relation("logrosConseguidos")
   partidas        Partida[]    @relation("partidaJugadores")
   online          Boolean      @default(false)
-  iconoActual     String      @default("icono_default")
-  fichaActual     String      @default("ficha_default")
-  serpienteActual String      @default("serpiente_default")
-  escaleraActual  String      @default("escalera_default")
+  iconoActualField String      @default("icono_default") @map("iconoActual")
+  iconoActual     Cosmeticos      @relation("iconoActual", fields: [iconoActualField], references: [nombre], map: "iconoActual_fk")
+  fichaActualField String      @default("ficha_default") @map("fichaActual")
+  fichaActual     Cosmeticos      @relation("fichaActual", fields: [fichaActualField], references: [nombre], map: "fichaActual_fk")
+  serpienteActualField String   @default("serpiente_default") @map("serpienteActual")
+  serpienteActual Cosmeticos      @relation("serpienteActual", fields: [serpienteActualField], references: [nombre], map: "serpienteActual_fk")
+  escaleraActualField String    @default("escalera_default") @map("escaleraActual")
+  escaleraActual  Cosmeticos      @relation("escaleraActual", fields: [escaleraActualField], references: [nombre], map: "escaleraActual_fk")
 }
 
 model Carta {
@@ -120,7 +124,11 @@ model Cosmeticos {
   precio       Int
   descripcion String
   usuarios    Usuario[]      @relation("cosmeticosObtenidos")
-}
+  usuariosIconoActual     Usuario[]      @relation("iconoActual", map: "iconoActual_fk")
+  usuariosFichaActual     Usuario[]      @relation("fichaActual", map: "fichaActual_fk")
+  usuariosSerpienteActual Usuario[]      @relation("serpienteActual", map: "serpienteActual_fk")
+  usuariosEscaleraActual  Usuario[]      @relation("escaleraActual", map: "escaleraActual_fk")
+  }
 
 enum Tipo_Carta {
   Ofensiva
