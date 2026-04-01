@@ -8,9 +8,13 @@
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
 
-### **POST** /api/auth/sessions
+### **POST** /api/auth/login
 - Inicia sesión en el sistema.
 - Body: "email" y "password".
+
+### **POST** /api/auth/cookie_login
+- Inicia sesión en el sistema.
+- Body: cookies jwt.
 
 ### **GET** /api/users/:email/profile
 - Devuelve la información del perfil (icono, nombre, victorias, derrotas, monedas que tiene, skin actual de escalera, de serpiente y de ficha).
