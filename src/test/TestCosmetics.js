@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import test, { describe, afterEach } from 'node:test'
 import prisma from '../prismaClient.js'
 import { Tipo_Cosmetico } from '../generated/prisma/client.js'
-import { cosmeticosPorDefecto } from './crearDatosBase.js'
+import { cosmeticosPorDefecto } from './CrearDatosBase.js'
 
 try {
     cosmeticosPorDefecto()

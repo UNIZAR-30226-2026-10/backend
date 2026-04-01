@@ -2,7 +2,7 @@ import Effects from "../services/Effects";
 import test, { after, before, describe } from "node:test"
 import assert from "node:assert/strict"
 import { Tipo_Afeccion, Tipo_Efecto } from "../generated/prisma/enums";
-import { cosmeticosPorDefecto } from "./crearDatosBase";
+import { cosmeticosPorDefecto } from "./CrearDatosBase.js";
 
 const runId = Date.now()
 const testEffectName = `Efecto de prueba ${runId}`

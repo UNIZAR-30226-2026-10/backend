@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "tsx --test test/**/*.js",
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch API/Index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",

@@ -2,7 +2,7 @@ import test, { after, before, describe } from "node:test"
 import assert from "node:assert/strict"
 import usersBL from "../services/User.ts"
 import prisma from "../prismaClient.ts"
-import { cosmeticosPorDefecto } from "./crearDatosBase.js"
+import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts"
 
 const runId = Date.now()
