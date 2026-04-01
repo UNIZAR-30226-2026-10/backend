@@ -2,7 +2,7 @@ import { Efecto, Tipo_Afeccion, Tipo_Efecto } from "../generated/prisma/client.j
 import prisma from "../prismaClient.js";
 import { EfectoReturnType } from "./ReturnTypes.js";
 
-export async function createEffect(data: { nombre: string, descripcion: string, afecta: Tipo_Afeccion, tipo: Tipo_Efecto }): Promise<EfectoReturnType | { error: string }> {
+export async function createEffect(data: { nombre: string, descripcion: string, afecta: Tipo_Afeccion, tipo: Tipo_Efecto }): Promise<EfectoReturnType> {
     try {
         const effect = await prisma.efecto.create({
             data : {
@@ -18,7 +18,7 @@ export async function createEffect(data: { nombre: string, descripcion: string, 
         return effect;
     } catch (error) {
         console.error("Error al crear el efecto:", error);
-        return { error: "Error al crear el efecto" };
+        throw new Error("Error al crear el efecto");
     }
 }
 
@@ -33,7 +33,7 @@ export async function getEffectById(nombre: string): Promise<EfectoReturnType | 
         return effect;
     } catch (error) {
         console.error("Error al obtener el efecto por ID:", error);
-        return null;
+        throw new Error("Error al obtener el efecto por ID");
     }
 }
 
@@ -47,11 +47,11 @@ export async function getAllEffects(): Promise<EfectoReturnType[]> {
         return effects;
     } catch (error) {
         console.error("Error al obtener todos los efectos:", error);
-        return [];
+        throw new Error("Error al obtener todos los efectos");
     }
 }
 
-export async function updateEffect(nombre: string, data: { descripcion?: string, afecta?: Tipo_Afeccion, tipo?: Tipo_Efecto }): Promise<EfectoReturnType | { error: string }> {
+export async function updateEffect(nombre: string, data: { descripcion?: string, afecta?: Tipo_Afeccion, tipo?: Tipo_Efecto }): Promise<EfectoReturnType> {
     try {
         const effect = await prisma.efecto.update({
             where: { nombre },
@@ -67,11 +67,11 @@ export async function updateEffect(nombre: string, data: { descripcion?: string,
         return effect;
     } catch (error) {
         console.error("Error al actualizar el efecto:", error);
-        return { error: "Error al actualizar el efecto" }; 
+        throw new Error("Error al actualizar el efecto");
     }
 }
 
-export async function deleteEffect(nombre: string): Promise<{ message: string } | { error: string }> {
+export async function deleteEffect(nombre: string): Promise<{ message: string }> {
     try {
         await prisma.efecto.delete({
             where: { nombre }
@@ -79,7 +79,7 @@ export async function deleteEffect(nombre: string): Promise<{ message: string } 
         return { message: "Efecto eliminado correctamente" };
     } catch (error) {
         console.error("Error al eliminar el efecto:", error);
-        return { error: "Error al eliminar el efecto" };
+        throw new Error("Error al eliminar el efecto");
     }
 }
 

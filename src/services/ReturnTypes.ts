@@ -28,6 +28,13 @@ export type UsuarioReturnType = Prisma.UsuarioGetPayload<{
     }
 }>
 
+export type AuthUserReturnType = Prisma.UsuarioGetPayload<{
+    select: {
+        email: true,
+        nombre: true
+    }
+}> & { authenticated: boolean }
+
 export type CartaReturnType = Prisma.CartaGetPayload<{
     include: {
         barajas: true,
