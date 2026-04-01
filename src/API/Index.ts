@@ -2,7 +2,7 @@ import createApp from "./App.js";
 import { FastifyInstance } from "fastify";
 
 export default async function startServer() : Promise<FastifyInstance> {
-    const app = createApp();
+    const app = await createApp();
 
     try {
         await app.listen({ port: 3000 });

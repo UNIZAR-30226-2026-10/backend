@@ -1,7 +1,8 @@
 import fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
+import registerRoutes from "./routes/Index.js";
 
-export default function createApp() : FastifyInstance {
+export default async function createApp() : Promise<FastifyInstance> {
     const app = fastify({
         logger: true
     });
@@ -13,6 +14,8 @@ export default function createApp() : FastifyInstance {
     app.get("/ping", async (request, reply) => {
     return "pong";
     });
+
+    await registerRoutes(app);
 
     return app;
 }
