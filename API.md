@@ -5,7 +5,6 @@
 
 
 ### **POST** /api/auth/new_users
-### **POST** /api/auth/new_users
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
 
