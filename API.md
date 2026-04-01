@@ -4,11 +4,11 @@
 ## Usuario.
 
 
-### **POST** /api/users
+### **POST** /api/auth/new_users
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
 
-### **POST** /api/sessions
+### **POST** /api/auth/sessions
 - Inicia sesión en el sistema.
 - Body: "email" y "password".
 

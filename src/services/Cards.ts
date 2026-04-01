@@ -2,7 +2,7 @@ import { Carta, Tipo_Carta, Rareza, Logros, Efecto } from "../generated/prisma/c
 import prisma from "../prismaClient.js";
 import { CartaReturnType } from "./ReturnTypes.js";
 
-export async function createCard(data: { nombre: string, descripcion: string, tipo: Tipo_Carta, rareza: Rareza, logroID?: Logros, efecto: Efecto[] }): Promise<CartaReturnType | { error: string }> {
+export async function createCard(data: { nombre: string, descripcion: string, tipo: Tipo_Carta, rareza: Rareza, logroID?: Logros, efecto: Efecto[] }): Promise<CartaReturnType> {
     try {
         const card = await prisma.carta.create({
             data : {
@@ -26,7 +26,7 @@ export async function createCard(data: { nombre: string, descripcion: string, ti
         return card;
     } catch (error) {
         console.error("Error al crear la carta:", error);
-        return { error: "Error al crear la carta" };
+        throw new Error("Error al crear la carta");
     }
 }
 
@@ -43,7 +43,7 @@ export async function getCardById(nombre: string): Promise<CartaReturnType | nul
         return card;
     } catch (error) {
         console.error("Error al obtener la carta por ID:", error);
-        return null;
+        throw new Error("Error al obtener la carta por ID");
     }
 }
 
@@ -59,11 +59,11 @@ export async function getAllCards(): Promise<CartaReturnType[]> {
         return cards;
     } catch (error) {
         console.error("Error al obtener todas las cartas:", error);
-        return [];
+        throw new Error("Error al obtener todas las cartas");
     }
 }
 
-export async function updateCard(nombre: string, data: { descripcion?: string, tipo?: Tipo_Carta, rareza?: Rareza, logroID?: Logros, efecto: Efecto[] }): Promise<CartaReturnType | { error: string }> {
+export async function updateCard(nombre: string, data: { descripcion?: string, tipo?: Tipo_Carta, rareza?: Rareza, logroID?: Logros, efecto: Efecto[] }): Promise<CartaReturnType> {
     try {
         const card = await prisma.carta.update({
             where: { nombre },
@@ -83,11 +83,11 @@ export async function updateCard(nombre: string, data: { descripcion?: string, t
         return card;
     } catch (error) {
         console.error("Error al actualizar la carta:", error);
-        return { error: "Error al actualizar la carta" };
+        throw new Error("Error al actualizar la carta");
     }
 }
 
-export async function deleteCard(nombre: string): Promise<{ message: string } | { error: string }> {
+export async function deleteCard(nombre: string): Promise<{ message: string }> {
     try {
         await prisma.carta.delete({
             where: { nombre }
@@ -95,7 +95,7 @@ export async function deleteCard(nombre: string): Promise<{ message: string } | 
         return { message: "Carta eliminada exitosamente" };
     } catch (error) {
         console.error("Error al eliminar la carta:", error);
-        return { error: "Error al eliminar la carta" };
+        throw new Error("Error al eliminar la carta");
     }
 }
 

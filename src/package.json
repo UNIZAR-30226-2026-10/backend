@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "tsx --test test/**/*.js",
-    "dev": "tsx watch index.ts",
+    "dev": "tsx watch API/Index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "db:deploy": "npx prisma migrate deploy && npx prisma generate",
@@ -34,8 +34,12 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/jwt": "^10.0.0",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
+    "@sinclair/typebox": "^0.34.49",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "fastify": "^5.2.0",

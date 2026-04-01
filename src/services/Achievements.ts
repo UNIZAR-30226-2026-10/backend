@@ -2,7 +2,7 @@ import { Logros, Carta, Tipo_Logro } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import { LogrosReturnType } from "./ReturnTypes.js";
 
-export async function createAchievement(data: { nombre: string, descripcion: string, tipo: Tipo_Logro, carta?: Carta, requisito: number }): Promise<LogrosReturnType | { error: string }> {
+export async function createAchievement(data: { nombre: string, descripcion: string, tipo: Tipo_Logro, carta?: Carta, requisito: number }): Promise<LogrosReturnType> {
     try {
         const achievement = await prisma.logros.create({
             data : {
@@ -20,7 +20,7 @@ export async function createAchievement(data: { nombre: string, descripcion: str
         return achievement;
     } catch (error) {
         console.error("Error al crear el logro:", error);
-        return { error: "Error al crear el logro" };
+        throw new Error("Error al crear el logro");
     }
 }
 
@@ -36,7 +36,7 @@ export async function getAchievementById(nombre: string): Promise<LogrosReturnTy
         return achievement;
     } catch (error) {
         console.error("Error al obtener el logro por ID:", error);
-        return null;
+        throw new Error("Error al obtener el logro por ID");
     }
 }
 
@@ -51,11 +51,11 @@ export async function getAllAchievements(): Promise<LogrosReturnType[]> {
         return achievements;
     } catch (error) {
         console.error("Error al obtener todos los logros:", error);
-        return [];
+        throw new Error("Error al obtener todos los logros");
     }
 }
 
-export async function updateAchievement(nombre: string, data: { descripcion?: string, tipo?: Tipo_Logro, carta?: Carta, requisito?: number }): Promise<LogrosReturnType | { error: string }> {
+export async function updateAchievement(nombre: string, data: { descripcion?: string, tipo?: Tipo_Logro, carta?: Carta, requisito?: number }): Promise<LogrosReturnType> {
     try {
         const achievement = await prisma.logros.update({
             where: { nombre },
@@ -73,11 +73,11 @@ export async function updateAchievement(nombre: string, data: { descripcion?: st
         return achievement;
     } catch (error) {
         console.error("Error al actualizar el logro:", error);
-        return { error: "Error al actualizar el logro" }; 
+        throw new Error("Error al actualizar el logro");
     }
 }
 
-export async function deleteAchievement(nombre: string): Promise<{ message: string } | { error: string }> {
+export async function deleteAchievement(nombre: string): Promise<{ message: string }> {
     try {
         await prisma.logros.delete({
             where: { nombre }
@@ -85,7 +85,7 @@ export async function deleteAchievement(nombre: string): Promise<{ message: stri
         return { message: "Logro eliminado exitosamente" };
     } catch (error) {
         console.error("Error al eliminar el logro:", error);
-        return { error: "Error al eliminar el logro" };
+        throw new Error("Error al eliminar el logro");
     }
 }
 

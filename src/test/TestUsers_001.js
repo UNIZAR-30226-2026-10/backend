@@ -2,7 +2,7 @@ import test, { after, before, describe } from "node:test"
 import assert from "node:assert/strict"
 import usersBL from "../services/User.ts"
 import prisma from "../prismaClient.ts"
-import { cosmeticosPorDefecto } from "./crearDatosBase.js"
+import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts"
 
 const runId = Date.now()
@@ -70,33 +70,36 @@ describe("Tests de User Service", { concurrency: false }, () => {
   })
 
   test("Nombre de usuario ilegal", async () => {
-    const result = await usersBL.createUser({
-      email: `maleducado${runId}@ejemplo.com`,
-      password: "Password123!",
-      nombre: "usuario extrema derecha "
-    })
-
-    assert.equal(result?.error, "El nombre contiene palabras inapropiadas")
+    await assert.rejects(
+      usersBL.createUser({
+        email: `maleducado${runId}@ejemplo.com`,
+        password: "Password123!",
+        nombre: "usuario extrema derecha "
+      }),
+      /El nombre contiene palabras inapropiadas/
+    )
   })
 
   test("Contraseña insegura", async () => {
-    const result = await usersBL.createUser({
-      email: `EZpass${runId}@ejemplo.com`,
-      password: "123",
-      nombre: "Test User"
-    })
-
-    assert.match(result?.error || "", /La contraseña debe tener al menos 8 caracteres/)
+    await assert.rejects(
+      usersBL.createUser({
+        email: `EZpass${runId}@ejemplo.com`,
+        password: "123",
+        nombre: "Test User"
+      }),
+      /La contraseña debe tener al menos 8 caracteres/
+    )
   })
 
   test("Ñ y acentos en el email", async () => {
-    const result = await usersBL.createUser({
-      email: `ñandú${runId}@ejemplo.com`,
-      password: "Password123!",
-      nombre: "Test User"
-    })
-
-    assert.equal(result?.error, "Email no válido o ya registrado")
+    await assert.rejects(
+      usersBL.createUser({
+        email: `ñandú${runId}@ejemplo.com`,
+        password: "Password123!",
+        nombre: "Test User"
+      }),
+      /Email no valido o ya registrado/
+    )
   })
 
   test("Email ya registrado", async () => {
@@ -106,13 +109,14 @@ describe("Tests de User Service", { concurrency: false }, () => {
       nombre: "Test User"
     })
 
-    const result = await usersBL.createUser({
-      email: testEmail,
-      password: "Password123!",
-      nombre: "Test User 2"
-    })
-
-    assert.equal(result?.error, "Email no válido o ya registrado")
+    await assert.rejects(
+      usersBL.createUser({
+        email: testEmail,
+        password: "Password123!",
+        nombre: "Test User 2"
+      }),
+      /Email no valido o ya registrado/
+    )
   })
 
   test("Ñ y acentos en el nombre", async () => {
@@ -141,7 +145,7 @@ describe("Tests de User Service", { concurrency: false }, () => {
       }
     })
 
-    const updatedUser = await usersBL.updateCosmeticOnUser(user?.email, { nombre: `Ficha de dragón ${runId}`, tipo: Tipo_Cosmetico.Skin_Ficha })
+    const updatedUser = await usersBL.updateCosmeticOnUser(user.email, { nombre: `Ficha de dragón ${runId}`, tipo: Tipo_Cosmetico.Skin_Ficha })
     assert.equal(updatedUser?.fichaActualField, `Ficha de dragón ${runId}`)
   })
 })
