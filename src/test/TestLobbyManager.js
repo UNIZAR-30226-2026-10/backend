@@ -171,4 +171,22 @@ describe("Lobby Manager", () => {
             manager.setReady("noexiste", "ag@gmail.com", true)
         }, new Error("LOBBY_NOT_FOUND"))
     })
+    test("Cambiar tablero siendo el lider del lobby", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        manager.changeBoard("ag@gmail.com", lobby.idLobby, "tablero33")
+        assert.equal(lobby.tablero, "tablero33")
+    })
+    test("Cambiar tablero sin ser el lider del lobby", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
+        assert.throws(() => {
+            manager.changeBoard("aplayer@gmail.com", lobby.idLobby, "tablero33")
+        }, new Error("CANT_CHANGE_BOARD"))
+    })
+    test("Cambiar tablero en un lobby que no existe", () => {
+        assert.throws(() => {
+            manager.changeBoard("ag@gmail.com", "noexiste", "tablero33")
+        }, new Error("LOBBY_NOT_FOUND"))
+    })
+
 })
