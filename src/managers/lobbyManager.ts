@@ -7,6 +7,7 @@ interface jugadorLobby {
     esIA: boolean,
     estaListo: boolean,
     nombreMazo?: string
+    icono?: string
 }
 
 interface Lobby {
@@ -14,7 +15,8 @@ interface Lobby {
     idCreador: string,
     jugadores: jugadorLobby[],
     numJugadores: number,
-    numBots: number    
+    numBots: number ,
+    tablero: string   
 }
 
 export class LobbyManager {
@@ -27,28 +29,29 @@ export class LobbyManager {
         this.jugadoresEnCola = new Map()
     }
 
-    createLobby(_idCreador: string, username: string): Lobby {
-        if (this.jugadoresEnCola.has(_idCreador)) throw new Error("ALREADY_IN_A_LOBBY")
+    createLobby(jugador: jugadorLobby): Lobby {
+        if (this.jugadoresEnCola.has(jugador.idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
         const id = 'lobby-' + this.numLobbies
         this.numLobbies++
         const nuevaLobby: Lobby = {
             idLobby: id,
-            idCreador: _idCreador,
-            jugadores: [{ idJugador: _idCreador, nombre: username, esIA: false, estaListo: false }],
+            idCreador: jugador.idJugador,
+            jugadores: [jugador],
             numJugadores: 1,
-            numBots: 0
+            numBots: 0,
+            tablero: "Tablero 1"
         }
         this.lobbies.set(id, nuevaLobby)
-        this.jugadoresEnCola.set(_idCreador, id)
+        this.jugadoresEnCola.set(jugador.idJugador, id)
         return nuevaLobby
     }
 
-    joinLobby(_idJugador: string, username: string, lobbyID: string): Lobby {
+    joinLobby(_idJugador: string, jugador: jugadorLobby, lobbyID: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
         if (this.jugadoresEnCola.has(_idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
-        lobby.jugadores.push({ idJugador: _idJugador, nombre: username, esIA: false, estaListo: false })
+        lobby.jugadores.push(jugador)
         lobby.numJugadores++
         this.jugadoresEnCola.set(_idJugador, lobbyID)
         return lobby
@@ -119,6 +122,13 @@ export class LobbyManager {
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.nombreMazo = mazo
 
+    }
+
+    changeBoard(requestBy: string, lobbyID: string, tablero: string) {
+        const lobby = this.lobbies.get(lobbyID)
+        if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+        if (requestBy !== lobby.idCreador) throw new Error("CANT_CHANGE_BOARD")
+        lobby.tablero = tablero
     }
 
     getLobby(lobbyID: string): Lobby {
