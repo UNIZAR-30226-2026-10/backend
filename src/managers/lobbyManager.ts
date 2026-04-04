@@ -46,14 +46,14 @@ export class LobbyManager {
         return nuevaLobby
     }
 
-    joinLobby(_idJugador: string, jugador: jugadorLobby, lobbyID: string): Lobby {
+    joinLobby(jugador: jugadorLobby, lobbyID: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
-        if (this.jugadoresEnCola.has(_idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
+        if (this.jugadoresEnCola.has(jugador.idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
         lobby.jugadores.push(jugador)
         lobby.numJugadores++
-        this.jugadoresEnCola.set(_idJugador, lobbyID)
+        this.jugadoresEnCola.set(jugador.idJugador, lobbyID)
         return lobby
     }
 
