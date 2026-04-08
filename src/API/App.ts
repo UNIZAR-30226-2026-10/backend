@@ -10,7 +10,9 @@ export default async function createApp() : Promise<FastifyInstance> {
     });
 
     app.register(cors, {
-    origin: "*",
+    origin: "http://localhost:3001", // Tu puerto del Front
+    credentials: true,               // Obligatorio para que funcionen las cookies/JWT
+    methods: ["GET", "POST", "PUT", "DELETE"],
     });
 
     app.get("/ping", async (request, reply) => {
