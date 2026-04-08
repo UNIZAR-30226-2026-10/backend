@@ -63,6 +63,9 @@ export default function authRoutes(app: FastifyInstance) : void {
 
         try {
             const user = await User.authenticateUser(email, password);
+            if (user.authenticated === false) {
+                throw new Error("Invalid credentials");
+            }
             const token = app.jwt.sign({ email: email, username: user.nombre });
             reply.setCookie("autologin", token, {
                 httpOnly: true,
