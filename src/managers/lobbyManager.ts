@@ -15,8 +15,8 @@ interface Lobby {
     idCreador: string,
     jugadores: jugadorLobby[],
     numJugadores: number,
-    numBots: number ,
-    tablero: string   
+    numBots: number,
+    tablero: string
 }
 
 interface invitation {
@@ -54,7 +54,7 @@ export class LobbyManager {
         return nuevaLobby
     }
 
-    sendInvite(invite: invitation): Error | String {
+    sendInvite(invite: invitation): string {
         const lobby = this.lobbies.get(invite.lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         const myInvites = this.invitaciones.get(invite.inviteFor) || []
@@ -64,17 +64,18 @@ export class LobbyManager {
         return "INVITE_SENT"
     }
 
-    manageInvite(jugador: jugadorLobby, accept: boolean, lobbyID: string, inviteFrom: string): Lobby | String | Error {
+    manageInvite(jugador: jugadorLobby, accept: boolean, lobbyID: string, inviteFrom: string): Lobby | string {
         let invites = this.invitaciones.get(jugador.idJugador)
         if (!invites || invites.length === 0) throw new Error("INVITES_NOT_FOUND")
         const invite = invites.find(i => i.inviteFrom === inviteFrom && i.lobbyID === lobbyID)
         if (!invite) throw new Error("INVITE_NOT_FOUND")
         if (accept) {
-            invites = invites.filter(i => i.lobbyID !== lobbyID)
-            this.invitaciones.set(jugador.idJugador, invites)
-            return this.joinLobby(jugador, lobbyID)
-        } else {
+            const lobby = this.joinLobby(jugador, lobbyID)
             invites = invites.filter(i => i.lobbyID !== lobbyID && i.inviteFrom !== inviteFrom)
+            this.invitaciones.set(jugador.idJugador, invites)
+            return lobby
+        } else {
+            invites = invites.filter(i => !(i.lobbyID === lobbyID && i.inviteFrom === inviteFrom))
             this.invitaciones.set(jugador.idJugador, invites)
             return "INVITE_DECLINED"
         }
@@ -83,7 +84,7 @@ export class LobbyManager {
     getInvitesOfPlayer(idJugador: string): invitation[] {
         const invites = this.invitaciones.get(idJugador)
         if (!invites) return []
-        return invites
+        return [...invites]
     }
 
 
@@ -190,7 +191,7 @@ export class LobbyManager {
         return "LOBBY_DELETED"
     }
 
-    setReady( lobbyID: string, idJugador: string, ready: boolean) {
+    setReady(lobbyID: string, idJugador: string, ready: boolean) {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")

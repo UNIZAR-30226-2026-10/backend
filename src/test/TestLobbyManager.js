@@ -224,10 +224,12 @@ describe("Lobby Manager", () => {
         assert.equal(manager.getInvitesOfPlayer("invitado@gmail.com").length, 0) 
     })
     test("Aceptar o rechazar invitación en un lobby que no existe", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
         let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
+        manager.deleteLobby(lobby.idLobby)
         assert.throws(() => {
-            manager.manageInvite(jugadorInvitado, true, "lobby-fantasma", "nadie@gmail.com")
-        }, new Error("INVITES_NOT_FOUND"))
+            manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag@gmail.com")
+        }, new Error("LOBBY_NOT_FOUND"))
     })
-
 })
