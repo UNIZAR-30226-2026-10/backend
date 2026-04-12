@@ -188,5 +188,46 @@ describe("Lobby Manager", () => {
             manager.changeBoard("ag@gmail.com", "noexiste", "tablero33")
         }, new Error("LOBBY_NOT_FOUND"))
     })
+    test("Enviar una invitación correctamente", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        let resultado = manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
+        let invites = manager.getInvitesOfPlayer("invitado@gmail.com")
+        assert.equal(resultado, "INVITE_SENT")
+        assert.equal(invites.length, 1)
+        assert.equal(invites[0].inviteFrom, "ag@gmail.com")
+        assert.equal(invites[0].lobbyID, lobby.idLobby)
+    })
+    test("Enviar invitación duplicada a la misma sala", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })     
+        assert.throws(() => {
+            manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
+        }, new Error("INVITE_ALREADY_SENT"))
+    })
+    test("Aceptar invitación", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
+        let devuelto = manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag@gmail.com")
+        assert.equal(devuelto.idLobby, lobby.idLobby) 
+        assert.equal(lobby.numJugadores, 2) 
+        assert.equal(manager.getInvitesOfPlayer("invitado@gmail.com").length, 0) 
+    })
+
+    test("Rechazar invitación", () => {
+        let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
+        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
+        let devuelto = manager.manageInvite(jugadorInvitado, false, lobby.idLobby, "ag@gmail.com")
+        assert.equal(devuelto, "INVITE_DECLINED")
+        assert.equal(lobby.numJugadores, 1) 
+        assert.equal(manager.getInvitesOfPlayer("invitado@gmail.com").length, 0) 
+    })
+    test("Aceptar o rechazar invitación en un lobby que no existe", () => {
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
+        assert.throws(() => {
+            manager.manageInvite(jugadorInvitado, true, "lobby-fantasma", "nadie@gmail.com")
+        }, new Error("INVITES_NOT_FOUND"))
+    })
 
 })

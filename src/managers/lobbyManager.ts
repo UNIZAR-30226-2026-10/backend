@@ -19,14 +19,22 @@ interface Lobby {
     tablero: string   
 }
 
+interface invitation {
+    inviteFor: string,
+    inviteFrom: string,
+    lobbyID: string
+}
+
 export class LobbyManager {
     private numLobbies = 0
     private lobbies: Map<string, Lobby>
     private jugadoresEnCola: Map<string, string>
+    private invitaciones: Map<string, invitation[]>
 
     constructor() {
         this.lobbies = new Map()
         this.jugadoresEnCola = new Map()
+        this.invitaciones = new Map()
     }
 
     createLobby(jugador: jugadorLobby): Lobby {
@@ -45,6 +53,39 @@ export class LobbyManager {
         this.jugadoresEnCola.set(jugador.idJugador, id)
         return nuevaLobby
     }
+
+    sendInvite(invite: invitation): Error | String {
+        const lobby = this.lobbies.get(invite.lobbyID)
+        if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+        const myInvites = this.invitaciones.get(invite.inviteFor) || []
+        if (myInvites.some(i => i.inviteFrom === invite.inviteFrom && i.lobbyID === invite.lobbyID)) throw new Error("INVITE_ALREADY_SENT")
+        myInvites.push(invite)
+        this.invitaciones.set(invite.inviteFor, myInvites)
+        return "INVITE_SENT"
+    }
+
+    manageInvite(jugador: jugadorLobby, accept: boolean, lobbyID: string, inviteFrom: string): Lobby | String | Error {
+        let invites = this.invitaciones.get(jugador.idJugador)
+        if (!invites || invites.length === 0) throw new Error("INVITES_NOT_FOUND")
+        const invite = invites.find(i => i.inviteFrom === inviteFrom && i.lobbyID === lobbyID)
+        if (!invite) throw new Error("INVITE_NOT_FOUND")
+        if (accept) {
+            invites = invites.filter(i => i.lobbyID !== lobbyID)
+            this.invitaciones.set(jugador.idJugador, invites)
+            return this.joinLobby(jugador, lobbyID)
+        } else {
+            invites = invites.filter(i => i.lobbyID !== lobbyID && i.inviteFrom !== inviteFrom)
+            this.invitaciones.set(jugador.idJugador, invites)
+            return "INVITE_DECLINED"
+        }
+    }
+
+    getInvitesOfPlayer(idJugador: string): invitation[] {
+        const invites = this.invitaciones.get(idJugador)
+        if (!invites) return []
+        return invites
+    }
+
 
     joinLobby(jugador: jugadorLobby, lobbyID: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
