@@ -40,6 +40,13 @@
 - Actualiza la skin de ficha del usuario.
 - Body: "pawn".
 
+### **GET** /api/users/:email/snakes
+- Devuelve todas las skins de serpientes que tiene el usuario.
+
+### **PUT** /api/users/:email/snake
+- Actualiza la skin de serpiente del usuario.
+- Body: "snake".
+
 ### **PUT** /api/users/:email/username
 - Actualiza el nombre del usuario.
 - Body: "username".

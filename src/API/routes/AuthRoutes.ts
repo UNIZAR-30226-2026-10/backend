@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
 import User from "../../services/User.js";
+import { UnauthorizedSessionToken } from "./AuxFunctionsAPI.js";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
@@ -74,6 +75,12 @@ export default function authRoutes(app: FastifyInstance) : void {
                 path: '/',         
                 maxAge: 60 * 60 * 24 * 7 // 7 dias
             });
+            reply.setCookie("session", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax',
+                path: '/',         
+            });
             reply.status(200).send({ email: user.email, username: user.nombre });
         } catch (error) {
             reply.status(401).send({ error: (error as Error).message });
@@ -93,19 +100,59 @@ export default function authRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { autologin } = request.cookies as { autologin?: string };
-
+        const autologin = request.cookies.autologin;
+        if (!autologin) {
+            return reply.status(401).send({ error: "No autologin cookie found" });
+        }
         try {
-        await request.jwtVerify(); 
-
-        return reply.status(200).send({ 
-            email: request.user.email, 
-            username: request.user.username 
+        const decoded = app.jwt.verify<{ email: string; username: string }>(autologin);
+        
+        // Añadimos cookie de sesion como en el login normal
+        reply.setCookie("session", autologin, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
         });
 
+
+        return reply.status(200).send({
+            email: decoded.email,
+            username: decoded.username
+        });
         } catch (error) {
             reply.status(401).send({ error: "Invalid autologin token" });
         }
     }
     )
+
+    app.post("/logout", {
+        preHandler: app.verifyToken,
+        schema: {
+            response: {
+                200: Type.String(),
+                400: Type.Object({
+                    error: Type.String()
+                }),
+                401: UnauthorizedSessionToken
+            }
+        }
+    }, async (request, reply) => {
+
+        reply.clearCookie("session", {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
+        });
+
+        reply.clearCookie("autologin", {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'lax',
+            path: '/',
+        });
+        return reply.status(200).send("Logged out successfully");
+    }
+    );
 }
