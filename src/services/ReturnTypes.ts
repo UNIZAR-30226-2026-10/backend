@@ -67,7 +67,10 @@ export type PartidaReturnType = Prisma.PartidaGetPayload<{
         partidaJugadores: true,
         barajas: true,
         ganador: true,
-        tableroInicial: true
+        tableroInicial: {
+            select: {
+                nombre: true }
+        }
     }
 }>
 
@@ -109,3 +112,26 @@ export type CosmeticosDisponiblesUsuarioReturnType = Prisma.UsuarioGetPayload<{
         }
     }
 }>
+
+export type PartidasActivasReturnType = {
+    ID: string,
+    fechaInicio: Date,
+    partidaJugadores: {
+        nombre: string
+    }[],
+    turnoActual: number,
+    rondaActual: number
+}
+
+export type Movimiento = {
+    fichaId: number,
+    casillaDestino: number,
+    esBifurcacion: boolean,
+    pasosRestantes?: number,
+}
+
+export type MovimientoReturnType = {
+    partida: PartidaReturnType,
+    tirada: number,
+    movimientos: Movimiento[]
+}
