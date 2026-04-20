@@ -218,6 +218,12 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     if (jugadorActual.email !== player) {
         throw new Error("No es tu turno");
     }
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
+        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+
+    }
+
     if (jugadorActual.fase !== "Cartas") {
         throw new Error("No puedes tirar el dado en esta fase");
     }
@@ -276,7 +282,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
             casillaDestino: casillaActual,
             esBifurcacion: esBifurcacion
         };
-        if (esBifurcacion) {
+        if (esBifurcacion&&pasos>0) {
             movimiento.pasosRestantes = pasos;
         }
         movimientos.push(movimiento);
@@ -311,7 +317,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     };
 }
 
-export async function moveToken(partidaId: string, player: string, fichaId: number, casillaDestino: number): Promise<PartidaReturnType> {
+export async function moveToken(partidaId: string, player: string, fichaId: number, casillaDestino: number, pasosRestantes?: number): Promise<PartidaReturnType> {
 
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
@@ -352,34 +358,70 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (!fichaAActualizar) {
         throw new Error("Ficha no encontrada");
     }
+    let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
         fichaAActualizar.meta = true;
     }
+    
     if (jugadorActual.fichas.every(f => f.meta)) {
         // return await finishMatch(partidaId, jugadorActual.email);
-    } else {
-        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
-        let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
-        siguienteJugador.fase = "Cartas";
-        if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
-            const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-            if (cartaRobada){
-                siguienteJugador.mano.push(cartaRobada);
+    } else {        
+        if(pasosRestantes!==undefined&&pasosRestantes>0){
+            let haciaAtras = false;
+            let esBifurcacion = false;
+            let casillaTablero;
+            while (pasosRestantes > 0) {
+                casillaTablero = tablero.casillas[casillaActual];
+                if (!haciaAtras) {
+                    if (casillaTablero.tipo === "Meta") {
+                        haciaAtras = true;
+                        continue;
+                    }
+                    if (casillaTablero.tipo === "Bifurcacion") {
+                        esBifurcacion = true;
+                        break;
+                    }
+                    if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
+                        break;
+                    }
+                    casillaActual = casillaTablero.siguientes[0];
+                    pasosRestantes--;
+                } else {
+                    let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(casillaActual));
+                    if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)) {
+                        break;
+                    }
+                        casillaActual = casillaAnterior;
+                    pasosRestantes--;
+                }
             }
-        } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
-            siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
-            siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
-            siguienteJugador.cementerio = [];
-            const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-            if (cartaRobada){
-                siguienteJugador.mano.push(cartaRobada);
+            fichaAActualizar.casilla = casillaActual;        
+        }  
+
+        if(tablero.casillas[casillaDestino].tipo !== "Bifurcacion"||(tablero.casillas[casillaDestino].tipo==="Bifurcacion"&&(pasosRestantes===undefined||pasosRestantes===0))){ 
+           estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+            let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+            siguienteJugador.fase = "Cartas";
+            if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+                const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+                if (cartaRobada){
+                   siguienteJugador.mano.push(cartaRobada);
+                }
+            } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
+                siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
+                siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
+                siguienteJugador.cementerio = [];
+                const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+                if (cartaRobada){
+                    siguienteJugador.mano.push(cartaRobada);
+                }
+            }
+            if (estadoJugadores.turnoActual === 0) {
+                estadoJugadores.ronda++;
             }
         }
-        if (estadoJugadores.turnoActual === 0) {
-            estadoJugadores.ronda++;
-        }
-    }    
+    }  
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
@@ -437,7 +479,20 @@ async function finishMatch(partidaId: string, ganadorEmail: string): Promise<Par
     return partidaUpdated;
 }
 
-export async function useCard(partidaId: string, player: string, cartaNombre: string, who: string , inicio: number): Promise<PartidaReturnType> {
+function validarCasillaParaSalto(tablero: SnapshotTableroJSON, casilla: number, etiqueta: string): void {
+    if (!Number.isInteger(casilla)) {
+        throw new Error(`${etiqueta} debe ser un numero entero`);
+    }
+    if (casilla < 0 || casilla >= tablero.casillas.length) {
+        throw new Error(`${etiqueta} fuera de rango`);
+    }
+    const tipo = tablero.casillas[casilla].tipo;
+    if (tipo === "Serpiente" || tipo === "Escalera") {
+        throw new Error(`${etiqueta} no puede ser serpiente ni escalera`);
+    }
+}
+
+export async function useCard(partidaId: string, player: string, cartaNombre: string, who: string | number, inicio?: number, fin?: number): Promise<PartidaReturnType> {
 
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
@@ -459,6 +514,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         throw new Error("El jugador no pertenece a esta partida");
     }
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
+    const tableroPartida = partida.snapshotTablero as SnapshotTableroJSON;
     const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
     if (jugadorActual.email !== player) {
         throw new Error("No es tu turno");
@@ -473,7 +529,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         throw new Error("Ya has jugado una carta en este turno");
     }
     const casillaActual = jugadorActual.fichas.find(f => !f.meta)!.casilla;
-    const casillaTablero = (partida.snapshotTablero as SnapshotTableroJSON).casillas[casillaActual];
+    const casillaTablero = tableroPartida.casillas[casillaActual];
     let prohibidas = false;
     if (casillaTablero.tipo === "Serpiente" || casillaTablero.tipo === "Escalera") {
         prohibidas = true;
@@ -486,10 +542,30 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.efectosActivos.push({ resumenEfecto: "Saltar bloqueo" });
             break;
         case "Wild Frank":
-            // No sé cómo poner esto
+            if (inicio === undefined || fin === undefined) {
+                throw new Error("Debes indicar casilla inicio y fin para Wild Frank");
+            }
+            validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
+            validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
+            if (fin%10 >= inicio%10) {
+                throw new Error("La casilla fin debe ser menor que la casilla inicio");
+            }
+            tableroPartida.casillas[inicio].tipo = "Serpiente";
+            tableroPartida.casillas[inicio].saltoA = fin;
+
             break;
         case "Carpintero":
-            // Same
+            if (inicio === undefined || fin === undefined) {
+                throw new Error("Debes indicar casilla inicio y fin para Carpintero");
+            }
+            validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
+            validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
+            if (fin%10 <= inicio%10) {
+                throw new Error("La casilla fin debe ser mayor que la casilla inicio");
+            }
+            tableroPartida.casillas[inicio].tipo = "Escalera";
+            tableroPartida.casillas[inicio].saltoA = fin;
+
             break;
         case "Día de la marmota":
             if (prohibidas) {
@@ -506,7 +582,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Robo de identidad":
             let posFichas = []
             for (let jugador of estadoJugadores.jugadores) {
-                if (jugador.email === who) {
+                if (jugador.email === player) {
                     continue;
                 }
                 for (let ficha of jugador.fichas) {
@@ -516,6 +592,30 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
                 }
                 // Tiene que seleccionar una ficha el user.
             }
+            //Pillar posicion random de las fichas y teletransportar una ficha del jugador actual ahí
+            const posicionAleatoria = Math.floor(Math.random() * posFichas.length);
+            // Lógica para teletransportar la ficha
+            // Cambiar la ficha del jugador en la posicion aleatoria por una ficha del jugador actual
+            jugadorActual.fichas[who].casilla = posFichas[posicionAleatoria];
+            let numFicha = 0;
+            for (let jugador of estadoJugadores.jugadores) {
+                if (jugador.email === player) {
+                    continue;
+                }
+                for (let ficha of jugador.fichas) {
+                    if (!ficha.meta && ficha.casilla === posFichas[posicionAleatoria]&&numFicha===0) {
+                        ficha.casilla = casillaActual;
+                        numFicha++;
+                        break;
+                    }
+                }
+                if(numFicha>0){
+                    break;
+                }                
+            }
+
+            // Y cambia a la ficha que habia ahi por la posicion en la que estaba el jugador actual
+            
             break;
         case "Mal de ojo":
             let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
@@ -550,6 +650,8 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             break;
         case "Serpiente en tu bota":
             // Pasar una ronda entera
+            const jugadorAfectado = estadoJugadores.jugadores.find(j => j.email === who);
+            jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
             break;
         case "Parca":
             posFichas = [];
@@ -634,7 +736,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     jugadorActual.cementerio.push(cartaNombre);
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
-        data: { snapshotJugadores: estadoJugadores },
+        data: { snapshotJugadores: estadoJugadores, snapshotTablero: tableroPartida },
         include: {
             partidaJugadores: true,
             barajas: true,
