@@ -437,28 +437,213 @@ async function finishMatch(partidaId: string, ganadorEmail: string): Promise<Par
     return partidaUpdated;
 }
 
-/*
-Funciones a realizar para la lógica de negocio de la partida:
+export async function useCard(partidaId: string, player: string, cartaNombre: string, who: string , inicio: number): Promise<PartidaReturnType> {
 
-- Empezar partida: Crear una nueva partida en la base de datos, leer desde la lobby los datos de esta y de los jugadores, eliminar el lobby
-                    y asignar todos los datos a los respectivos json (snapshotJugadores, configuracion y partida).
-                    Establecer el turno 1 y robar automáticamente la primera carta para el Jugador 1.
-
-- Usar carta: Dado el jugador, si es su turno, usar la carta seleccionada. Aplicar los efectos de la carta dependiendo de lo que haga.
-
-- Tirar dado: Dado el jugador, si es su turno, tirar el dado. Devolver todas las posibles posiciones a las que puede moverse 
-                cada una de sus 3 fichas, teniendo en cuenta las serpientes, escaleras, efectos y cualquier bloqueo.
-
-- Mover ficha: Dado el jugador y la ficha que quiere mover, si es su turno, mover la ficha a la posición seleccionada. 
-                Aplicar los efectos de la casilla a la que se ha movido. Si sus 3 fichas llegan a la meta, llamar a Terminar Partida. 
-                Si no, pasar el turno al siguiente jugador.
-
-- Terminar partida: Declarar la partida como terminada. Devolver el resultado de la partida, incluyendo el ganador, el número de turnos, etc. 
-                    Actualizar partidas ganadas, perdidas, SEP ... de los jugadores.
-
-- Obtener estado partida: Dado el id de la partida, devolver el estado actual de la partida, incluyendo la posición de las 3 fichas de cada uno, 
-                los jugadores, las cartas que tienen, etc. (Ocultando la mano/mazo de los rivales).
-
-- Obtener partidas activas del jugador: Devolver una lista de las partidas que están activas, con su id, nombre, número de jugadores, etc.
-
-*/
+    const partida = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        include: {
+            partidaJugadores: true,
+            barajas: true,
+            ganador: true,
+            tableroInicial: {   
+                select: {
+                    nombre: true
+                }
+            }
+        }
+    });
+    if (!partida) {
+        throw new Error("Partida no encontrada");
+    }
+    if (!partida.partidaJugadores.some(j => j.email === player)) {
+        throw new Error("El jugador no pertenece a esta partida");
+    }
+    const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
+    const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+    if (jugadorActual.email !== player) {
+        throw new Error("No es tu turno");
+    }
+    if (jugadorActual.fase !== "Cartas") {
+        throw new Error("No puedes usar cartas en esta fase");
+    }
+    if (!jugadorActual.mano.includes(cartaNombre)) {
+        throw new Error("No tienes esta carta en la mano");
+    }
+    if (jugadorActual.cartaJugadaEnTurno) {
+        throw new Error("Ya has jugado una carta en este turno");
+    }
+    const casillaActual = jugadorActual.fichas.find(f => !f.meta)!.casilla;
+    const casillaTablero = (partida.snapshotTablero as SnapshotTableroJSON).casillas[casillaActual];
+    let prohibidas = false;
+    if (casillaTablero.tipo === "Serpiente" || casillaTablero.tipo === "Escalera") {
+        prohibidas = true;
+    }
+    switch (cartaNombre) {
+        case "Exceso de medios":
+            jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
+            break;
+        case "Moises":
+            jugadorActual.efectosActivos.push({ resumenEfecto: "Saltar bloqueo" });
+            break;
+        case "Wild Frank":
+            // No sé cómo poner esto
+            break;
+        case "Carpintero":
+            // Same
+            break;
+        case "Día de la marmota":
+            if (prohibidas) {
+                throw new Error("No puedes jugar esta carta en una serpiente o escalera");
+            }
+            casillaTablero.efecto= "-4";
+            break;
+        case "Salto de longitud":
+            if (prohibidas) {
+                throw new Error("No puedes jugar esta carta en una serpiente o escalera");
+            }
+            casillaTablero.efecto = "+4";
+            break;
+        case "Robo de identidad":
+            let posFichas = []
+            for (let jugador of estadoJugadores.jugadores) {
+                if (jugador.email === who) {
+                    continue;
+                }
+                for (let ficha of jugador.fichas) {
+                    if (!ficha.meta) {
+                        posFichas.push(ficha.casilla);
+                    }
+                }
+                // Tiene que seleccionar una ficha el user.
+            }
+            break;
+        case "Mal de ojo":
+            let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorObjetivo) {
+                throw new Error("Jugador objetivo no encontrado");
+            }
+            jugadorObjetivo.efectosActivos.push({ resumenEfecto: "-3" });
+            break;
+        case "Antidoto":
+            jugadorActual.efectosActivos.push({ resumenEfecto: "Antidoto" });
+            break;
+        case "Pickpocket":
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorObjetivo) {
+                throw new Error("Jugador objetivo no encontrado");
+            }
+            if (jugadorObjetivo.mano.length === 0) {
+                throw new Error("El jugador objetivo no tiene cartas en la mano");
+            }
+            const cartaRobada = jugadorObjetivo.mano.shift()!;
+            jugadorActual.mano.push(cartaRobada);
+            break;
+        case "Dardo envenenado":
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorObjetivo) {
+                throw new Error("Jugador objetivo no encontrado");
+            }
+            jugadorObjetivo.efectosActivos.push({ resumenEfecto: "1-3" });
+            break;
+        case "Dado dorado":
+            jugadorActual.efectosActivos.push({ resumenEfecto: "4-6" });
+            break;
+        case "Serpiente en tu bota":
+            // Pasar una ronda entera
+            break;
+        case "Parca":
+            posFichas = [];
+            for (let jugador of estadoJugadores.jugadores) {
+                for (let ficha of jugador.fichas) {
+                    if (!ficha.meta) {
+                        posFichas.push(ficha.casilla);
+                    }
+                }
+            }
+            // Coger ficha aleatoria y devolverla al inicio
+            break;
+        case "Cambiar de idea":
+            const cartasAlCementerio = jugadorActual.mano
+            jugadorActual.cementerio.push(...cartasAlCementerio);
+            for (let i = 0; i < 4; i++) {
+                if (jugadorActual.mazoRestante.length === 0) {
+                    jugadorActual.mazoRestante = [...jugadorActual.cementerio];
+                    jugadorActual.mazoRestante.sort(() => Math.random() - 0.5);
+                    jugadorActual.cementerio = [];
+                }
+                const cartaRobada = jugadorActual.mazoRestante.shift()!;
+                jugadorActual.mano.push(cartaRobada);
+            }
+            break;
+        case "Agujero de serpiente":
+            // Coger posición del tablero aleatoria y teletransportar una ficha ahí
+            break;
+        case "Bolsillo roto":
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorObjetivo) {
+                throw new Error("Jugador objetivo no encontrado");
+            }
+            if (jugadorObjetivo.mano.length === 0) {
+                throw new Error("El jugador objetivo no tiene cartas en la mano");
+            }
+            jugadorObjetivo.cementerio.push(...jugadorObjetivo.mano);
+            jugadorObjetivo.mano = [];
+            if (jugadorObjetivo.mazoRestante.length > 0) {
+                const cartaRobada = jugadorObjetivo.mazoRestante.shift()!;
+                jugadorObjetivo.mano.push(cartaRobada);
+            } else if (jugadorObjetivo.cementerio.length > 0) {
+                jugadorObjetivo.mazoRestante = [...jugadorObjetivo.cementerio];
+                jugadorObjetivo.mazoRestante.sort(() => Math.random() - 0.5);
+                jugadorObjetivo.cementerio = [];
+                const cartaRobada = jugadorObjetivo.mazoRestante.shift()!;
+                jugadorObjetivo.mano.push(cartaRobada);
+            }
+            break;
+        case "Compañerismo obligado":
+            let fichasActivas = jugadorActual.fichas.filter(f => !f.meta);
+            if (fichasActivas.length < 2) {
+                throw new Error("No tienes suficientes fichas en juego para usar esta carta");
+            }
+            let fichaMasAvanzada = fichasActivas[0];
+            let fichaMasAtrasada = fichasActivas[0];
+            for (let ficha of fichasActivas) {
+                if (ficha.casilla > fichaMasAvanzada.casilla) {
+                    fichaMasAvanzada = ficha;
+                }
+                if (ficha.casilla < fichaMasAtrasada.casilla) {
+                    fichaMasAtrasada = ficha;
+                }
+            }
+            let casillaDestino = fichaMasAvanzada.casilla;
+            fichaMasAtrasada.casilla = casillaDestino;
+            break;
+        case "Coleccionista":
+            jugadorActual.efectosActivos.push({ resumenEfecto: "Coleccionista" });
+            break;
+        case "Noqueo":
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorObjetivo) {
+                throw new Error("Jugador objetivo no encontrado");
+            }
+            // Saltar turno del jugador objetivo 
+            break;
+    }
+    jugadorActual.cartaJugadaEnTurno = true;
+    jugadorActual.cartasJugadas++;
+    jugadorActual.mano = jugadorActual.mano.filter(c => c !== cartaNombre);
+    jugadorActual.cementerio.push(cartaNombre);
+    const partidaUpdated = await prisma.partida.update({
+        where: { ID: partidaId },
+        data: { snapshotJugadores: estadoJugadores },
+        include: {
+            partidaJugadores: true,
+            barajas: true,
+            ganador: true,
+            tableroInicial: {
+                select: {
+                    nombre: true                }
+            }
+        }
+    });
+    return partidaUpdated;
+}
