@@ -158,5 +158,6 @@ export type Movimiento = {
 export type MovimientoReturnType = {
     partida: PartidaReturnType,
     tirada: number,
-    movimientos: Movimiento[]
+    movimientos: Movimiento[],
+    tiradaExtra?: number,
 }

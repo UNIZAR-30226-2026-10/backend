@@ -229,8 +229,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     }
 
 
-    const tirada = randomInt(1, 7);
-    jugadorActual.ultimaTirada = tirada;
+    let tirada = randomInt(1, 7);
     jugadorActual.fase = "Movimiento";
     let movimientos: Movimiento[] = [];
     let fichasBloqueadas: number[] = [];
@@ -242,7 +241,14 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
             fichasBloqueadas = jugadorActual.fichas.filter(f => f.casilla === bloqueoUsuario && !f.meta).map(f => f.id);
         }
     }
+    let tiradaExtra = 0;
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "+1 dado")){
+        tiradaExtra = randomInt(1,7);
+        tirada = tirada + tiradaExtra;
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "+1 dado");
+    }
 
+    jugadorActual.ultimaTirada = tirada;
     for (let ficha of jugadorActual.fichas) {
         if (fichasBloqueadas.length > 0 && !fichasBloqueadas.includes(ficha.id)) continue;
         if (ficha.meta) continue;
@@ -263,7 +269,11 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                     break;
                 }
                 if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
+                    if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")){
+                        pasos++;
+                    }else{
                     break;
+                    }
                 }
                 casillaActual = casillaTablero.siguientes[0];
                 pasos--;
@@ -275,6 +285,9 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 casillaActual = casillaAnterior;
                 pasos--;
             }
+        }
+        if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")){
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
         }
         casillaTablero = tablero.casillas[casillaActual];
         let movimiento: Movimiento = {
@@ -313,7 +326,8 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     return {
         partida: partidaUpdated,
         tirada: tirada,
-        movimientos: movimientos
+        movimientos: movimientos,
+        tiradaExtra: tiradaExtra
     };
 }
 
@@ -535,13 +549,13 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         prohibidas = true;
     }
     switch (cartaNombre) {
-        case "Exceso de medios":
+        case "Exceso de medios"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
             break;
         case "Moises":
             jugadorActual.efectosActivos.push({ resumenEfecto: "Saltar bloqueo" });
             break;
-        case "Wild Frank":
+        case "Wild Frank"://done 🈴
             if (inicio === undefined || fin === undefined) {
                 throw new Error("Debes indicar casilla inicio y fin para Wild Frank");
             }
@@ -554,7 +568,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             tableroPartida.casillas[inicio].saltoA = fin;
 
             break;
-        case "Carpintero":
+        case "Carpintero"://done 🈴
             if (inicio === undefined || fin === undefined) {
                 throw new Error("Debes indicar casilla inicio y fin para Carpintero");
             }
@@ -579,7 +593,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             casillaTablero.efecto = "+4";
             break;
-        case "Robo de identidad":
+        case "Robo de identidad"://done 🈴
             let posFichas = []
             for (let jugador of estadoJugadores.jugadores) {
                 if (jugador.email === player) {
@@ -638,7 +652,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             const cartaRobada = jugadorObjetivo.mano.shift()!;
             jugadorActual.mano.push(cartaRobada);
             break;
-        case "Dardo envenenado":
+        case "Dado envenenado":
             jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
@@ -648,7 +662,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Dado dorado":
             jugadorActual.efectosActivos.push({ resumenEfecto: "4-6" });
             break;
-        case "Serpiente en tu bota":
+        case "Serpiente en tu bota"://done 🈴
             // Pasar una ronda entera
             const jugadorAfectado = estadoJugadores.jugadores.find(j => j.email === who);
             jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
@@ -664,7 +678,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             // Coger ficha aleatoria y devolverla al inicio
             break;
-        case "Cambiar de idea":
+        case "Cambiar de idea"://done 🈴
             const cartasAlCementerio = jugadorActual.mano
             jugadorActual.cementerio.push(...cartasAlCementerio);
             for (let i = 0; i < 4; i++) {
@@ -680,7 +694,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Agujero de serpiente":
             // Coger posición del tablero aleatoria y teletransportar una ficha ahí
             break;
-        case "Bolsillo roto":
+        case "Bolsillo roto"://done 🈴
             jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
@@ -701,7 +715,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
                 jugadorObjetivo.mano.push(cartaRobada);
             }
             break;
-        case "Compañerismo obligado":
+        case "Compañerismo obligado"://done 🈴
             let fichasActivas = jugadorActual.fichas.filter(f => !f.meta);
             if (fichasActivas.length < 2) {
                 throw new Error("No tienes suficientes fichas en juego para usar esta carta");
@@ -722,12 +736,12 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Coleccionista":
             jugadorActual.efectosActivos.push({ resumenEfecto: "Coleccionista" });
             break;
-        case "Noqueo":
+        case "Noqueo"://done 🈴
             jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
-            // Saltar turno del jugador objetivo 
+            jugadorObjetivo.efectosActivos.push({ resumenEfecto: "Salto de turno" });
             break;
     }
     jugadorActual.cartaJugadaEnTurno = true;
