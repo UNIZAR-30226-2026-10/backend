@@ -3,7 +3,7 @@ import { Type, Static } from '@sinclair/typebox';
 
 
 export const EfectoActivoSchema = Type.Object({
-    // A COMPLETAR
+    resumenEfecto: Type.String(),
 });
 
 export const FichaSchema = Type.Object({
