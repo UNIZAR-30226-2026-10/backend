@@ -26,7 +26,6 @@ model Usuario {
   cosmeticos      Cosmeticos[] @relation("cosmeticosObtenidos")
   logros          Logros[]     @relation("logrosConseguidos")
   partidas        Partida[]    @relation("partidaJugadores")
-  online          Boolean      @default(false)
   iconoActualField String      @default("icono_default") @map("iconoActual")
   iconoActual     Cosmeticos      @relation("iconoActual", fields: [iconoActualField], references: [nombre], map: "iconoActual_fk")
   fichaActualField String      @default("ficha_default") @map("fichaActual")
@@ -64,6 +63,7 @@ model Logros {
   cartaID     String?    @unique
   carta       Carta?     @relation("RecompensaJugable", fields: [cartaID], references: [nombre], onDelete: SetNull)
   usuarios    Usuario[]  @relation("logrosConseguidos")
+  recompensaMonetaria Int?
 }
 
 model Partida {

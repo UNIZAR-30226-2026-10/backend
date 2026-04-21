@@ -8,9 +8,13 @@
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
 
-### **POST** /api/auth/sessions
+### **POST** /api/auth/login
 - Inicia sesión en el sistema.
 - Body: "email" y "password".
+
+### **POST** /api/auth/cookie_login
+- Inicia sesión en el sistema.
+- Body: cookies jwt.
 
 ### **GET** /api/users/:email/profile
 - Devuelve la información del perfil (icono, nombre, victorias, derrotas, monedas que tiene, skin actual de escalera, de serpiente y de ficha).
@@ -35,6 +39,13 @@
 ### **PUT** /api/users/:email/pawn
 - Actualiza la skin de ficha del usuario.
 - Body: "pawn".
+
+### **GET** /api/users/:email/snakes
+- Devuelve todas las skins de serpientes que tiene el usuario.
+
+### **PUT** /api/users/:email/snake
+- Actualiza la skin de serpiente del usuario.
+- Body: "snake".
 
 ### **PUT** /api/users/:email/username
 - Actualiza el nombre del usuario.
@@ -147,3 +158,30 @@
 
 
 ## ES MUY POSIBLE QUE FALTEN ALGUNAS LLAMADAS
+
+
+## Usuario (Amigos e Invitaciones)
+
+### **GET** /api/users/:email/friends
+- Devuelve la lista de amigos del usuario (SIN online/offline).
+
+### **GET** /api/users/:email/invites
+- Devuelve los usuarios que han invitado al usuario.
+
+### **POST** /api/users/:friendUsername/invites
+- Envía al usuario con friendUsername una invitación de amistad.
+- Body: "friendUsername".
+
+### **POST** /api/users/:email/friends
+- Añade a ambas listas de amigos, ambos usuarios como corresponda. Genera error si se busca un usuario que no está en el sistema o que ya está agregado.
+- Body: "friendUsername".
+
+### **DELETE** /api/users/:email/friends
+- Elimina a un usuario de la lista de amigos de :email y el usuario correspondiente a :email del amigo borrado.
+- Body: "friendUsername".
+
+## Lobby (Unirse a lobby de amigo)
+
+### **POST** /api/lobbies/join-friend
+- Permite a un usuario unirse directamente al lobby donde se encuentre un amigo (si hay hueco, etc).
+- Body: "email", "friendUsername".

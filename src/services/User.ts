@@ -1,7 +1,7 @@
 import { Tipo_Cosmetico, Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
-import { UsuarioReturnType, AuthUserReturnType } from "./ReturnTypes.js";
+import { UsuarioReturnType, AuthUserReturnType, CompleteUserReturnType } from "./ReturnTypes.js";
 
 type RelacionConfig = {
     disconnect: (prisma: any, userEmail: string, relatedId: string) => Promise<any>
@@ -225,7 +225,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
     }
 }
 
-export async function getUserByEmail(email:string) : Promise<UsuarioReturnType | null> {
+export async function getUserByEmail(email:string) : Promise<CompleteUserReturnType | null> {
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -234,7 +234,16 @@ export async function getUserByEmail(email:string) : Promise<UsuarioReturnType |
                 cartas: true,
                 cosmeticos: true,
                 logros: true,
-                barajas: true,
+                barajas: {
+                    include: {
+                        usadaEn: true,
+                        barajaCartas: {
+                            include: {
+                                carta: true
+                            }
+                        }
+                    }
+                },
                 partidas: true,
                 partidasGanadas: true,
                 iconoActual: true,
@@ -263,7 +272,7 @@ export async function deleteUserByEmail(email:string) : Promise<{ message: strin
 }
 
 export async function modifyUserByEmail(email:string, data: { password?:string, SEP?:number, ELO?:number, 
-    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number}) : Promise<UsuarioReturnType> {
+    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number, nombre?:string }) : Promise<UsuarioReturnType> {
 
     let updateData:any = {}
 

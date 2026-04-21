@@ -5,8 +5,13 @@ import cardsRoutes from "./CardsRoutes.js";
 import lobbiesRoutes from "./LobbiesRoutes.js";
 import matchesRoutes from "./MatchesRoutes.js";
 import userRoutes from "./UserRoutes.js";
+import AuxFunctionsAPI from "./AuxFunctionsAPI.js";
 
 export default async function registerRoutes(app: FastifyInstance) : Promise<void> {
+
+    app.register(
+        AuxFunctionsAPI
+    )
 
     app.register(
         achievementsRoutes,
