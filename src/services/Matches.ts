@@ -185,6 +185,142 @@ function checkBlockInBox(estadoJugadores: SnapshotJugadoresJSON, casilla: number
     return false;
 }
 
+function aplicarEfectoMasCuatro(
+    tablero: SnapshotTableroJSON,
+    jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
+    posicionInicial: number,
+    estadoJugadores?: SnapshotJugadoresJSON
+): number {
+    let posicionFinal = posicionInicial;
+    let pasos = 4;
+    let haciaAtras = false;
+    while (pasos > 0) {
+        const casillaActual = tablero.casillas[posicionFinal];
+        if(!haciaAtras){
+            if (!casillaActual|| casillaActual.siguientes.length === 0) {
+                break;
+            }
+            if(casillaActual.tipo === "Meta"){
+                haciaAtras = true;
+            }
+            if(pasos===1&&checkBlockInBox(estadoJugadores, casillaActual.siguientes[0])){
+                break;
+            }
+            posicionFinal = casillaActual.siguientes[0];
+            pasos--;
+        }else{
+            let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(casillaActual));
+            if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)) {
+                break;
+            }
+            posicionFinal = casillaAnterior;
+            pasos--;
+        }
+    }
+
+    const casillaFinal = tablero.casillas[posicionFinal];
+    if (casillaFinal.tipo === "Escalera") {
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+
+    if (casillaFinal.tipo === "Serpiente") {
+        const tieneAntidoto = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto");
+        if (tieneAntidoto) {
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+            return posicionFinal;
+        }
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+    if(casillaFinal.efecto==="+4"){
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+    }
+    if(casillaFinal.efecto==="-4"){
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+    }
+    if(casillaFinal.efecto === "Agujero de Serpiente"){
+        return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+    }
+
+    return posicionFinal;
+}
+function aplicarEfectoMenosCuatro(
+    tablero: SnapshotTableroJSON,
+    jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
+    posicionInicial: number,
+    estadoJugadores?: SnapshotJugadoresJSON
+): number {
+    let posicionFinal = posicionInicial;
+    let pasos = 4;
+    while (pasos > 0) {
+        const casillaActual = tablero.casillas[posicionFinal];
+        let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(casillaActual));
+            if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)&&pasos===1) {
+                break;
+        }
+        posicionFinal = casillaAnterior;
+        pasos--;
+    }
+
+    const casillaFinal = tablero.casillas[posicionFinal];
+    if (casillaFinal.tipo === "Escalera") {
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+
+    if (casillaFinal.tipo === "Serpiente") {
+        const tieneAntidoto = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto");
+        if (tieneAntidoto) {
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+            return posicionFinal;
+        }
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+    if(casillaFinal.efecto==="+4"){
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+    }
+    if(casillaFinal.efecto==="-4"){
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+    }
+    if(casillaFinal.efecto === "Agujero de Serpiente"){
+        return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+    }
+
+    return posicionFinal;
+}
+function aplicarEfectoAgujeroSerpiente(
+    tablero: SnapshotTableroJSON,
+    jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
+    estadoJugadores?: SnapshotJugadoresJSON
+): number {
+    //tpea a una posicion aleatoria
+        let posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
+        while (checkBlockInBox(estadoJugadores, posicionFinal) || tablero.casillas[posicionFinal].tipo === "Vacia") {
+            posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
+        }
+        
+    const casillaFinal = tablero.casillas[posicionFinal];
+        if (casillaFinal.tipo === "Escalera") {
+            return casillaFinal.saltoA ?? posicionFinal;
+        }
+        if (casillaFinal.tipo === "Serpiente") {
+            const tieneAntidoto = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto");
+            if (tieneAntidoto) {
+                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+                return posicionFinal;
+            }
+            return casillaFinal.saltoA ?? posicionFinal;
+        }
+        if(casillaFinal.efecto==="+4"){
+            return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+        }
+        if(casillaFinal.efecto==="-4"){
+            return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+        }
+        if(casillaFinal.efecto === "Agujero de Serpiente"){
+            return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+        }
+        return posicionFinal;
+
+}
 export async function throwDice(partidaId: string, player: string): Promise<MovimientoReturnType> {
 
     const partida = await prisma.partida.findUnique({
@@ -230,6 +366,14 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
 
 
     let tirada = randomInt(1, 7);
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "1-3")) {
+        tirada = randomInt(1, 4);
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "1-3");
+    }
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "4-6")) {
+        tirada = randomInt(4, 7);
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "4-6");
+    }
     jugadorActual.fase = "Movimiento";
     let movimientos: Movimiento[] = [];
     let fichasBloqueadas: number[] = [];
@@ -247,7 +391,11 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         tirada = tirada + tiradaExtra;
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "+1 dado");
     }
-
+    if(jugadorActual.efectosActivos.some(e=> e.resumenEfecto ==="-3")){
+        tiradaExtra = -3;
+        tirada = tirada + tiradaExtra;
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "-3");
+    }
     jugadorActual.ultimaTirada = tirada;
     for (let ficha of jugadorActual.fichas) {
         if (fichasBloqueadas.length > 0 && !fichasBloqueadas.includes(ficha.id)) continue;
@@ -303,11 +451,15 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     jugadorActual.movimientosPermitidos = movimientos.map(m => {
         let final = m.casillaDestino;
         let casilla = tablero.casillas[final];
-        if (casilla.tipo === "Escalera" || casilla.tipo === "Serpiente") {
+        if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente"&&!jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
             return casilla.saltoA!;
         }
         return final;
     });
+    
+    if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")){
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+    }
        const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
@@ -413,7 +565,34 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             fichaAActualizar.casilla = casillaActual;        
         }  
 
-        if(tablero.casillas[casillaDestino].tipo !== "Bifurcacion"||(tablero.casillas[casillaDestino].tipo==="Bifurcacion"&&(pasosRestantes===undefined||pasosRestantes===0))){ 
+        if(tablero.casillas[casillaDestino].tipo !== "Bifurcacion"||(tablero.casillas[casillaDestino].tipo==="Bifurcacion"&&(pasosRestantes===undefined||pasosRestantes===0))){
+            const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
+            if(casillaConEfecto.efecto==="-4"){
+                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla);
+                fichaAActualizar.casilla = nuevaCasilla;
+                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                    fichaAActualizar.meta = true;
+                }
+            }
+            if(casillaConEfecto.efecto ==="+4"){
+                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla);
+                fichaAActualizar.casilla = nuevaCasilla;
+                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                    fichaAActualizar.meta = true;
+                }
+            }
+            if(casillaConEfecto.efecto === "Agujero de Serpiente"){
+                const nuevaCasilla = aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+                fichaAActualizar.casilla = nuevaCasilla;
+                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                    fichaAActualizar.meta = true;
+                }
+            }
+            if(fichaAActualizar.meta){
+                if(jugadorActual.fichas.every(f => f.meta)){
+                    //return await finishMatch(partidaId, jugadorActual.email);
+                }
+            }
            estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
             let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
             siguienteJugador.fase = "Cartas";
@@ -422,6 +601,17 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                 if (cartaRobada){
                    siguienteJugador.mano.push(cartaRobada);
                 }
+                
+                if(siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")){
+                    if(siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4){
+                        const cartaRobada2 = siguienteJugador.mazoRestante.shift()!;
+                        if(cartaRobada2){
+                            siguienteJugador.mano.push(cartaRobada2);
+                        }
+
+                    }
+                }
+
             } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
                 siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
                 siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
@@ -552,7 +742,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Exceso de medios"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
             break;
-        case "Moises":
+        case "Moises"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "Saltar bloqueo" });
             break;
         case "Wild Frank"://done 🈴
@@ -581,13 +771,13 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             tableroPartida.casillas[inicio].saltoA = fin;
 
             break;
-        case "Día de la marmota":
+        case "Día de la marmota"://done 🈴
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
             casillaTablero.efecto= "-4";
             break;
-        case "Salto de longitud":
+        case "Salto de longitud"://done 🈴
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
@@ -631,17 +821,17 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             // Y cambia a la ficha que habia ahi por la posicion en la que estaba el jugador actual
             
             break;
-        case "Mal de ojo":
+        case "Mal de ojo"://done 🈴
             let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
             jugadorObjetivo.efectosActivos.push({ resumenEfecto: "-3" });
             break;
-        case "Antidoto":
+        case "Antidoto"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "Antidoto" });
             break;
-        case "Pickpocket":
+        case "Pickpocket"://done 🈴
             jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
@@ -652,14 +842,14 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             const cartaRobada = jugadorObjetivo.mano.shift()!;
             jugadorActual.mano.push(cartaRobada);
             break;
-        case "Dado envenenado":
+        case "Dado envenenado"://done  🈴
             jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
             jugadorObjetivo.efectosActivos.push({ resumenEfecto: "1-3" });
             break;
-        case "Dado dorado":
+        case "Dado dorado"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "4-6" });
             break;
         case "Serpiente en tu bota"://done 🈴
@@ -667,15 +857,17 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             const jugadorAfectado = estadoJugadores.jugadores.find(j => j.email === who);
             jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
             break;
-        case "Parca":
-            posFichas = [];
+        case "Parca"://done 🈴
+            let Fichas = [];
             for (let jugador of estadoJugadores.jugadores) {
                 for (let ficha of jugador.fichas) {
                     if (!ficha.meta) {
-                        posFichas.push(ficha.casilla);
+                        Fichas.push(ficha);
                     }
                 }
             }
+            let fichaAfectada = Math.floor(Math.random() * Fichas.length);
+            Fichas[fichaAfectada].casilla = 0;
             // Coger ficha aleatoria y devolverla al inicio
             break;
         case "Cambiar de idea"://done 🈴
@@ -691,7 +883,11 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
                 jugadorActual.mano.push(cartaRobada);
             }
             break;
-        case "Agujero de serpiente":
+        case "Agujero de serpiente"://done 🈴
+            if(prohibidas){
+                throw new Error("No puedes jugar esta carta en una serpiente o escalera");
+            }
+            casillaTablero.efecto = "Agujero de serpiente";
             // Coger posición del tablero aleatoria y teletransportar una ficha ahí
             break;
         case "Bolsillo roto"://done 🈴
@@ -733,7 +929,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             let casillaDestino = fichaMasAvanzada.casilla;
             fichaMasAtrasada.casilla = casillaDestino;
             break;
-        case "Coleccionista":
+        case "Coleccionista"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "Coleccionista" });
             break;
         case "Noqueo"://done 🈴
