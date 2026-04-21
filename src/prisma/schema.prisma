@@ -63,6 +63,7 @@ model Logros {
   cartaID     String?    @unique
   carta       Carta?     @relation("RecompensaJugable", fields: [cartaID], references: [nombre], onDelete: SetNull)
   usuarios    Usuario[]  @relation("logrosConseguidos")
+  recompensaMonetaria Int?
 }
 
 model Partida {
