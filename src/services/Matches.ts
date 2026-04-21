@@ -4,6 +4,9 @@ import { JugadorEstadoSchema, SnapshotJugadoresJSON, SnapshotTableroJSON } from 
 import { lobbyManager } from "../managers/lobbyManager.js";
 import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento } from "./ReturnTypes.js";
 import { randomInt } from "node:crypto";
+import { modifyUserByEmail,getUserByEmail } from "./User.js";
+import { get } from "node:http";
+import { checkAchievementsForCompletion } from "./Achievements.js";
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 
@@ -661,8 +664,20 @@ async function finishMatch(partidaId: string, ganadorEmail: string): Promise<Par
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
+    //sep a ganador 100
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
     const jugadorGanador = estadoJugadores.jugadores.find(j => j.email === ganadorEmail);
+    for (let jugador of estadoJugadores.jugadores){
+        let jugadorJuego = await getUserByEmail(jugador.email) as Usuario;
+        await modifyUserByEmail(jugador.email, {
+            SEP: jugadorJuego.SEP+ (jugador.email === ganadorEmail ? 100 : 30),
+            victorias: jugador.email === ganadorEmail ? 1 : 0,
+            partidasJugadas: jugadorJuego.partidasJugadas + 1,
+            derrotas: jugador.email === ganadorEmail ? 0 : 1,
+            cartasJugadas: jugador.cartasJugadas,
+        });        
+        let LogrosAnt=checkAchievementsForCompletion(jugador.email);
+    }
     if (!jugadorGanador) {
         throw new Error("El jugador ganador no pertenece a esta partida");
     }
