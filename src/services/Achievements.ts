@@ -89,7 +89,7 @@ export async function deleteAchievement(nombre: string): Promise<{ message: stri
     }
 }
 
-export async function checkAchievementsForCompletion(userEmail: string): Promise<LogrosReturnType[]> {
+export async function checkAchievementsForCompletion(userEmail: string): Promise<Logros[]> {
     try {
         // Excluir logros que ya estén completados por el usuario (usuarios con ese email)
         const incompleteAchievements = await prisma.logros.findMany({
@@ -123,6 +123,8 @@ export async function checkAchievementsForCompletion(userEmail: string): Promise
             throw new Error("Usuario no encontrado");
         }
 
+        let arrCompleted : Logros[] = [];
+
         for (const achievement of incompleteAchievements) {
             let isCompleted = false;
             switch (achievement.tipo) {
@@ -150,6 +152,7 @@ export async function checkAchievementsForCompletion(userEmail: string): Promise
             }
 
             if (isCompleted) {
+                arrCompleted.push(achievement);
                 await prisma.usuario.update({
                     where: { email: userEmail },
                     data: {
@@ -161,10 +164,41 @@ export async function checkAchievementsForCompletion(userEmail: string): Promise
             }
         }
 
-        return incompleteAchievements
+        return arrCompleted;
     } catch (error) {
         console.error("Error al verificar los logros para finalización:", error);
         throw new Error("Error al verificar los logros para finalización");
+    }
+}
+
+export async function giveAchievementsRewards(userEmail: string, achievements: Logros[]): Promise<void> {
+    try {
+        for (const achievement of achievements) {
+            if (achievement.cartaID) {
+                await prisma.usuario.update({
+                    where: { email: userEmail },
+                    data: {
+                        cartas: {
+                            connect: { nombre: achievement.cartaID }
+                        }
+                    }
+                });
+            }
+
+            if (achievement.recompensaMonetaria) {
+                await prisma.usuario.update({
+                    where: { email: userEmail },
+                    data: {
+                        SEP: {
+                            increment: achievement.recompensaMonetaria
+                        }
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error("Error al otorgar recompensas por logros:", error);
+        throw new Error("Error al otorgar recompensas por logros");
     }
 }
 
@@ -174,5 +208,6 @@ export default {
     getAllAchievements,
     updateAchievement,
     deleteAchievement,
-    checkAchievementsForCompletion
+    checkAchievementsForCompletion,
+    giveAchievementsRewards
 };
