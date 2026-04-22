@@ -36,25 +36,19 @@ export async function cosmeticosPorDefecto() {
             descripcion: "Escalera por defecto"
         },
         {
-            nombre: "escalera_coleccionista",
-            tipo : Tipo_Cosmetico.Skin_Escalera,
-            precio: 0,
-            descripcion: "Escalera con diseño de monedas"
-        },
-        {
             nombre: "icono_nerd",
             tipo : Tipo_Cosmetico.Icono,
             precio: 300,
             descripcion: "Icono con gafas de nerd"
         },
         {
-            nombre:"completista",
+            nombre:"icono_completista",
             tipo : Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de trofeo de completista"
         },
         {
-            nombre:"platino",
+            nombre:"icono_platino",
             tipo : Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de trofeo de platino"
@@ -113,6 +107,30 @@ export async function cosmeticosPorDefecto() {
             precio: 700,
             descripcion: "Ficha con diseño de moneda"
         },
+        {
+            nombre:"serpiente_calcetin",
+            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            precio: 800,
+            descripcion: "Serpiente con diseño de calcetín"
+        },
+        {
+            nombre: "serpiente_tribal",
+            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            precio: 700,
+            descripcion: "Serpiente con diseño de patrón tribal"
+        },
+        {   
+            nombre: "serpiente_futuro",
+            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            precio: 900,
+            descripcion: "Serpiente con diseño de estilo futurista"
+        },
+        {
+            nombre: "escalera_jungla",
+            tipo : Tipo_Cosmetico.Skin_Escalera,
+            precio: 600,
+            descripcion: "Escalera con diseño de lianas de jungla"
+        }
     ];
 
     for (const cosmetico of cosmeticos) {
@@ -312,11 +330,34 @@ export async function cuentaAdminPorDefecto() {
         email: emailAdmin,
         nombre: "Admin",
         password:"admin123",
+        SEP: 10000,
+        logros: [],
+        cosmeticos: [],
+        partidasJugadas: 0,
+        partidasGanadas: 0,
+
     });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_default" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_nerd" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_completista" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_platino" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_L" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_W" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_cofre" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_estratega" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_magnate" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_totem" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_aventurero" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_esqueleto" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_moneda" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_calcetin" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_tribal" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_futuro" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_jungla" });
+
 }
 
 export async function efectosPoblacion(){
@@ -431,7 +472,7 @@ export async function logrosPoblacion() {
             descripcion: "Gana tu primera partida",
             requisito:1,
             tipo: Tipo_Logro.Victorias,
-            cartaID : null
+            cartaID : "Serpiente en tu bota"
         },
         {
             nombre: "En racha",
@@ -445,7 +486,7 @@ export async function logrosPoblacion() {
             descripcion: "Gana 10 partidas",
             requisito:10,
             tipo: Tipo_Logro.Victorias,
-            cartaID : null
+            cartaID : "Wild Frank"
         },
         {
             nombre: "Manos a la obra",
@@ -480,7 +521,7 @@ export async function logrosPoblacion() {
             descripcion: "Pierde tu primera partida",
             requisito:1,
             tipo: Tipo_Logro.Derrotas,
-            cartaID : null
+            cartaID : "Pickpocket"
         },
         {
             nombre: "Resiliente",
@@ -494,7 +535,7 @@ export async function logrosPoblacion() {
             descripcion: "Pierde 10 partidas",
             requisito:10,
             tipo: Tipo_Logro.Derrotas,
-            cartaID : null
+            cartaID : "Carpintero"
         },
         {
             nombre: "Coleccionista",
@@ -508,7 +549,7 @@ export async function logrosPoblacion() {
             descripcion: "Completa 8 logros",
             requisito:8,
             tipo: Tipo_Logro.LogrosCompletados,
-            cartaID : null
+            cartaID : "Mal de ojo"
         },
         {
             nombre: "Platino",
