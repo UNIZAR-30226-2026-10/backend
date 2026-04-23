@@ -107,9 +107,13 @@
 ### **GET** /api/lobbies/:lobby-id
 - Devuelve la información asociada a un lobby. Sirve también para comprobar si la partida ya ha sido iniciada.
 
-### **POST** /api/lobbies/:lobby-id/players
-- Un jugador se une a la lobby si es posible.
-- Body: "email" y "username".
+### **POST** /api/lobbies/:lobby-id/invitations
+- Envía una invitación a un amigo para que se una al lobby.
+- Body: "inviteFrom" y "inviteFor".
+
+### **PUT** /api/lobbies/:lobby-id/invitations
+- Acepta o rechaza una invitación a un lobby.
+- Body: "inviteFor", "username", "inviteFrom" y "accept" (boolean).
 
 ### **POST** /api/lobbies/:lobby-id/bots
 - Añade un bot al lobby si es posible.
@@ -117,11 +121,15 @@
 
 ### **PUT** /api/lobbies/:lobby-id/players/:email/deck
 - Selecciona el mazo a jugar en la partida por el usuario.
-- Body: "deck_name".
+- Body: "deck".
 
 ### **PUT** /api/lobbies/:lobby-id/players/:email/ready
 - Establece si el jugador está listo o no para comenzar la partida.
-- Body: "is_ready".
+- Body: "ready".
+
+### **PUT** /api/lobbies/:lobby-id/board
+- Establece el tablero a jugar en la partida.
+- Body: "requested_by" y "board".
 
 ### **DELETE** /api/lobbies/:lobby-id/players/:email
 - El jugador abandona el lobby o es expulsado por el líder. Si el usuario que abandona es el líder se destruye el lobby.
