@@ -259,6 +259,52 @@ export async function getUserByEmail(email:string) : Promise<CompleteUserReturnT
     }
 }
 
+export async function getUserMatches(email:string) {
+    try {
+        const matches = await prisma.usuario.findUnique({
+            where: { email },
+            include: {
+                partidas: {
+                    select: {
+                        configuracion: false,
+                        ID: true,
+                        fechaInicio: true,
+                        tableroInicialNombre: true
+                    },
+
+                    include: {
+                        partidaJugadores: {
+                            select: {
+                                nombre: true,
+                            }
+                        }
+                    },
+                
+                    where: {
+                        ganadorEmail: null
+                    }
+                }
+            }
+        })
+        return matches
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
+export async function getUserByEmailBasic(email:string) {
+    try {
+        const user = await prisma.usuario.findUnique({
+            where: { email }
+        })
+        return user
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
 export async function deleteUserByEmail(email:string) : Promise<{ message: string }> {
     try {
         await prisma.usuario.delete({
@@ -494,6 +540,7 @@ const passwordHelper = (password:string): string | null => {
 export default {
     createUser,
     getUserByEmail,
+    getUserMatches,
     deleteUserByEmail,
     modifyUserByEmail,
     getAllUsers,

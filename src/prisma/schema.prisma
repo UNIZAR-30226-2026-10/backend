@@ -74,11 +74,11 @@ model Partida {
   fechaFin             DateTime?
   configuracion        Json
   snapshotTablero      Json
-  tableroInicialNombre String?
+  tableroInicialNombre String
   ganadorEmail         String?
   barajas              BarajaPartida[]
   ganador              Usuario?        @relation("partidaGanador", fields: [ganadorEmail], references: [email])
-  tableroInicial       TableroInicial? @relation("inicio", fields: [tableroInicialNombre], references: [nombre])
+  tableroInicial       TableroInicial @relation("inicio", fields: [tableroInicialNombre], references: [nombre])
   partidaJugadores     Usuario[]       @relation("partidaJugadores")
 }
 
