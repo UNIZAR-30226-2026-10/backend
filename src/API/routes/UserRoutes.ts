@@ -6,6 +6,7 @@ import Cosmetics from "../../services/Cosmetics.js";
 import Achievements from "../../services/Achievements.js";
 import { Rareza, Tipo_Carta, Tipo_Cosmetico, Tipo_Logro } from "../../generated/prisma/enums.js";
 import Deck from "../../services/Deck.js";
+import { lobbyManager } from "../../managers/lobbyManager.js";
 
 export default function userRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
@@ -648,8 +649,118 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    
+    app.get("/:email/friends", {
+        schema: {
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    friends: Type.Array(Type.String())
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
 
+        try {
+            const friends = await User.getAmigos(email);
+            return reply.status(200).send({ friends });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
 
+    app.get("/:email/invites", {
+        schema: {
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    invites: Type.Array(Type.Object({
+                        inviteFor: Type.String(),
+                        inviteFrom: Type.String(),
+                        partidaID: Type.String()
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+        
+        try {
+            const invites = lobbyManager.getInvitesOfPlayer(email);
+            return reply.status(200).send({ invites });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
+    app.post("/:email/:friendUsername/invites", {
+        schema: {
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                friendUsername: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        try {
+            const amigos = await User.addAmigo(email, friendUsername);
+            return reply.status(200).send({ message: amigos });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
+    app.delete("/:email/friends", {
+        schema: {
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                friendUsername: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        try {
+            const amigos = await User.removeAmigo(email, friendUsername);
+            return reply.status(200).send({ message: amigos });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
 
 }

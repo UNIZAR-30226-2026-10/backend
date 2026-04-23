@@ -172,7 +172,6 @@ const Relaciones : Record<string, RelacionConfig> = {
 }
 
 export async function createUser(data: { email:string, password:string, nombre:string }) : Promise<UsuarioReturnType> {
-    data.email = data.email.toLowerCase()
     // Verificar correctitud del email
     if(!await emailHelper(data.email)) throw new Error("Email no valido o ya registrado")
 
@@ -386,8 +385,40 @@ export async function getAllUsers() : Promise<UsuarioReturnType[]> {
     }
 }
 
-export async function addAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string }> {
+export async function getAmigos(userEmail:string) : Promise<String[]> {
     try {
+        const user = await prisma.usuario.findUnique({
+            where: { email: userEmail },
+            include: {
+                amigos: {
+                    select: {
+                        nombre: true,
+                    }
+                }
+            }
+        });
+        if (!user) {
+            throw new Error("Usuario no encontrado");
+        }
+        return user.amigos.map((amigo: any) => amigo.email);
+    } catch (error) {
+        console.error("Error al obtener amigos:", error);
+        throw new Error("Error al obtener amigos");
+    }
+}
+
+export async function addAmigo(userEmail:string, amigoUsername:string) : Promise<{ message: string }> {
+    try {
+        const amigo = await prisma.usuario.findUnique({
+            where: { nombre: amigoUsername }
+        });
+
+        if (!amigo) {
+            throw new Error("Amigo no encontrado");
+        }
+
+        const amigoEmail = amigo.email;
+
         await Relaciones["amigos"].connect(prisma, userEmail, amigoEmail)
         await Relaciones["amigos"].connect(prisma, amigoEmail, userEmail)
         return { message: "Amigo añadido correctamente" }
@@ -397,8 +428,18 @@ export async function addAmigo(userEmail:string, amigoEmail:string) : Promise<{ 
     }
 }
 
-export async function removeAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string }> {
+export async function removeAmigo(userEmail:string, amigoUsername:string) : Promise<{ message: string }> {
     try {
+        const amigo = await prisma.usuario.findUnique({
+            where: { nombre: amigoUsername }
+        });
+
+        if (!amigo) {
+            throw new Error("Amigo no encontrado");
+        }
+
+        const amigoEmail = amigo.email;
+
         await Relaciones["amigos"].disconnect(prisma, userEmail, amigoEmail)
         await Relaciones["amigos"].disconnect(prisma, amigoEmail, userEmail)
         return { message: "Amigo eliminado correctamente" }
@@ -544,6 +585,7 @@ export default {
     deleteUserByEmail,
     modifyUserByEmail,
     getAllUsers,
+    getAmigos,
     addAmigo,
     removeAmigo,
     connectRelacion,

@@ -176,20 +176,9 @@
 ### **GET** /api/users/:email/invites
 - Devuelve los usuarios que han invitado al usuario.
 
-### **POST** /api/users/:friendUsername/invites
-- Envía al usuario con friendUsername una invitación de amistad.
-- Body: "friendUsername".
-
-### **POST** /api/users/:email/friends
-- Añade a ambas listas de amigos, ambos usuarios como corresponda. Genera error si se busca un usuario que no está en el sistema o que ya está agregado.
-- Body: "friendUsername".
+### **POST** /api/users/:email/:friendUsername/friends
+- Envía al usuario con friendUsername una solicitud de amistad.
 
 ### **DELETE** /api/users/:email/friends
 - Elimina a un usuario de la lista de amigos de :email y el usuario correspondiente a :email del amigo borrado.
 - Body: "friendUsername".
-
-## Lobby (Unirse a lobby de amigo)
-
-### **POST** /api/lobbies/join-friend
-- Permite a un usuario unirse directamente al lobby donde se encuentre un amigo (si hay hueco, etc).
-- Body: "email", "friendUsername".
