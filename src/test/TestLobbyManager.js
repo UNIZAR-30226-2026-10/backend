@@ -75,12 +75,12 @@ describe("Lobby Manager", () => {
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
         let devuelto = manager.deletePlayer("ag@gmail.com", "aplayer@gmail.com", lobby.idLobby)
         assert.equal(lobby.numJugadores, 1)
-        assert.equal(devuelto, "PLAYER_KICKED")
+        assert.equal(devuelto, lobby)
     })
     test("Salir de un Lobby siendo el líder", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         let devuelto = manager.deletePlayer("ag@gmail.com", "ag@gmail.com", lobby.idLobby)
-        assert.equal(devuelto, "LEADER_EXITED")
+        assert.equal(devuelto, lobby)
         assert.throws(() => {
             manager.getLobby(lobby.idLobby)
         }, new Error("LOBBY_NOT_FOUND"))
@@ -90,7 +90,7 @@ describe("Lobby Manager", () => {
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
         let devuelto = manager.deletePlayer("aplayer@gmail.com", "aplayer@gmail.com", lobby.idLobby)
         assert.equal(lobby.numJugadores, 1)
-        assert.equal(devuelto, "PLAYER_LEFT")
+        assert.equal(devuelto, lobby)
     })
     test("Expulsar a un jugador de una lobby inexistente", () => {
         assert.throws(() => {
@@ -116,7 +116,7 @@ describe("Lobby Manager", () => {
         let botId = lobby.jugadores[1].idJugador
         let devuelto = manager.deletePlayer("ag@gmail.com", botId, lobby.idLobby)
         assert.equal(lobby.numBots, 0)
-        assert.equal(devuelto, "PLAYER_KICKED")
+        assert.equal(devuelto, lobby)
     })
     test("Seleccionar mazo", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})

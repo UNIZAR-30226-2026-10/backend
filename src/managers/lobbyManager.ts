@@ -114,7 +114,7 @@ export class LobbyManager {
         return lobby
     }
 
-    deletePlayer(requestBy: string, idJugador: string, lobbyID: string) {
+    deletePlayer(requestBy: string, idJugador: string, lobbyID: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (requestBy !== lobby.idCreador) {
@@ -124,12 +124,11 @@ export class LobbyManager {
                 lobby.numJugadores--
                 lobby.jugadores = lobby.jugadores.filter(i => i.idJugador !== idJugador)
                 this.jugadoresEnCola.delete(idJugador)
-                return "PLAYER_LEFT"
+                return lobby
             } else {
                 throw new Error("WRONG_LOBBY")
             }
-        }
-        if (requestBy === lobby.idCreador) {
+        } else {
             if (lobby.idCreador === idJugador) {
                 lobby.jugadores.forEach(jugador => {
                     if (!jugador.esIA) {
@@ -137,7 +136,7 @@ export class LobbyManager {
                     }
                 });
                 this.lobbies.delete(lobbyID)
-                return "LEADER_EXITED"
+                return lobby
             } else {
                 const aEliminar = lobby.jugadores.find(i => i.idJugador === idJugador)
                 if (!aEliminar) {
@@ -150,27 +149,28 @@ export class LobbyManager {
                     }
                     lobby.jugadores = lobby.jugadores.filter(i => i.idJugador !== idJugador)
                     lobby.numJugadores--
-                    return "PLAYER_KICKED"
+                    return lobby
                 }
             }
         }
     }
 
-    selectDeck(idJugador: string, lobbyID: string, mazo: string) { // El mazo esta verificado que existe para el jugador, no lo verificamos aquí
+    selectDeck(idJugador: string, lobbyID: string, mazo: string): Lobby { // El mazo esta verificado que existe para el jugador, no lo verificamos aquí
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")
         const jugador = lobby.jugadores.find(i => i.idJugador === idJugador)
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.nombreMazo = mazo
-
+        return lobby
     }
 
-    changeBoard(requestBy: string, lobbyID: string, tablero: string) {
+    changeBoard(requestBy: string, lobbyID: string, tablero: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (requestBy !== lobby.idCreador) throw new Error("CANT_CHANGE_BOARD")
         lobby.tablero = tablero
+        return lobby
     }
 
     getLobby(lobbyID: string): Lobby {
@@ -179,7 +179,7 @@ export class LobbyManager {
         return lobby
     }
 
-    deleteLobby(lobbyID: string) {
+    deleteLobby(lobbyID: string): string {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         lobby.jugadores.forEach(jugador => {
@@ -191,13 +191,14 @@ export class LobbyManager {
         return "LOBBY_DELETED"
     }
 
-    setReady(lobbyID: string, idJugador: string, ready: boolean) {
+    setReady(lobbyID: string, idJugador: string, ready: boolean): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")
         const jugador = lobby.jugadores.find(i => i.idJugador === idJugador)
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.estaListo = ready
+        return lobby
     }
 }
 
