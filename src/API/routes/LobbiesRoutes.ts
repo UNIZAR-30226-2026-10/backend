@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
-import { UnauthorizedSessionToken } from "./AuxFunctionsAPI.js";
+import { UnauthorizedSessionToken, ForbiddenSessionToken } from "./AuxFunctionsAPI.js";
 import { lobbyManager } from "../../managers/lobbyManager.js";
 import Boards from "../../services/Boards.js";
 import User from "../../services/User.js";
@@ -331,6 +331,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     error: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -397,6 +398,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 400: Type.Object({
                     error: Type.String()
                 }),
+                403: ForbiddenSessionToken,
                 401: UnauthorizedSessionToken,
                 404: Type.Object({
                     error: Type.String()
@@ -518,9 +520,12 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     error: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
-                403: Type.Object({
-                    error: Type.String()
-                }),
+                403: Type.Union([
+                    ForbiddenSessionToken,
+                    Type.Object({
+                        error: Type.String()
+                    })
+                ]),
                 404: Type.Object({
                     error: Type.String()
                 })

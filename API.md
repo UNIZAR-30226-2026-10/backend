@@ -52,6 +52,17 @@
 - Body: "username".
 
 
+## Cosméticos.
+
+
+### **GET** /api/cosmetics/store/:email
+- Devuelve todos los cosméticos disponibles para comprar y si el usuario tiene cada uno de ellos o no.
+
+### **POST** /api/cosmetics/store/:email
+- Compra un cosmetico.
+- Body: "cosmetic_name".
+
+
 ## Logros.
 
 
