@@ -564,3 +564,6 @@ export async function logrosPoblacion() {
     }
 }
 
+export async function tablerosPoblacion() {
+    
+}
