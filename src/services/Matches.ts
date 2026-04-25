@@ -14,6 +14,18 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     if (!lobby) {
         throw new Error("Lobby no encontrado");
     }
+    if (lobby.jugadores.length < 2) {
+        throw new Error("No hay suficientes jugadores para iniciar la partida");
+    }
+
+    const allDeckSelected = lobby.jugadores.every(jugador => jugador.nombreMazo);
+    const allReady = lobby.jugadores.every(jugador => jugador.estaListo);
+    if (!allDeckSelected) {
+        throw new Error("No todos los jugadores han seleccionado un mazo");
+    }
+    if (!allReady) {
+        throw new Error("No todos los jugadores están listos");
+    }
 
     const jugadores = lobby.jugadores;
     const tablero = lobby.tablero;
@@ -49,6 +61,12 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
             jugadorJson.mazoRestante = nombresCartas;
         } else {
+            const cartas  = await prisma.barajaCarta.findMany({
+                where: { barajaNombre: "mazoPorDefecto" },
+                select: { cartaNombre: true }
+            });
+            const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
+            jugadorJson.mazoRestante = nombresCartas;
             // mazoPorDefecto aún no implementaado
         }
         if (jugadorJson.mazoRestante.length >= 4) {
@@ -70,6 +88,11 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         data: {
             estado: Estado.EnCurso,
             snapshotJugadores: jsonJugadores,
+            configuracion: {
+                tablero,
+                numeroJugadores: jugadores.length,
+                numeroBots: lobby.numBots
+            },
             snapshotTablero: jsonTablero,
             tableroInicialNombre: tablero,
             partidaJugadores: {
@@ -192,7 +215,7 @@ function aplicarEfectoMasCuatro(
     tablero: SnapshotTableroJSON,
     jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
     posicionInicial: number,
-    estadoJugadores?: SnapshotJugadoresJSON
+    estadoJugadores: SnapshotJugadoresJSON
 ): number {
     let posicionFinal = posicionInicial;
     let pasos = 4;
@@ -212,7 +235,7 @@ function aplicarEfectoMasCuatro(
             posicionFinal = casillaActual.siguientes[0];
             pasos--;
         }else{
-            let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(casillaActual));
+            let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(posicionFinal));
             if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)) {
                 break;
             }
@@ -235,10 +258,10 @@ function aplicarEfectoMasCuatro(
         return casillaFinal.saltoA ?? posicionFinal;
     }
     if(casillaFinal.efecto==="+4"){
-        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
     if(casillaFinal.efecto==="-4"){
-        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
     if(casillaFinal.efecto === "Agujero de Serpiente"){
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
@@ -250,13 +273,13 @@ function aplicarEfectoMenosCuatro(
     tablero: SnapshotTableroJSON,
     jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
     posicionInicial: number,
-    estadoJugadores?: SnapshotJugadoresJSON
+    estadoJugadores: SnapshotJugadoresJSON
 ): number {
     let posicionFinal = posicionInicial;
     let pasos = 4;
     while (pasos > 0) {
         const casillaActual = tablero.casillas[posicionFinal];
-        let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(casillaActual));
+        let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(posicionFinal));
             if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)&&pasos===1) {
                 break;
         }
@@ -278,10 +301,10 @@ function aplicarEfectoMenosCuatro(
         return casillaFinal.saltoA ?? posicionFinal;
     }
     if(casillaFinal.efecto==="+4"){
-        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
     if(casillaFinal.efecto==="-4"){
-        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
     if(casillaFinal.efecto === "Agujero de Serpiente"){
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
@@ -292,11 +315,11 @@ function aplicarEfectoMenosCuatro(
 function aplicarEfectoAgujeroSerpiente(
     tablero: SnapshotTableroJSON,
     jugadorActual: SnapshotJugadoresJSON["jugadores"][number],
-    estadoJugadores?: SnapshotJugadoresJSON
+    estadoJugadores: SnapshotJugadoresJSON
 ): number {
     //tpea a una posicion aleatoria
         let posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
-        while (checkBlockInBox(estadoJugadores, posicionFinal) || tablero.casillas[posicionFinal].tipo === "Vacia") {
+        while (checkBlockInBox(estadoJugadores, posicionFinal) || tablero.casillas[posicionFinal].tipo === "Vacía") {
             posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
         }
         
@@ -313,10 +336,10 @@ function aplicarEfectoAgujeroSerpiente(
             return casillaFinal.saltoA ?? posicionFinal;
         }
         if(casillaFinal.efecto==="+4"){
-            return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal);
+            return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
         }
         if(casillaFinal.efecto==="-4"){
-            return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal);
+            return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
         }
         if(casillaFinal.efecto === "Agujero de Serpiente"){
             return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
@@ -571,14 +594,14 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         if(tablero.casillas[casillaDestino].tipo !== "Bifurcacion"||(tablero.casillas[casillaDestino].tipo==="Bifurcacion"&&(pasosRestantes===undefined||pasosRestantes===0))){
             const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
             if(casillaConEfecto.efecto==="-4"){
-                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla);
+                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla,estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
                 }
             }
             if(casillaConEfecto.efecto ==="+4"){
-                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla);
+                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla,estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
@@ -815,6 +838,9 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             const posicionAleatoria = Math.floor(Math.random() * posFichas.length);
             // Lógica para teletransportar la ficha
             // Cambiar la ficha del jugador en la posicion aleatoria por una ficha del jugador actual
+            if(typeof who !== "number"){
+                throw new Error("Debes indicar el id de la ficha a mover para Robo de identidad");
+            }
             jugadorActual.fichas[who].casilla = posFichas[posicionAleatoria];
             let numFicha = 0;
             for (let jugador of estadoJugadores.jugadores) {
@@ -870,6 +896,9 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Serpiente en tu bota"://done 🈴
             // Pasar una ronda entera
             const jugadorAfectado = estadoJugadores.jugadores.find(j => j.email === who);
+            if (!jugadorAfectado) {
+                throw new Error("Jugador afectado no encontrado");
+            }
             jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
             break;
         case "Parca"://done 🈴
