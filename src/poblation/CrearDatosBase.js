@@ -2,7 +2,7 @@ import { Tipo_Cosmetico } from "../generated/prisma/enums.js";
 import { Tipo_Carta, Rareza } from "../generated/prisma/enums.js";
 import { createCard, getCardById } from "../services/Cards.ts";
 import { createDeck, getDeckById, updateDeck } from "../services/Deck.ts";
-import { createCosmetic } from "../services/Cosmeticos.ts";
+import { createCosmetic } from "../services/Cosmetics.ts";
 import { createUser, getUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
 import { createEffect } from "../services/Effects.js";
 import { Tipo_Afeccion} from "../generated/prisma/enums.js";
