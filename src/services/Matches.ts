@@ -1,11 +1,10 @@
 import prisma from "../prismaClient.js";
-import { Partida, Usuario, TableroInicial, Estado, BarajaCarta } from "../generated/prisma/client.js";
-import { JugadorEstadoSchema, SnapshotJugadoresJSON, SnapshotTableroJSON } from "./JsonTypes.js";
+import { Usuario, Estado } from "../generated/prisma/client.js";
+import { SnapshotJugadoresJSON, SnapshotTableroJSON } from "./JsonTypes.js";
 import { lobbyManager } from "../managers/lobbyManager.js";
 import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento } from "./ReturnTypes.js";
 import { randomInt } from "node:crypto";
 import { modifyUserByEmail,getUserByEmail } from "./User.js";
-import { get } from "node:http";
 import { checkAchievementsForCompletion } from "./Achievements.js";
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
@@ -67,7 +66,6 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             });
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
             jugadorJson.mazoRestante = nombresCartas;
-            // mazoPorDefecto aún no implementaado
         }
         if (jugadorJson.mazoRestante.length >= 4) {
             jugadorJson.mano = jugadorJson.mazoRestante.slice(0, 4);
@@ -263,7 +261,7 @@ function aplicarEfectoMasCuatro(
     if(casillaFinal.efecto==="-4"){
         return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
-    if(casillaFinal.efecto === "Agujero de Serpiente"){
+    if(casillaFinal.efecto === "Agujero de serpiente"){
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
     }
 
@@ -306,7 +304,7 @@ function aplicarEfectoMenosCuatro(
     if(casillaFinal.efecto==="-4"){
         return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
     }
-    if(casillaFinal.efecto === "Agujero de Serpiente"){
+    if(casillaFinal.efecto === "Agujero de serpiente"){
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
     }
 
@@ -341,7 +339,7 @@ function aplicarEfectoAgujeroSerpiente(
         if(casillaFinal.efecto==="-4"){
             return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
         }
-        if(casillaFinal.efecto === "Agujero de Serpiente"){
+        if(casillaFinal.efecto === "Agujero de serpiente"){
             return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
         }
         return posicionFinal;
@@ -557,7 +555,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     }
     
     if (jugadorActual.fichas.every(f => f.meta)) {
-        // return await finishMatch(partidaId, jugadorActual.email);
+        return await finishMatch(partidaId, jugadorActual.email);
     } else {        
         if(pasosRestantes!==undefined&&pasosRestantes>0){
             let haciaAtras = false;
@@ -607,7 +605,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     fichaAActualizar.meta = true;
                 }
             }
-            if(casillaConEfecto.efecto === "Agujero de Serpiente"){
+            if(casillaConEfecto.efecto === "Agujero de serpiente"){
                 const nuevaCasilla = aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
@@ -616,7 +614,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             }
             if(fichaAActualizar.meta){
                 if(jugadorActual.fichas.every(f => f.meta)){
-                    //return await finishMatch(partidaId, jugadorActual.email);
+                    return await finishMatch(partidaId, jugadorActual.email);
                 }
             }
            estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
@@ -692,6 +690,9 @@ async function finishMatch(partidaId: string, ganadorEmail: string): Promise<Par
     const jugadorGanador = estadoJugadores.jugadores.find(j => j.email === ganadorEmail);
     for (let jugador of estadoJugadores.jugadores){
         let jugadorJuego = await getUserByEmail(jugador.email) as Usuario;
+        if (!jugadorJuego) {
+            continue;
+        }
         await modifyUserByEmail(jugador.email, {
             SEP: jugadorJuego.SEP+ (jugador.email === ganadorEmail ? 100 : 30),
             victorias: jugador.email === ganadorEmail ? 1 : 0,
@@ -734,7 +735,7 @@ function validarCasillaParaSalto(tablero: SnapshotTableroJSON, casilla: number, 
     }
 }
 
-export async function useCard(partidaId: string, player: string, cartaNombre: string, who: string | number, inicio?: number, fin?: number): Promise<PartidaReturnType> {
+export async function useCard(partidaId: string, player: string, cartaNombre: string, who?: string | number, inicio?: number, fin?: number): Promise<PartidaReturnType> {
 
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
@@ -776,6 +777,11 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     if (casillaTablero.tipo === "Serpiente" || casillaTablero.tipo === "Escalera") {
         prohibidas = true;
     }
+    const indiceCarta = jugadorActual.mano.indexOf(cartaNombre);
+    if (indiceCarta === -1) {
+        throw new Error("Carta no encontrada en la mano");
+    }
+    jugadorActual.mano.splice(indiceCarta, 1);
     switch (cartaNombre) {
         case "Exceso de medios"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
@@ -917,6 +923,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Cambiar de idea"://done 🈴
             const cartasAlCementerio = jugadorActual.mano
             jugadorActual.cementerio.push(...cartasAlCementerio);
+            jugadorActual.mano = [];
             for (let i = 0; i < 4; i++) {
                 if (jugadorActual.mazoRestante.length === 0) {
                     jugadorActual.mazoRestante = [...jugadorActual.cementerio];
@@ -986,7 +993,6 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     }
     jugadorActual.cartaJugadaEnTurno = true;
     jugadorActual.cartasJugadas++;
-    jugadorActual.mano = jugadorActual.mano.filter(c => c !== cartaNombre);
     jugadorActual.cementerio.push(cartaNombre);
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
