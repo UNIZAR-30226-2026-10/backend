@@ -3,6 +3,7 @@ import { Type } from "@sinclair/typebox";
 import Achievements from "../../services/Achievements.js";
 
 export default function achievementsRoutes(app: FastifyInstance) : void {
+    app.addHook("preHandler", app.verifyToken);
     app.get("/ping", async (request, reply) => {
         return "pong Achievements";
     });
@@ -11,40 +12,32 @@ export default function achievementsRoutes(app: FastifyInstance) : void {
         schema: 
             { response: {
                 200: {
-                    type: Type.Object({
-                        logros: Type.Array(Type.Object({
-                            nombre: Type.String(),
-                            descripcion: Type.String(),
-                            tipo: Type.String(),
-                            cartaID: Type.Optional(Type.String()),
-                            requisito: Type.Number(),
-                            recompensaMonetaria: Type.Optional(Type.Number())
-                        })),
-                        cartaRecompensa: Type.Array(Type.Optional(Type.Object({
-                            nombre: Type.String(),
-                            descripcion: Type.String(),
-                            tipo: Type.String(),
-                            calidad: Type.String()
-                        })))
-                    }),
+                    logros: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        descripcion: Type.String(),
+                        tipo: Type.String(),
+                        cartaID: Type.Optional(Type.String()),
+                        requisito: Type.Number(),
+                        recompensaMonetaria: Type.Optional(Type.Number())
+                    })),
+                    cartaRecompensa: Type.Array(Type.Optional(Type.Object({
+                        nombre: Type.String(),
+                        descripcion: Type.String(),
+                        tipo: Type.String(),
+                        calidad: Type.String()
+                    }))),
                     description: "Lista de logros con sus detalles y las cartas de recompensa asociadas (si las hay)."
                 },
                 400: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "Error al obtener los logros."
                 },
                 401: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "No autorizado. Se requiere autenticación."
                 },
                 403: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "Prohibido. El usuario no tiene permisos para acceder a esta información."
                 }
             } }

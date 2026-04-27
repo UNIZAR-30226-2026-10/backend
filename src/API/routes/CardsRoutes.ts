@@ -3,6 +3,7 @@ import { Type } from "@sinclair/typebox";
 import Cards from "../../services/Cards.js";
 
 export default function cardsRoutes(app: FastifyInstance) : void {
+    app.addHook("preHandler", app.verifyToken);
     app.get("/ping", async (request, reply) => {
         return "pong Cards";
     });
@@ -11,30 +12,22 @@ export default function cardsRoutes(app: FastifyInstance) : void {
         schema: 
             { response: {
                 200: {
-                    type: Type.Object({
-                        cards: Type.Array(Type.Object({
-                            nombre: Type.String(),
-                            descripcion: Type.String(),
-                            tipo: Type.String(),
-                            calidad: Type.String()
-                        }))})
-                    },
+                    cards: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        descripcion: Type.String(),
+                        tipo: Type.String(),
+                        calidad: Type.String()
+                    }))},
                 400: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "Error al obtener las cartas."
                 },
                 401: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "No autorizado. Se requiere autenticación."
                 },
                 403: {
-                    type: Type.Object({
-                        message: Type.String()
-                    }),
+                    message: Type.String(),
                     description: "Prohibido. El usuario no tiene permisos para acceder a esta información."
                 }
             } }

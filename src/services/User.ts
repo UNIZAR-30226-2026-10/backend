@@ -578,6 +578,31 @@ const passwordHelper = (password:string): string | null => {
 
 }
 
+export async function getUserByName(nombre:string) : Promise<UsuarioReturnType | null> {
+    try {
+        const user = await prisma.usuario.findUnique({
+            where: { nombre: nombre },
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
+            }
+        })
+        return user
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
 export default {
     createUser,
     getUserByEmail,
@@ -591,5 +616,6 @@ export default {
     connectRelacion,
     disconnectRelacion,
     updateCosmeticOnUser,
-    authenticateUser
+    authenticateUser,
+    getUserByName
 }

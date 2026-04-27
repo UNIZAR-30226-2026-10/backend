@@ -33,6 +33,16 @@ export default function authRoutes(app: FastifyInstance) : void {
         const { email, username, password } = request.body as { email: string, username: string, password: string };
 
         try {
+            const user_taken = await User.getUserByName(username);
+            if (user_taken) {
+                throw new Error("Nombre de usuario ya en uso");
+            }
+        } catch (error) {
+            reply.status(400).send({ error: (error as Error).message });
+            return;
+        }
+
+        try {
             await User.createUser({ email: email, password: password, nombre: username });
         } catch (error) {
             reply.status(400).send({ error: (error as Error).message });
