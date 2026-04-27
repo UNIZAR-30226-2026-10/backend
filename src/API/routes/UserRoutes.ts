@@ -481,7 +481,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             if (!user) {
                 return reply.status(404).send({ error: "usuario no encontrado" });
             }
-
+            //FIXME
             const decks = user.barajas.map(m => ({
                 nombre: m.nombre,
                 cartas: m.barajaCartas.map(bc => bc.carta)
@@ -489,7 +489,7 @@ export default function userRoutes(app: FastifyInstance) : void {
 
             return reply.status(200).send({ decks });
         } catch (error) {
-            return reply.status(404).send({ error: "usuario no encontrado" });
+            return reply.status(404).send({ error: "Error catch user decks" });
         }
     });
 
@@ -566,6 +566,9 @@ export default function userRoutes(app: FastifyInstance) : void {
             const usuario = await User.getUserByEmail(email);
             if (!usuario) {
                 return reply.status(400).send({ error: "Usuario no encontrado" });
+            }
+            if(usuario.barajas.length >= 8) {
+                return reply.status(400).send({ error: "El usuario ya tiene el máximo de mazos permitidos (8)" });
             }
             await Deck.createDeck({ nombre, carta: cartas, usuario });
             return reply.status(200).send({ message: "Mazo creado correctamente" });
