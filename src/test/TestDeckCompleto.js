@@ -5,7 +5,7 @@ import User from "../services/User"
 import Cards from "../services/Cards"
 import Effects from "../services/Effects"
 import { Tipo_Afeccion, Tipo_Carta, Rareza, Tipo_Efecto } from "../generated/prisma/enums"
-import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
+import { cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 
 const runid = Date.now()
 
