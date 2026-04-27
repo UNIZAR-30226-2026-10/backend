@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import achievementsRoutes from "./AchievementsRoutes.js";
 import authRoutes from "./AuthRoutes.js";
 import cardsRoutes from "./CardsRoutes.js";
+import cosmeticsRoutes from "./CosmeticsRoutes.js";
 import lobbiesRoutes from "./LobbiesRoutes.js";
 import matchesRoutes from "./MatchesRoutes.js";
 import userRoutes from "./UserRoutes.js";
@@ -24,6 +25,10 @@ export default async function registerRoutes(app: FastifyInstance) : Promise<voi
     app.register(
         cardsRoutes,
         { prefix: "api/cards" }
+    )
+    app.register(
+        cosmeticsRoutes,
+        { prefix: "api/cosmetics" }
     )
     app.register(
         lobbiesRoutes,

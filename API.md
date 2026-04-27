@@ -16,9 +16,92 @@
 - Inicia sesión en el sistema.
 - Body: "email" y "password".
 
+<<<<<<< HEAD
 ### **POST** /api/auth/new_users
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
+=======
+### **GET** /api/users/:email/icons
+- Devuelve todos los iconos que el usuario tiene.
+
+###  **PUT** /api/users/:email/icon
+- Actualiza el icono del usuario.
+- Body: "icon".
+
+### **GET** /api/users/:email/stairs
+- Devuelve todas las skins de escaleras que tiene el usuario.
+
+### **PUT** /api/users/:email/stair
+- Actualiza la skin de escalera del usuario.
+- Body: "stair".
+
+### **GET** /api/users/:email/pawns
+- Devuelve todas las skins de fichas que tiene el usuario.
+
+### **PUT** /api/users/:email/pawn
+- Actualiza la skin de ficha del usuario.
+- Body: "pawn".
+
+### **GET** /api/users/:email/snakes
+- Devuelve todas las skins de serpientes que tiene el usuario.
+
+### **PUT** /api/users/:email/snake
+- Actualiza la skin de serpiente del usuario.
+- Body: "snake".
+
+### **PUT** /api/users/:email/username
+- Actualiza el nombre del usuario.
+- Body: "username".
+
+
+## Cosméticos.
+
+
+### **GET** /api/cosmetics/store/:email
+- Devuelve todos los cosméticos disponibles para comprar y si el usuario tiene cada uno de ellos o no.
+
+### **POST** /api/cosmetics/store/:email
+- Compra un cosmetico.
+- Body: "cosmetic_name".
+
+
+## Logros.
+
+
+### **GET** /api/users/:email/stats
+- Devuelve las estadísticas del jugador, así como los logros completados.
+
+### **GET** /api/achievements
+- Devuelve todos los logros existentes.
+
+### **POST** /api/users/:email/achievements
+- Marca como completado el logro y le otorga la recompensa al usuario.
+- Body: "achievement_id".
+
+
+## MAZOS.
+
+
+### **GET** /api/users/:email/decks 
+- Devuelve todos los mazos y los nombres de las cartas que lo componen asociados al usuario.
+
+### **GET** /api/users/:email/decks/:deck-id/cards
+- Devuelve las cartas que componen un mazo, junto a toda la información acerca de estas.
+
+### **POST** /api/users/:email/decks
+- Crea un mazo nuevo asociado al usuario. Devuelve error si incluye alguna carta ilegal/no conseguida.
+- Body: "deck_name" y "cards".
+
+### **PUT** /api/users/:email/decks/:deck-id
+- Modifica el mazo con deck-id asociado al usuario. Devuelve error si incluye alguna carta ilegal/no conseguida.
+- Body: "deck_name" y "cards".
+
+### **DELETE** /api/users/:email/decks/:deck-id
+- Borra, si posible, el mazo del usuario.
+
+
+## CARTAS
+>>>>>>> 61f05b3fa82a701c4e80805ea196f369594b994d
 
 ## /api/cards
 
