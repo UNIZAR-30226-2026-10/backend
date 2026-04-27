@@ -9,6 +9,8 @@ import { Tipo_Afeccion} from "../generated/prisma/enums.js";
 import { Tipo_Efecto } from "../generated/prisma/enums.js";
 import { createAchievement } from "../services/Achievements.ts";
 import { Tipo_Logro } from "../generated/prisma/enums.js";
+import { createBoard } from "../services/Boards.ts";
+import { generarTableros } from "./tableros.tsx";
 export async function cosmeticosPorDefecto() {
     const cosmeticos = [
         {
@@ -565,5 +567,25 @@ export async function logrosPoblacion() {
 }
 
 export async function tablerosPoblacion() {
-    
+    //tengo un codigo que devuelve t
+    const tablero1 = generarTableros(1);
+    const tablero2 = generarTableros(2);
+    const tablero3 = generarTableros(3);
+    const tableros = [
+        {
+            boardName: "Basico",
+            snapShot: tablero1
+        },
+        {
+            boardName: "Jungla Loca",
+            snapShot: tablero2
+        },
+        {
+            boardName: "La apuesta final",
+            snapShot: tablero3
+        }
+    ];
+    for (const tablero of tableros) {
+        await createBoard(tablero);
+    }
 }
