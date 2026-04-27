@@ -16,11 +16,10 @@
 - Inicia sesión en el sistema.
 - Body: "email" y "password".
 
-<<<<<<< HEAD
 ### **POST** /api/auth/new_users
 - Crea un nuevo usuario en el sistema.
 - Body: "email", "username" y "password".
-=======
+
 ### **GET** /api/users/:email/icons
 - Devuelve todos los iconos que el usuario tiene.
 
@@ -101,7 +100,7 @@
 
 
 ## CARTAS
->>>>>>> 61f05b3fa82a701c4e80805ea196f369594b994d
+
 
 ## /api/cards
 
@@ -151,23 +150,19 @@
 - Inicia la partida. Dados los datos del lobby crea la partida y destruye el lobby.
 - Body: "lobby_id".
 
-### **GET** /api/matches/:match_id/board
-- Devuelve el estado del tablero en el momento actual.
-
-### **GET** /api/matches/:match_id/players
+### **GET** /api/matches/:match_id/:email
 - Devuelve el estado de los jugadores de la partida en el momento actual. Recibiendo el usuario que hace la petición le devuelve información exclusiva, como la mano del mazo en el turno.
 
-### **POST** /api/matches/:match_id/cards
+### **POST** /api/matches/:match_id/cards/:email
 - El usuario juega una carta y se actualiza el estado de la partida.
-- Body: "email", "card_id" y "target" (si necesario).
+- Body: "card_id", "target" (si necesario. Dependiendo de si es sobre una ficha o user, será un number o string, respectivamente), inicio y fin (si necesario).
 
-### **POST** /api/matches/:match_id/dice
-- Tira los dados de un usuario y devuelve todos los posibles movimientos del usuario.
-- Body: "email".
+### **POST** /api/matches/:match_id/dice/:email
+- Tira el dado de un usuario (dado los efectos que tiene a consecuencia de las cartas) y devuelve todos los posibles movimientos del usuario de cada una de las fichas (si posible) dada la tirada.
 
-### **POST** /api/matches/:match_id/final-location
-- Comprueba si en la casilla destino existe algún tipo de efecto. Si lo hay lo aplica y devuelve qué cambios ha realizado dicho efecto.
-- Body: "email".
+### **POST** /api/matches/:match_id/pawn/:email
+- Actualiaza la posición de una ficha en el tablero.
+- Body: "pawn_id", "final_position" y steps_remaining.
 
 ## /api/users
 
@@ -248,6 +243,3 @@
 ### **PUT** /api/users/:email/username
 - Actualiza el nombre del usuario.
 - Body: "username".
-
-
-## ES MUY POSIBLE QUE FALTEN ALGUNAS LLAMADAS
