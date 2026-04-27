@@ -155,7 +155,7 @@
 
 ### **POST** /api/matches/:match_id/cards/:email
 - El usuario juega una carta y se actualiza el estado de la partida.
-- Body: "card_id", "target" (si necesario. Dependiendo de si es sobre una ficha o user, será un number o string, respectivamente), inicio y fin (si necesario).
+- Body: "card_id", "who" (si necesario. Dependiendo de si es sobre una ficha o user, será un number o string, respectivamente), inicio y fin (si necesario).
 
 ### **POST** /api/matches/:match_id/dice/:email
 - Tira el dado de un usuario (dado los efectos que tiene a consecuencia de las cartas) y devuelve todos los posibles movimientos del usuario de cada una de las fichas (si posible) dada la tirada.
