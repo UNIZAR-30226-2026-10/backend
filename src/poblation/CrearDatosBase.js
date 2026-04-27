@@ -567,7 +567,6 @@ export async function logrosPoblacion() {
 }
 
 export async function tablerosPoblacion() {
-    //tengo un codigo que devuelve t
     const tablero1 = generarTableros(1);
     const tablero2 = generarTableros(2);
     const tablero3 = generarTableros(3);
