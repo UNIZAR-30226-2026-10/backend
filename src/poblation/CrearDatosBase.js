@@ -3,7 +3,7 @@ import { Tipo_Carta, Rareza } from "../generated/prisma/enums.js";
 import { createCard, getCardById } from "../services/Cards.ts";
 import { createDeck, getDeckById, updateDeck } from "../services/Deck.ts";
 import { createCosmetic } from "../services/Cosmetics.ts";
-import { createUser, getUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
+import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
 import { createEffect } from "../services/Effects.js";
 import { Tipo_Afeccion} from "../generated/prisma/enums.js";
 import { Tipo_Efecto } from "../generated/prisma/enums.js";
@@ -331,13 +331,7 @@ export async function cuentaAdminPorDefecto() {
     await createUser({
         email: emailAdmin,
         nombre: "Admin",
-        password:"admin123",
-        SEP: 10000,
-        logros: [],
-        cosmeticos: [],
-        partidasJugadas: 0,
-        partidasGanadas: 0,
-
+        password:"#Admin123",
     });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_default" });
@@ -359,7 +353,8 @@ export async function cuentaAdminPorDefecto() {
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_tribal" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_futuro" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_jungla" });
-
+    await mazosPorDefecto(emailAdmin);
+    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 0, derrotas: 0 });
 }
 
 export async function efectosPoblacion(){
@@ -550,14 +545,14 @@ export async function logrosPoblacion() {
             nombre: "Completista",
             descripcion: "Completa 8 logros",
             requisito:8,
-            tipo: Tipo_Logro.LogrosCompletados,
+            tipo: Tipo_Logro.LogrosDesbloqueados,
             cartaID : "Mal de ojo"
         },
         {
             nombre: "Platino",
             descripcion: "Completa todos los logros",
             requisito:9,
-            tipo: Tipo_Logro.LogrosCompletados,
+            tipo: Tipo_Logro.LogrosDesbloqueados,
             cartaID : null
         }
     ];
