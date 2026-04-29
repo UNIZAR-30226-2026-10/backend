@@ -14,6 +14,17 @@ import {
 } from "./poblation/CrearDatosBase.js";
 import { getBoardByName } from "./services/Boards.js";
 import { getCosmeticByName } from "./services/Cosmetics.js";
+import { getAchievementById } from "./services/Achievements.js";
+import { getCardById } from "./services/Cards.js";
+import { getEffectById } from "./services/Effects.js";
+import { createBoard } from "./services/Boards.js";
+import { createAchievement } from "./services/Achievements.js";
+import { createCosmetic } from "./services/Cosmetics.js";
+import { createCard } from "./services/Cards.js";
+import { createEffect } from "./services/Effects.js";
+import { createUser } from "./services/Users.js";
+import { createDeck } from "./services/Decks.js";
+import { getUserByEmail } from "./services/User.js";
 
 async function seedIfMissing<T>(
     label: string,
