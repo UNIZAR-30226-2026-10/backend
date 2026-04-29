@@ -585,6 +585,6 @@ export async function tablerosPoblacion() {
         }
     ];
     for (const tablero of tableros) {
-        await createBoard(tablero);
+        await createBoard(tablero.snapShot, tablero.boardName);
     }
 }
