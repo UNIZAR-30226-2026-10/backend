@@ -340,6 +340,9 @@ export function generarTableros(tipo: number): SnapshotTablero {
             sparseCasillasArray[76] = { esCurva: false, rotacion: 90, tipo: "Serpiente", siguientes: [75], saltoA: 55 };
             sparseCasillasArray[84] = { esCurva: false, rotacion: 0, tipo: "Serpiente", siguientes: [94], saltoA: 78 };
             // Generar tablero 3
+            return {
+                casillas: sparseCasillasArray,
+            };
             break;
         default:
             // Generar tablero por defecto

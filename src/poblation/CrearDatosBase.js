@@ -3,7 +3,7 @@ import { Tipo_Carta, Rareza } from "../generated/prisma/enums.js";
 import { createCard, getCardById } from "../services/Cards.ts";
 import { createDeck, getDeckById, updateDeck } from "../services/Deck.ts";
 import { createCosmetic } from "../services/Cosmetics.ts";
-import { createUser, getUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
+import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
 import { createEffect } from "../services/Effects.js";
 import { Tipo_Afeccion} from "../generated/prisma/enums.js";
 import { Tipo_Efecto } from "../generated/prisma/enums.js";
@@ -331,13 +331,7 @@ export async function cuentaAdminPorDefecto() {
     await createUser({
         email: emailAdmin,
         nombre: "Admin",
-        password:"admin123",
-        SEP: 10000,
-        logros: [],
-        cosmeticos: [],
-        partidasJugadas: 0,
-        partidasGanadas: 0,
-
+        password:"#Admin123",
     });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_default" });
@@ -359,105 +353,106 @@ export async function cuentaAdminPorDefecto() {
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_tribal" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_futuro" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_jungla" });
-
+    await mazosPorDefecto(emailAdmin);
+    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 0, derrotas: 0 });
 }
 
 export async function efectosPoblacion(){
         const efectos = [{
                 nombre: "Efecto 1: Tiras 2 dados",
-                descripcion: "Tiras 2 dados en tu próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Dados
+                    descripcion: "Tiras 2 dados en tu próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Dados
             },
             {
-                nombre: "Efecto 2: Te saltas un bloqueo",
-                descripcion: "Te saltas un bloqueo en tu próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 2: Te saltas un bloqueo",
+                    descripcion: "Te saltas un bloqueo en tu próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 3: Pones una serpiente donde quieras",
-                descripcion: "Pones una serpiente donde quieras en tu próximo turno",
-                afecta: Tipo_Afeccion.Casilla,
-                efecto: Tipo_Efecto.Debufo
+                    nombre: "Efecto 3: Pones una serpiente donde quieras",
+                    descripcion: "Pones una serpiente donde quieras en tu próximo turno",
+                    afecta: Tipo_Afeccion.Casilla,
+                    tipo: Tipo_Efecto.Debufo
             },
             {
-                nombre: "Efecto 4: Pones una escalera donde quieras",
-                descripcion: "Pones una escalera donde quieras en tu próximo turno",
-                afecta: Tipo_Afeccion.Casilla,
-                efecto: Tipo_Efecto.Bufo
+                    nombre: "Efecto 4: Pones una escalera donde quieras",
+                    descripcion: "Pones una escalera donde quieras en tu próximo turno",
+                    afecta: Tipo_Afeccion.Casilla,
+                    tipo: Tipo_Efecto.Bufo
             },
             {
-                nombre: "Efecto 5: Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
-                descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
-                afecta: Tipo_Afeccion.Casilla,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 5: Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
+                    descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
+                    afecta: Tipo_Afeccion.Casilla,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 6: Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
-                descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
-                afecta: Tipo_Afeccion.Casilla,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 6: Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+                    descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+                    afecta: Tipo_Afeccion.Casilla,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 7: Robas una carta de la pila de descarte",
-                descripcion: "Robas una carta de la pila de descarte",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Debufo
+                    nombre: "Efecto 7: Robas una carta de la pila de descarte",
+                    descripcion: "Robas una carta de la pila de descarte",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Debufo
             },
             {
-                nombre: "Efecto 8: El rival solo puede tirar dados de 1-3 en su próximo turno",
-                descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Dados
+                    nombre: "Efecto 8: El rival solo puede tirar dados de 1-3 en su próximo turno",
+                    descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Dados
             },
             {
-                nombre: "Efecto 9: Puedes tirar dados de 4-6 en tu próximo turno",
-                descripcion: "Puedes tirar dados de 4-6 en tu próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Dados
+                    nombre: "Efecto 9: Puedes tirar dados de 4-6 en tu próximo turno",
+                    descripcion: "Puedes tirar dados de 4-6 en tu próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Dados
             },
             {
-                nombre: "Efecto 10: Te saltas un bloqueo",
-                descripcion: "Te saltas un bloqueo en tu próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 10: Te saltas un bloqueo",
+                    descripcion: "Te saltas un bloqueo en tu próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 11: Robas una carta al azar a otro jugador",
-                descripcion: "Robas una carta al azar a otro jugador",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Cartas
+                    nombre: "Efecto 11: Robas una carta al azar a otro jugador",
+                    descripcion: "Robas una carta al azar a otro jugador",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Cartas
             },
             {
-                nombre: "Efecto 12: Mandas una ficha al azar al inicio del tablero",
-                descripcion: "Mandas una ficha al azar al inicio del tablero",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 12: Mandas una ficha al azar al inicio del tablero",
+                    descripcion: "Mandas una ficha al azar al inicio del tablero",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 13: El rival no puede usar cartas en su próximo turno",
-                descripcion: "El rival no puede usar cartas en su próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Cartas
+                    nombre: "Efecto 13: El rival no puede usar cartas en su próximo turno",
+                    descripcion: "El rival no puede usar cartas en su próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Cartas
             },
             {
-                nombre: "Efecto 14: Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
-                descripcion: "Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Movimiento
+                    nombre: "Efecto 14: Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
+                    descripcion: "Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Movimiento
             },
             {
-                nombre: "Efecto 15: Roba dos cartas en tu próximo turno",
-                descripcion: "Roba dos cartas en tu próximo turno",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Cartas
+                    nombre: "Efecto 15: Roba dos cartas en tu próximo turno",
+                    descripcion: "Roba dos cartas en tu próximo turno",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Cartas
             },
             {
-                nombre: "Efecto 16: Cancela el próximo turno de un rival",
-                descripcion: "Cancela el próximo turno de un rival",
-                afecta: Tipo_Afeccion.Jugador,
-                efecto: Tipo_Efecto.Debufo
+                    nombre: "Efecto 16: Cancela el próximo turno de un rival",
+                    descripcion: "Cancela el próximo turno de un rival",
+                    afecta: Tipo_Afeccion.Jugador,
+                    tipo: Tipo_Efecto.Debufo
             }
 
         ];
@@ -550,14 +545,14 @@ export async function logrosPoblacion() {
             nombre: "Completista",
             descripcion: "Completa 8 logros",
             requisito:8,
-            tipo: Tipo_Logro.LogrosCompletados,
+            tipo: Tipo_Logro.LogrosDesbloqueados,
             cartaID : "Mal de ojo"
         },
         {
             nombre: "Platino",
             descripcion: "Completa todos los logros",
             requisito:9,
-            tipo: Tipo_Logro.LogrosCompletados,
+            tipo: Tipo_Logro.LogrosDesbloqueados,
             cartaID : null
         }
     ];
@@ -585,6 +580,6 @@ export async function tablerosPoblacion() {
         }
     ];
     for (const tablero of tableros) {
-        await createBoard(tablero);
+        await createBoard(tablero.snapShot, tablero.boardName);
     }
 }
