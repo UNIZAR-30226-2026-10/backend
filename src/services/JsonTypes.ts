@@ -13,7 +13,7 @@ export const FichaSchema = Type.Object({
 });
 
 export const JugadorEstadoSchema = Type.Object({
-    email: Type.String({ format: 'email' }),
+    username: Type.String(),
     fase: Type.Union([Type.Literal("Cartas"), Type.Literal("Movimiento")]),
     ultimaTirada: Type.Optional(Type.Integer({ minimum: 1, maximum: 6 })),
     fichas: Type.Array(FichaSchema, { minItems: 3, maxItems: 3 }),

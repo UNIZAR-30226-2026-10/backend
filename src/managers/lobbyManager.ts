@@ -2,7 +2,6 @@ import nombresBots from "../data/nombresBots.json" with {type: "json"}
 
 
 interface jugadorLobby {
-    idJugador: string, // Si jugador real = email, si bot id inventado
     nombre: string,    // nombre de usuario para mostrar en pantalla
     esIA: boolean,
     estaListo: boolean,
@@ -12,7 +11,7 @@ interface jugadorLobby {
 
 interface Lobby {
     idLobby: string,
-    idCreador: string,
+    usernameCreador: string,
     jugadores: jugadorLobby[],
     numJugadores: number,
     numBots: number,
@@ -38,19 +37,19 @@ export class LobbyManager {
     }
 
     createLobby(jugador: jugadorLobby): Lobby {
-        if (this.jugadoresEnCola.has(jugador.idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
+        if (this.jugadoresEnCola.has(jugador.nombre)) throw new Error("ALREADY_IN_A_LOBBY")
         const id = 'lobby-' + this.numLobbies
         this.numLobbies++
         const nuevaLobby: Lobby = {
             idLobby: id,
-            idCreador: jugador.idJugador,
+            usernameCreador: jugador.nombre,
             jugadores: [jugador],
             numJugadores: 1,
             numBots: 0,
             tablero: "Tablero 1"
         }
         this.lobbies.set(id, nuevaLobby)
-        this.jugadoresEnCola.set(jugador.idJugador, id)
+        this.jugadoresEnCola.set(jugador.nombre, id)
         return nuevaLobby
     }
 
@@ -65,18 +64,18 @@ export class LobbyManager {
     }
 
     manageInvite(jugador: jugadorLobby, accept: boolean, lobbyID: string, inviteFrom: string): Lobby | string {
-        let invites = this.invitaciones.get(jugador.idJugador)
+        let invites = this.invitaciones.get(jugador.nombre)
         if (!invites || invites.length === 0) throw new Error("INVITES_NOT_FOUND")
         const invite = invites.find(i => i.inviteFrom === inviteFrom && i.lobbyID === lobbyID)
         if (!invite) throw new Error("INVITE_NOT_FOUND")
         if (accept) {
             const lobby = this.joinLobby(jugador, lobbyID)
             invites = invites.filter(i => i.lobbyID !== lobbyID && i.inviteFrom !== inviteFrom)
-            this.invitaciones.set(jugador.idJugador, invites)
+            this.invitaciones.set(jugador.nombre, invites)
             return lobby
         } else {
             invites = invites.filter(i => !(i.lobbyID === lobbyID && i.inviteFrom === inviteFrom))
-            this.invitaciones.set(jugador.idJugador, invites)
+            this.invitaciones.set(jugador.nombre, invites)
             return "INVITE_DECLINED"
         }
     }
@@ -92,10 +91,10 @@ export class LobbyManager {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
-        if (this.jugadoresEnCola.has(jugador.idJugador)) throw new Error("ALREADY_IN_A_LOBBY")
+        if (this.jugadoresEnCola.has(jugador.nombre)) throw new Error("ALREADY_IN_A_LOBBY")
         lobby.jugadores.push(jugador)
         lobby.numJugadores++
-        this.jugadoresEnCola.set(jugador.idJugador, lobbyID)
+        this.jugadoresEnCola.set(jugador.nombre, lobbyID)
         return lobby
     }
 
@@ -105,10 +104,9 @@ export class LobbyManager {
         if (this.jugadoresEnCola.get(requestBy) !== lobbyID) throw new Error("WRONG_LOBBY")
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
-        if (lobby.idCreador !== requestBy) throw new Error("CANT_ADD")
+        if (lobby.usernameCreador !== requestBy) throw new Error("CANT_ADD")
         const nombre = 'BOT ' + nombresBots[Math.floor(Math.random() * nombresBots.length)]
-        const idBot = `BOT-${nombre}-${crypto.randomUUID()}`
-        lobby.jugadores.push({ idJugador: idBot, nombre, esIA: true, estaListo: true, nombreMazo: "mazoPorDefecto" })
+        lobby.jugadores.push({nombre: nombre, esIA: true, estaListo: true, nombreMazo: "mazoPorDefecto" })
         lobby.numBots++
         lobby.numJugadores++
         return lobby
@@ -117,28 +115,28 @@ export class LobbyManager {
     deletePlayer(requestBy: string, idJugador: string, lobbyID: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
-        if (requestBy !== lobby.idCreador) {
+        if (requestBy !== lobby.usernameCreador) {
             if (requestBy !== idJugador) {
                 throw new Error("CANT_KICK")
             } else if (this.jugadoresEnCola.get(idJugador) === lobbyID) {
                 lobby.numJugadores--
-                lobby.jugadores = lobby.jugadores.filter(i => i.idJugador !== idJugador)
+                lobby.jugadores = lobby.jugadores.filter(i => i.nombre !== idJugador)
                 this.jugadoresEnCola.delete(idJugador)
                 return lobby
             } else {
                 throw new Error("WRONG_LOBBY")
             }
         } else {
-            if (lobby.idCreador === idJugador) {
+            if (lobby.usernameCreador === idJugador) {
                 lobby.jugadores.forEach(jugador => {
                     if (!jugador.esIA) {
-                        this.jugadoresEnCola.delete(jugador.idJugador)
+                        this.jugadoresEnCola.delete(jugador.nombre)
                     }
                 });
                 this.lobbies.delete(lobbyID)
                 return lobby
             } else {
-                const aEliminar = lobby.jugadores.find(i => i.idJugador === idJugador)
+                const aEliminar = lobby.jugadores.find(i => i.nombre === idJugador)
                 if (!aEliminar) {
                     throw new Error("NOT_IN_LOBBY")
                 } else {
@@ -147,7 +145,7 @@ export class LobbyManager {
                     } else {
                         this.jugadoresEnCola.delete(idJugador)
                     }
-                    lobby.jugadores = lobby.jugadores.filter(i => i.idJugador !== idJugador)
+                    lobby.jugadores = lobby.jugadores.filter(i => i.nombre !== idJugador)
                     lobby.numJugadores--
                     return lobby
                 }
@@ -159,7 +157,7 @@ export class LobbyManager {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")
-        const jugador = lobby.jugadores.find(i => i.idJugador === idJugador)
+        const jugador = lobby.jugadores.find(i => i.nombre === idJugador)
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.nombreMazo = mazo
         return lobby
@@ -168,7 +166,7 @@ export class LobbyManager {
     changeBoard(requestBy: string, lobbyID: string, tablero: string): Lobby {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
-        if (requestBy !== lobby.idCreador) throw new Error("CANT_CHANGE_BOARD")
+        if (requestBy !== lobby.usernameCreador) throw new Error("CANT_CHANGE_BOARD")
         lobby.tablero = tablero
         return lobby
     }
@@ -184,7 +182,7 @@ export class LobbyManager {
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         lobby.jugadores.forEach(jugador => {
             if (!jugador.esIA) {
-                this.jugadoresEnCola.delete(jugador.idJugador)
+                this.jugadoresEnCola.delete(jugador.nombre)
             }
         });
         this.lobbies.delete(lobbyID)
@@ -195,7 +193,7 @@ export class LobbyManager {
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         if (this.jugadoresEnCola.get(idJugador) !== lobbyID) throw new Error("WRONG_LOBBY")
-        const jugador = lobby.jugadores.find(i => i.idJugador === idJugador)
+        const jugador = lobby.jugadores.find(i => i.nombre === idJugador)
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.estaListo = ready
         return lobby

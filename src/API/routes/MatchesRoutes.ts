@@ -35,11 +35,11 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:match_id/:email", {
+    app.get("/:match_id/:username", {
         schema: {
             params: Type.Object({
                 match_id: Type.String(),
-                email: Type.String({ format: 'email' })
+                username: Type.String()
             }),
             response: {
                 200: Type.Any(),
@@ -53,9 +53,9 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, email } = request.params as { match_id: string; email: string };
+        const { match_id, username } = request.params as { match_id: string; username: string };
         try {
-            const partida = await getMatchState(match_id, email);
+            const partida = await getMatchState(match_id, username);
             return reply.status(200).send(partida);
         } catch (error) {
             if ((error as Error).message === "Partida no encontrada") {
@@ -65,11 +65,11 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/cards/:email", {
+    app.post("/:match_id/cards/:username", {
         schema: {
             params: Type.Object({
                 match_id: Type.String(),
-                email: Type.String({ format: 'email' })
+                username: Type.String()
             }),
             body: Type.Object({
                 card_id: Type.String(),
@@ -95,10 +95,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, email } = request.params as { match_id: string; email: string };
+        const { match_id, username } = request.params as { match_id: string; username: string };
         const { card_id, who, inicio, fin } = request.body as { card_id: string; who?: number | string; inicio?: number; fin?: number };
         try {
-            const partida = await useCard(match_id, email, card_id, who, inicio, fin);
+            const partida = await useCard(match_id, username, card_id, who, inicio, fin);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;
@@ -115,11 +115,11 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/dice/:email", {
+    app.post("/:match_id/dice/:username", {
         schema: {
             params: Type.Object({
                 match_id: Type.String(),
-                email: Type.String({ format: 'email' })
+                username: Type.String()
             }),
             response: {
                 200: Type.Any(),
@@ -136,9 +136,9 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, email } = request.params as { match_id: string; email: string };
+        const { match_id, username } = request.params as { match_id: string; username: string };
         try {
-            const partida = await throwDice(match_id, email);
+            const partida = await throwDice(match_id, username);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;
@@ -152,11 +152,11 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/pawn/:email", {
+    app.post("/:match_id/pawn/:username", {
         schema: {
             params: Type.Object({
                 match_id: Type.String(),
-                email: Type.String({ format: 'email' })
+                username: Type.String()
             }),
             body: Type.Object({
                 pawn_id: Type.Number(),
@@ -181,10 +181,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, email } = request.params as { match_id: string; email: string };
+        const { match_id, username } = request.params as { match_id: string; username: string };
         const { pawn_id, final_position, steps_remaining } = request.body as { pawn_id: number; final_position: number; steps_remaining?: number };
         try {
-            const partida = await moveToken(match_id, email, pawn_id, final_position, steps_remaining);
+            const partida = await moveToken(match_id, username, pawn_id, final_position, steps_remaining);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;

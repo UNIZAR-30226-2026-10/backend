@@ -11,7 +11,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
     app.post("/", {
         schema: {
             body: Type.Object({
-                email: Type.String({ format: "email" }),
                 username: Type.String(),
             }),
             response: {
@@ -19,7 +18,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -40,11 +38,10 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { email, username } = request.body as { email: string, username: string }
+        const { username } = request.body as { username: string }
         let lobby
         try {
             lobby = lobbyManager.createLobby({
-                idJugador: email,
                 nombre: username,
                 esIA: false,
                 estaListo: false
@@ -57,7 +54,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -75,7 +72,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -102,7 +98,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -116,8 +112,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 "lobby-id": Type.String()
             }),
             body: Type.Object({
-                inviteFrom: Type.String({ format: "email" }),
-                inviteFor: Type.String({ format: "email" })
+                inviteFrom: Type.String(),
+                inviteFor: Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -144,11 +140,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             lobbyID: lobbyId
         }
         try {            
-            const user = await User.getUserByEmail(inviteFrom)
+            const user = await User.getUserByName(inviteFrom)
             if (!user) {
                 return reply.status(404).send({ error: "Usuario que intenta invitar no encontrado" })
             }
-            const esAmigo = user.amigos.some(amigo => amigo.email === inviteFor)
+            const esAmigo = user.amigos.some(amigo => amigo.nombre === inviteFor)
             if (!esAmigo) {
                 return reply.status(403).send({ error: "Solo puedes invitar a tus amigos" })
             }
@@ -172,9 +168,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 "lobby-id": Type.String()
             }),
             body: Type.Object({
-                inviteFor: Type.String({ format: "email" }),
-                username: Type.String(),
-                inviteFrom: Type.String({ format: "email" }),
+                inviteFor: Type.String(),
+                inviteFrom: Type.String(),
                 accept: Type.Boolean()
             }),
             response: {
@@ -186,7 +181,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -209,11 +203,10 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
     }, async (request, reply) => {
         const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
-        const { inviteFor, username, inviteFrom, accept } = request.body as { inviteFor: string, username: string, inviteFrom: string, accept: boolean }
+        const { inviteFor, inviteFrom, accept } = request.body as { inviteFor: string, inviteFrom: string, accept: boolean }
         let lobby
         let jugadorLobby = {
-            idJugador: inviteFor,
-            nombre: username,
+            nombre: inviteFor,
             esIA: false,
             estaListo: false
         }   
@@ -230,7 +223,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -244,14 +237,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 "lobby-id": Type.String()
             }),
             body: Type.Object({
-                requested_by: Type.String({ format: "email" })
+                requested_by: Type.String()
             }),
             response: {
                 200: Type.Object({
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean()
@@ -295,7 +287,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -303,11 +295,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.put("/:lobby-id/players/:email/deck", {
+    app.put("/:lobby-id/players/:username/deck", {
         schema: {
             params: Type.Object({
                 "lobby-id": Type.String(),
-                "email": Type.String({ format: "email" })
+                "username": Type.String()
             }),
             body: Type.Object({
                 deck: Type.String()
@@ -316,7 +308,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -338,11 +329,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "email": email } = request.params as { "lobby-id": string, "email": string }
+        const { "lobby-id": lobbyId, "user": username } = request.params as { "lobby-id": string, "user": string }
         const { deck } = request.body as { deck: string }
         let lobby;
         try {
-            const user = await User.getUserByEmail(email)
+            const user = await User.getUserByName(username)
             if (!user) {
                 return reply.status(404).send({ error: "Usuario no encontrado" })
             }
@@ -354,7 +345,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             return reply.status(404).send({ error: "Usuario no encontrado" })
         }
         try {
-            lobby = lobbyManager.selectDeck(email, lobbyId, deck)
+            lobby = lobbyManager.selectDeck(username, lobbyId, deck)
         } catch (error) {
             if ((error as Error).message === "WRONG_LOBBY") {
                 return reply.status(400).send({ error: (error as Error).message })
@@ -363,7 +354,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -371,11 +362,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.put("/:lobby-id/players/:email/ready", {
+    app.put("/:lobby-id/players/:username/ready", {
         schema: {
             params: Type.Object({
                 "lobby-id": Type.String(),
-                "email": Type.String({ format: "email" })
+                "username": Type.String()
             }),
             body: Type.Object({
                 ready: Type.Boolean()
@@ -384,7 +375,6 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -406,11 +396,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "email": email } = request.params as { "lobby-id": string, "email": string }
+        const { "lobby-id": lobbyId, "username": username } = request.params as { "lobby-id": string, "username": string }
         const { ready } = request.body as { ready: boolean }
         let lobby
         try {
-            lobby = lobbyManager.setReady(lobbyId, email, ready)
+            lobby = lobbyManager.setReady(lobbyId, username, ready)
         } catch (error) {
             if ((error as Error).message === "WRONG_LOBBY") {
                 return reply.status(400).send({ error: (error as Error).message })
@@ -419,7 +409,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -433,14 +423,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 "lobby-id": Type.String()
             }),
             body: Type.Object({
-                requested_by: Type.String({ format: "email" }),
+                requested_by: Type.String(),
                 board: Type.String()
             }), response: {
                 200: Type.Object({
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -484,7 +473,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
@@ -492,20 +481,19 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.delete("/:lobby-id/players/:email", {
+    app.delete("/:lobby-id/players/:username", {
         schema: {
             params: Type.Object({
                 "lobby-id": Type.String(),
-                "email": Type.String()
+                "username": Type.String()
             }),
             body: Type.Object({
-                requested_by: Type.String({ format: "email" })
+                requested_by: Type.String()
             }), response: {
                 200: Type.Object({
                     idLobby: Type.String(),
                     idCreador: Type.String(),
                     jugadores: Type.Array(Type.Object({
-                        idJugador: Type.String(),
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
                         estaListo: Type.Boolean(),
@@ -532,11 +520,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }  
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "email": email } = request.params as { "lobby-id": string, "email": string }
+        const { "lobby-id": lobbyId, "username": username } = request.params as { "lobby-id": string, "username": string }
         const { requested_by } = request.body as { requested_by: string }
         let lobby
         try {
-            lobby = lobbyManager.deletePlayer(requested_by, email, lobbyId)
+            lobby = lobbyManager.deletePlayer(requested_by, username, lobbyId)
         }
         catch (error) {
             if ((error as Error).message === "WRONG_LOBBY") {
@@ -549,7 +537,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
-            idCreador: lobby.idCreador,
+            idCreador: lobby.usernameCreador,
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,

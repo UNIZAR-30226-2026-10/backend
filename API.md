@@ -111,14 +111,10 @@
 
 ### **POST** /api/lobbies
 - Crea un nuevo lobby en el sistema. El usuario que la crea se convierte en el líder.
-- Body: "email" y "username".
+- Body: "username".
 
 ### **GET** /api/lobbies/:lobby-id
 - Devuelve la información asociada a un lobby. Sirve también para comprobar si la partida ya ha sido iniciada.
-
-### **POST** /api/lobbies/:lobby-id/bots
-- Añade un bot al lobby si es posible.
-- Body: "requested_by".
 
 ### **POST** /api/lobbies/:lobby-id/invitations
 - Envía una invitación a un amigo para que se una al lobby.
@@ -126,21 +122,25 @@
 
 ### **PUT** /api/lobbies/:lobby-id/invitations
 - Acepta o rechaza una invitación a un lobby.
-- Body: "inviteFor", "username", "inviteFrom" y "accept" (boolean).
+- Body: "inviteFor", "inviteFrom" y "accept" (boolean).
+
+### **POST** /api/lobbies/:lobby-id/bots
+- Añade un bot al lobby si es posible.
+- Body: "requested_by".
+
+### **PUT** /api/lobbies/:lobby-id/players/:username/deck
+- Selecciona el mazo a jugar en la partida por el usuario.
+- Body: "deck".
+
+### **PUT** /api/lobbies/:lobby-id/players/:username/ready
+- Establece si el jugador está listo o no para comenzar la partida.
+- Body: "ready".
 
 ### **PUT** /api/lobbies/:lobby-id/board
 - Establece el tablero a jugar en la partida.
 - Body: "requested_by" y "board".
 
-### **PUT** /api/lobbies/:lobby-id/players/:email/deck
-- Selecciona el mazo a jugar en la partida por el usuario.
-- Body: "deck".
-
-### **PUT** /api/lobbies/:lobby-id/players/:email/ready
-- Establece si el jugador está listo o no para comenzar la partida.
-- Body: "ready".
-
-### **DELETE** /api/lobbies/:lobby-id/players/:email
+### **DELETE** /api/lobbies/:lobby-id/players/:username
 - El jugador abandona el lobby o es expulsado por el líder. Si el usuario que abandona es el líder se destruye el lobby.
 - Body: "requested_by".
 
@@ -150,17 +150,17 @@
 - Inicia la partida. Dados los datos del lobby crea la partida y destruye el lobby.
 - Body: "lobby_id".
 
-### **GET** /api/matches/:match_id/:email
+### **GET** /api/matches/:match_id/:username
 - Devuelve el estado de los jugadores de la partida en el momento actual. Recibiendo el usuario que hace la petición le devuelve información exclusiva, como la mano del mazo en el turno.
 
-### **POST** /api/matches/:match_id/cards/:email
+### **POST** /api/matches/:match_id/cards/:username
 - El usuario juega una carta y se actualiza el estado de la partida.
 - Body: "card_id", "who" (si necesario. Dependiendo de si es sobre una ficha o user, será un number o string, respectivamente), inicio y fin (si necesario).
 
-### **POST** /api/matches/:match_id/dice/:email
+### **POST** /api/matches/:match_id/dice/:username
 - Tira el dado de un usuario (dado los efectos que tiene a consecuencia de las cartas) y devuelve todos los posibles movimientos del usuario de cada una de las fichas (si posible) dada la tirada.
 
-### **POST** /api/matches/:match_id/pawn/:email
+### **POST** /api/matches/:match_id/pawn/:username
 - Actualiaza la posición de una ficha en el tablero.
 - Body: "pawn_id", "final_position" y steps_remaining.
 
