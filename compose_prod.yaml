@@ -31,10 +31,12 @@ services:
         condition: service_healthy
     networks:
       - prisma_network
+      - red_universal
 
 networks:
   prisma_network:
     name: prisma_network_prod
-
+  red_universal:
+    external: true
 volumes:
   postgres_data_prod:
