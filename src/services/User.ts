@@ -2,6 +2,7 @@ import { Tipo_Cosmetico, Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
 import { UsuarioReturnType, AuthUserReturnType, CompleteUserReturnType } from "./ReturnTypes.js";
+import Deck from "./Deck.js";
 
 type RelacionConfig = {
     disconnect: (prisma: any, userEmail: string, relatedId: string) => Promise<any>
@@ -217,6 +218,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 escaleraActual: true
             }
         })
+        const defaultDeck = await Deck.createDefaultDeckForUser(user)
         return user
     } catch (error) {
         console.error("Error al crear el usuario:", error)
