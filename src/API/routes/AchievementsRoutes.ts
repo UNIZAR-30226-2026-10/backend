@@ -4,9 +4,6 @@ import Achievements from "../../services/Achievements.js";
 
 export default function achievementsRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
-    app.get("/ping", async (request, reply) => {
-        return "pong Achievements";
-    });
 
     app.get("/", {
         schema: 

@@ -806,6 +806,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.post("/:email/:friendUsername/invites", {
         schema: {
+            summary: "Agregar a un jugador como amigo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para agregar a un jugador como amigo. 
+            La petición debe incluir el email del usuario y el nombre de usuario del amigo que se desea agregar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
                 friendUsername: Type.String()
