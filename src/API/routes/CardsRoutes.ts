@@ -4,9 +4,6 @@ import Cards from "../../services/Cards.js";
 
 export default function cardsRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
-    app.get("/ping", async (request, reply) => {
-        return "pong Cards";
-    });
 
     app.get("/", {
         schema: 
