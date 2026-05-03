@@ -44,7 +44,7 @@ export default async function createApp() : Promise<FastifyInstance> {
                 { name: "auth", description: "Endpoints relacionados con autenticación y gestión de usuarios" },
                 { name: "users", description: "Endpoints relacionados con la gestión de usuarios" },
                 { name: "cards", description: "Endpoints relacionados con la gestión de cartas" },
-                { name: "game", description: "Endpoints relacionados con la gestión de partidas" },
+                { name: "matches", description: "Endpoints relacionados con la gestión de partidas" },
                 { name: "Achievements", description: "Endpoints relacionados con la gestión de logros" },
                 { name: "Cosmetics", description: "Endpoints relacionados con la gestión de cosméticos" },
                 { name: "lobbies", description: "Endpoints relacionados con la gestión de lobbies" }
