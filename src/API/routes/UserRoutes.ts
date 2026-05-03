@@ -546,7 +546,6 @@ export default function userRoutes(app: FastifyInstance) : void {
             if (!user) {
                 return reply.status(404).send({ error: "usuario no encontrado" });
             }
-            //FIXME
             const decks = user.barajas.map(m => ({
                 nombre: m.nombre,
                 cartas: m.barajaCartas.map(bc => bc.carta)
