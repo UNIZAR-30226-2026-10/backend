@@ -1,7 +1,8 @@
 import { Tipo_Cosmetico, Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
-import { UsuarioReturnType, AuthUserReturnType } from "./ReturnTypes.js";
+import { UsuarioReturnType, AuthUserReturnType, CompleteUserReturnType } from "./ReturnTypes.js";
+import Deck from "./Deck.js";
 
 type RelacionConfig = {
     disconnect: (prisma: any, userEmail: string, relatedId: string) => Promise<any>
@@ -172,7 +173,6 @@ const Relaciones : Record<string, RelacionConfig> = {
 }
 
 export async function createUser(data: { email:string, password:string, nombre:string }) : Promise<UsuarioReturnType> {
-    data.email = data.email.toLowerCase()
     // Verificar correctitud del email
     if(!await emailHelper(data.email)) throw new Error("Email no valido o ya registrado")
 
@@ -218,6 +218,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 escaleraActual: true
             }
         })
+        await Deck.createDefaultDeckForUser(user)
         return user
     } catch (error) {
         console.error("Error al crear el usuario:", error)
@@ -225,7 +226,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
     }
 }
 
-export async function getUserByEmail(email:string) : Promise<UsuarioReturnType | null> {
+export async function getUserByEmail(email:string) : Promise<CompleteUserReturnType | null> {
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -234,7 +235,16 @@ export async function getUserByEmail(email:string) : Promise<UsuarioReturnType |
                 cartas: true,
                 cosmeticos: true,
                 logros: true,
-                barajas: true,
+                barajas: {
+                    include: {
+                        usadaEn: true,
+                        barajaCartas: {
+                            include: {
+                                carta: true
+                            }
+                        }
+                    }
+                },
                 partidas: true,
                 partidasGanadas: true,
                 iconoActual: true,
@@ -242,6 +252,52 @@ export async function getUserByEmail(email:string) : Promise<UsuarioReturnType |
                 serpienteActual: true,
                 escaleraActual: true
             }
+        })
+        return user
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
+export async function getUserMatches(email:string) {
+    try {
+        const matches = await prisma.usuario.findUnique({
+            where: { email },
+            include: {
+                partidas: {
+                    select: {
+                        configuracion: false,
+                        ID: true,
+                        fechaInicio: true,
+                        tableroInicialNombre: true
+                    },
+
+                    include: {
+                        partidaJugadores: {
+                            select: {
+                                nombre: true,
+                            }
+                        }
+                    },
+                
+                    where: {
+                        ganadorEmail: null
+                    }
+                }
+            }
+        })
+        return matches
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
+export async function getUserByEmailBasic(email:string) {
+    try {
+        const user = await prisma.usuario.findUnique({
+            where: { email }
         })
         return user
     } catch (error) {
@@ -263,7 +319,7 @@ export async function deleteUserByEmail(email:string) : Promise<{ message: strin
 }
 
 export async function modifyUserByEmail(email:string, data: { password?:string, SEP?:number, ELO?:number, 
-    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number}) : Promise<UsuarioReturnType> {
+    partidasJugadas?:number, victorias?:number, derrotas?:number, cartasJugadas?:number, nombre?:string }) : Promise<UsuarioReturnType> {
 
     let updateData:any = {}
 
@@ -331,8 +387,40 @@ export async function getAllUsers() : Promise<UsuarioReturnType[]> {
     }
 }
 
-export async function addAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string }> {
+export async function getAmigos(userEmail:string) : Promise<String[]> {
     try {
+        const user = await prisma.usuario.findUnique({
+            where: { email: userEmail },
+            include: {
+                amigos: {
+                    select: {
+                        nombre: true,
+                    }
+                }
+            }
+        });
+        if (!user) {
+            throw new Error("Usuario no encontrado");
+        }
+        return user.amigos.map((amigo: any) => amigo.email);
+    } catch (error) {
+        console.error("Error al obtener amigos:", error);
+        throw new Error("Error al obtener amigos");
+    }
+}
+
+export async function addAmigo(userEmail:string, amigoUsername:string) : Promise<{ message: string }> {
+    try {
+        const amigo = await prisma.usuario.findUnique({
+            where: { nombre: amigoUsername }
+        });
+
+        if (!amigo) {
+            throw new Error("Amigo no encontrado");
+        }
+
+        const amigoEmail = amigo.email;
+
         await Relaciones["amigos"].connect(prisma, userEmail, amigoEmail)
         await Relaciones["amigos"].connect(prisma, amigoEmail, userEmail)
         return { message: "Amigo añadido correctamente" }
@@ -342,8 +430,18 @@ export async function addAmigo(userEmail:string, amigoEmail:string) : Promise<{ 
     }
 }
 
-export async function removeAmigo(userEmail:string, amigoEmail:string) : Promise<{ message: string }> {
+export async function removeAmigo(userEmail:string, amigoUsername:string) : Promise<{ message: string }> {
     try {
+        const amigo = await prisma.usuario.findUnique({
+            where: { nombre: amigoUsername }
+        });
+
+        if (!amigo) {
+            throw new Error("Amigo no encontrado");
+        }
+
+        const amigoEmail = amigo.email;
+
         await Relaciones["amigos"].disconnect(prisma, userEmail, amigoEmail)
         await Relaciones["amigos"].disconnect(prisma, amigoEmail, userEmail)
         return { message: "Amigo eliminado correctamente" }
@@ -482,16 +580,44 @@ const passwordHelper = (password:string): string | null => {
 
 }
 
+export async function getUserByName(nombre:string) : Promise<UsuarioReturnType | null> {
+    try {
+        const user = await prisma.usuario.findUnique({
+            where: { nombre: nombre },
+            include: {
+                amigos: true,
+                cartas: true,
+                cosmeticos: true,
+                logros: true,
+                barajas: true,
+                partidas: true,
+                partidasGanadas: true,
+                iconoActual: true,
+                fichaActual: true,
+                serpienteActual: true,
+                escaleraActual: true
+            }
+        })
+        return user
+    } catch (error) {
+        console.error("Error al obtener el usuario:", error)
+        throw new Error("Error al obtener el usuario")
+    }
+}
+
 export default {
     createUser,
     getUserByEmail,
+    getUserMatches,
     deleteUserByEmail,
     modifyUserByEmail,
     getAllUsers,
+    getAmigos,
     addAmigo,
     removeAmigo,
     connectRelacion,
     disconnectRelacion,
     updateCosmeticOnUser,
-    authenticateUser
+    authenticateUser,
+    getUserByName
 }

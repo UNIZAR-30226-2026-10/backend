@@ -28,6 +28,31 @@ export type UsuarioReturnType = Prisma.UsuarioGetPayload<{
     }
 }>
 
+export type CompleteUserReturnType = Prisma.UsuarioGetPayload<{
+    include: {
+        amigos: true,
+        cartas: true,
+        barajas: {
+            include: {
+               usadaEn: true,
+               barajaCartas: {
+                include: {
+                    carta: true
+                }
+               } 
+            }
+        }, 
+        logros: true,
+        cosmeticos: true,
+        partidas: true,
+        partidasGanadas: true,
+        iconoActual: true,
+        fichaActual: true,
+        serpienteActual: true,
+        escaleraActual: true
+    }
+}>
+
 export type AuthUserReturnType = Prisma.UsuarioGetPayload<{
     select: {
         email: true,
@@ -67,7 +92,10 @@ export type PartidaReturnType = Prisma.PartidaGetPayload<{
         partidaJugadores: true,
         barajas: true,
         ganador: true,
-        tableroInicial: true
+        tableroInicial: {
+            select: {
+                nombre: true }
+        }
     }
 }>
 
@@ -109,3 +137,27 @@ export type CosmeticosDisponiblesUsuarioReturnType = Prisma.UsuarioGetPayload<{
         }
     }
 }>
+
+export type PartidasActivasReturnType = {
+    ID: string,
+    fechaInicio: Date,
+    partidaJugadores: {
+        nombre: string
+    }[],
+    turnoActual: number,
+    rondaActual: number
+}
+
+export type Movimiento = {
+    fichaId: number,
+    casillaDestino: number,
+    esBifurcacion: boolean,
+    pasosRestantes?: number,
+}
+
+export type MovimientoReturnType = {
+    partida: PartidaReturnType,
+    tirada: number,
+    movimientos: Movimiento[],
+    tiradaExtra?: number,
+}

@@ -7,6 +7,10 @@ import { Tipo_Cosmetico } from "../generated/prisma/enums.ts"
 
 const runId = Date.now()
 const testEmail = `test_${runId}@ejemplo.com`
+const testEmail2 = `test2_${runId}@ejemplo.com`
+const testEmail3 = `test3_${runId}@ejemplo.com`
+
+const makeUserName = (label) => `${label} ${runId}`
 
 after(async () => {
   await prisma.usuario.deleteMany({
@@ -14,8 +18,13 @@ after(async () => {
       email: {
         in: [
           testEmail,
+          testEmail2,
+          testEmail3,
           `badname_${runId}@ejemplo.com`,
-          `weakpass_${runId}@ejemplo.com`
+          `weakpass_${runId}@ejemplo.com`,
+          `maleducado${runId}@ejemplo.com`,
+          `EZpass${runId}@ejemplo.com`,
+          `ñandú${runId}@ejemplo.com`
         ]
       }
     }
@@ -40,7 +49,7 @@ describe("Tests de User Service", { concurrency: false }, () => {
     const user = await usersBL.createUser({
       email: testEmail,
       password: "Password123!",
-      nombre: "Test User"
+      nombre: makeUserName("Test User")
     })
 
     assert.equal(user?.email, testEmail)
@@ -106,14 +115,14 @@ describe("Tests de User Service", { concurrency: false }, () => {
     await usersBL.createUser({
       email: testEmail,
       password: "Password123!",
-      nombre: "Test User"
+      nombre: makeUserName("Test User Registro")
     })
 
     await assert.rejects(
       usersBL.createUser({
         email: testEmail,
         password: "Password123!",
-        nombre: "Test User 2"
+        nombre: makeUserName("Test User 2")
       }),
       /Email no valido o ya registrado/
     )
@@ -121,19 +130,19 @@ describe("Tests de User Service", { concurrency: false }, () => {
 
   test("Ñ y acentos en el nombre", async () => {
     const result = await usersBL.createUser({
-      email: `test2_${runId}@ejemplo.com`,
+      email: testEmail2,
       password: "Password123!",
-      nombre: "ñandú"
+      nombre: makeUserName("ñandú")
     })
 
-    assert.equal(result?.nombre, "ñandú")
+    assert.equal(result?.nombre, makeUserName("ñandú"))
   })
 
   test("Modificar el cosmetico de un usuario", async () => {
     const user = await usersBL.createUser({
-      email: `test3_${runId}@ejemplo.com`,
+      email: testEmail3,
       password: "Password123!",
-      nombre: "Test User 3"
+      nombre: makeUserName("Test User 3")
     })
 
     const cosmetic = await prisma.cosmeticos.create({
