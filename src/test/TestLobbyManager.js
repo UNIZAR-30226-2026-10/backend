@@ -10,9 +10,9 @@ describe("Lobby Manager", () => {
 
     test("Crear Lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        assert.equal(lobby.idCreador, "ag@gmail.com")
+        assert.equal(lobby.usernameCreador, "ag")
         assert.equal(lobby.numJugadores, 1)
-        assert.equal(lobby.jugadores[0].idJugador, "ag@gmail.com")
+        assert.equal(lobby.jugadores[0].nombre, "ag")
         assert.equal(lobby.numBots, 0)
     })
     test("Crear Lobby cuando ya estás en un lobby", () => {
@@ -42,14 +42,14 @@ describe("Lobby Manager", () => {
     })
     test("Añadir un bot a un lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.addBot(lobby.idCreador,lobby.idLobby)
+        manager.addBot(lobby.usernameCreador, lobby.idLobby)
         assert.equal(lobby.numBots, 1)
     })
     test("Añadir un bot cuando no eres el líder", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
         assert.throws(() => {
-            manager.addBot("aplayer@gmail.com", lobby.idLobby)
+            manager.addBot("aplayer", lobby.idLobby)
         }, new Error("CANT_ADD"))
     })
     test("Unir jugador a un lobby lleno", () => {
@@ -67,19 +67,19 @@ describe("Lobby Manager", () => {
         lobby = manager.joinLobby({idJugador: "another@gmail.com", nombre: "another", esIA: false, estaListo: false}, lobby.idLobby)
         lobby = manager.joinLobby({idJugador: "otro@gmail.com", nombre: "otro", esIA: false, estaListo: false}, lobby.idLobby)
         assert.throws(() => {
-            manager.addBot("ag@gmail.com", lobby.idLobby)
+            manager.addBot("ag", lobby.idLobby)
         }, new Error("LOBBY_IS_FULL"))
     })
     test("Expulsar jugador de un lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
-        let devuelto = manager.deletePlayer("ag@gmail.com", "aplayer@gmail.com", lobby.idLobby)
+        let devuelto = manager.deletePlayer("ag", "aplayer", lobby.idLobby)
         assert.equal(lobby.numJugadores, 1)
         assert.equal(devuelto, lobby)
     })
     test("Salir de un Lobby siendo el líder", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        let devuelto = manager.deletePlayer("ag@gmail.com", "ag@gmail.com", lobby.idLobby)
+        let devuelto = manager.deletePlayer("ag", "ag", lobby.idLobby)
         assert.equal(devuelto, lobby)
         assert.throws(() => {
             manager.getLobby(lobby.idLobby)
@@ -88,51 +88,51 @@ describe("Lobby Manager", () => {
     test("Salir de un Lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
-        let devuelto = manager.deletePlayer("aplayer@gmail.com", "aplayer@gmail.com", lobby.idLobby)
+        let devuelto = manager.deletePlayer("aplayer", "aplayer", lobby.idLobby)
         assert.equal(lobby.numJugadores, 1)
         assert.equal(devuelto, lobby)
     })
     test("Expulsar a un jugador de una lobby inexistente", () => {
         assert.throws(() => {
-            manager.deletePlayer("ag@gmail.com", "aplayer@gmail.com", "noexiste")
+            manager.deletePlayer("ag", "aplayer", "noexiste")
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Expulsar a un jugador sin ser el líder", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
         assert.throws(() => {
-            manager.deletePlayer("aplayer@gmail.com", "ag@gmail.com", lobby.idLobby)
+            manager.deletePlayer("aplayer", "ag", lobby.idLobby)
         }, new Error("CANT_KICK"))
     })
     test("Expulsar a un jugador que no está en el lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         assert.throws(() => {
-            manager.deletePlayer("ag@gmail.com", "aplayer@gmail.com", lobby.idLobby)
+            manager.deletePlayer("ag", "aplayer", lobby.idLobby)
         }, new Error("NOT_IN_LOBBY"))
     })
     test("Expulsar a un bot del lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        lobby = manager.addBot(lobby.idCreador, lobby.idLobby)
-        let botId = lobby.jugadores[1].idJugador
-        let devuelto = manager.deletePlayer("ag@gmail.com", botId, lobby.idLobby)
+        lobby = manager.addBot(lobby.usernameCreador, lobby.idLobby)
+        let botId = lobby.jugadores[1].nombre
+        let devuelto = manager.deletePlayer("ag", botId, lobby.idLobby)
         assert.equal(lobby.numBots, 0)
         assert.equal(devuelto, lobby)
     })
     test("Seleccionar mazo", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
-        manager.selectDeck("ag@gmail.com", lobby.idLobby, "mazo1")
+        manager.selectDeck("ag", lobby.idLobby, "mazo1")
         assert.equal(lobby.jugadores[0].nombreMazo, "mazo1")
     })
     test("Seleccionar mazo sin estar en el lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         assert.throws(() => {
-            manager.selectDeck("aplayer@gmail.com", lobby.idLobby, "mazo1")
+            manager.selectDeck("aplayer", lobby.idLobby, "mazo1")
         }, new Error("WRONG_LOBBY"))
     })
     test("Seleccionar mazo en un lobby que no existe", () => {
         assert.throws(() => {
-            manager.selectDeck("ag@gmail.com", "noexiste", "mazo1")
+            manager.selectDeck("ag", "noexiste", "mazo1")
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Obtener una lobby existente",  () => {
@@ -157,79 +157,79 @@ describe("Lobby Manager", () => {
     })
     test("Poner jugador listo", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.setReady(lobby.idLobby, "ag@gmail.com", true)
+        manager.setReady(lobby.idLobby, "ag", true)
         assert.equal(lobby.jugadores[0].estaListo, true)   
     })
     test("Poner jugador listo sin estar en el lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         assert.throws(() => {
-            manager.setReady(lobby.idLobby, "aplayer@gmail.com", true)
+            manager.setReady(lobby.idLobby, "aplayer", true)
         }, new Error("WRONG_LOBBY"))
     })
     test("Poner jugador listo en un lobby que no existe", () => {
         assert.throws(() => {
-            manager.setReady("noexiste", "ag@gmail.com", true)
+            manager.setReady("noexiste", "ag", true)
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Cambiar tablero siendo el lider del lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.changeBoard("ag@gmail.com", lobby.idLobby, "tablero33")
+        manager.changeBoard("ag", lobby.idLobby, "tablero33")
         assert.equal(lobby.tablero, "tablero33")
     })
     test("Cambiar tablero sin ser el lider del lobby", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
         lobby = manager.joinLobby({idJugador: "aplayer@gmail.com", nombre: "aplayer", esIA: false, estaListo: false}, lobby.idLobby)
         assert.throws(() => {
-            manager.changeBoard("aplayer@gmail.com", lobby.idLobby, "tablero33")
+            manager.changeBoard("aplayer", lobby.idLobby, "tablero33")
         }, new Error("CANT_CHANGE_BOARD"))
     })
     test("Cambiar tablero en un lobby que no existe", () => {
         assert.throws(() => {
-            manager.changeBoard("ag@gmail.com", "noexiste", "tablero33")
+            manager.changeBoard("ag", "noexiste", "tablero33")
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Enviar una invitación correctamente", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        let resultado = manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
-        let invites = manager.getInvitesOfPlayer("invitado@gmail.com")
+        let resultado = manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
+        let invites = manager.getInvitesOfPlayer("invitado")
         assert.equal(resultado, "INVITE_SENT")
         assert.equal(invites.length, 1)
-        assert.equal(invites[0].inviteFrom, "ag@gmail.com")
+        assert.equal(invites[0].inviteFrom, "ag")
         assert.equal(invites[0].lobbyID, lobby.idLobby)
     })
     test("Enviar invitación duplicada a la misma sala", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })     
+        manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })     
         assert.throws(() => {
-            manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
+            manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
         }, new Error("INVITE_ALREADY_SENT"))
     })
     test("Aceptar invitación", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
-        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
-        let devuelto = manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag@gmail.com")
+        manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "invitado", esIA: false, estaListo: false}
+        let devuelto = manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
         assert.equal(devuelto.idLobby, lobby.idLobby) 
         assert.equal(lobby.numJugadores, 2) 
-        assert.equal(manager.getInvitesOfPlayer("invitado@gmail.com").length, 0) 
+        assert.equal(manager.getInvitesOfPlayer("invitado").length, 0) 
     })
 
     test("Rechazar invitación", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
-        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
-        let devuelto = manager.manageInvite(jugadorInvitado, false, lobby.idLobby, "ag@gmail.com")
+        manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "invitado", esIA: false, estaListo: false}
+        let devuelto = manager.manageInvite(jugadorInvitado, false, lobby.idLobby, "ag")
         assert.equal(devuelto, "INVITE_DECLINED")
         assert.equal(lobby.numJugadores, 1) 
-        assert.equal(manager.getInvitesOfPlayer("invitado@gmail.com").length, 0) 
+        assert.equal(manager.getInvitesOfPlayer("invitado").length, 0) 
     })
     test("Aceptar o rechazar invitación en un lobby que no existe", () => {
         let lobby = manager.createLobby({idJugador: "ag@gmail.com", nombre: "ag", esIA: false, estaListo: false})
-        manager.sendInvite({ inviteFrom: "ag@gmail.com", inviteFor: "invitado@gmail.com", lobbyID: lobby.idLobby })
-        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "Invitado", esIA: false, estaListo: false}
+        manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
+        let jugadorInvitado = {idJugador: "invitado@gmail.com", nombre: "invitado", esIA: false, estaListo: false}
         manager.deleteLobby(lobby.idLobby)
         assert.throws(() => {
-            manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag@gmail.com")
+            manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
         }, new Error("LOBBY_NOT_FOUND"))
     })
 })

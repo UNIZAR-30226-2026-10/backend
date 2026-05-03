@@ -5,7 +5,7 @@ import User from "../services/User.js"
 import Cards from "../services/Cards.js"
 import Effects from "../services/Effects.js"
 import { Tipo_Afeccion, Tipo_Carta, Rareza, Tipo_Efecto } from "../generated/prisma/enums.js"
-import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
+import { cartasPoblación, cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 
 const runid = Date.now()
 
@@ -22,6 +22,7 @@ function makeIds(suffix) {
 before(async () => {
     try {
         await cosmeticosPorDefecto()
+        await cartasPoblación()
     } catch (error) {
         console.error("Error al crear los cosméticos por defecto:", error)
     }

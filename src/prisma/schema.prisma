@@ -89,7 +89,7 @@ model TableroInicial {
 }
 
 model Baraja {
-  nombre       String          @unique
+  nombre       String          
   usuarioEmail String
   usuario      Usuario         @relation("crea", fields: [usuarioEmail], references: [email], onDelete: Cascade)
   barajaCartas BarajaCarta[]

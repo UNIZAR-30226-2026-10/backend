@@ -64,6 +64,9 @@ export class LobbyManager {
     }
 
     manageInvite(jugador: jugadorLobby, accept: boolean, lobbyID: string, inviteFrom: string): Lobby | string {
+        const lobby = this.lobbies.get(lobbyID)
+        if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+
         let invites = this.invitaciones.get(jugador.nombre)
         if (!invites || invites.length === 0) throw new Error("INVITES_NOT_FOUND")
         const invite = invites.find(i => i.inviteFrom === inviteFrom && i.lobbyID === lobbyID)
