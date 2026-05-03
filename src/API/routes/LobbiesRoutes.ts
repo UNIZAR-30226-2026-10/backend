@@ -10,6 +10,12 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.post("/", {
         schema: {
+            summary: "Crear un nuevo lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para crear un nuevo lobby. 
+            La petición debe incluir el nombre de usuario del creador del lobby.
+            El creador se convierte automaticamente en el líder del lobby.`,
             body: Type.Object({
                 username: Type.String(),
             }),
@@ -64,6 +70,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.get("/:lobby-id", {
         schema: {
+            summary: "Obtener la información de un lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener la información de un lobby específico. 
+            La petición debe incluir el ID del lobby del cual se quiere obtener la información.`,
             params: Type.Object({
                 "lobby-id": Type.String()
             }),
@@ -108,6 +119,11 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.post("/:lobby-id/invitations", {
         schema: {
+            summary: "Enviar una invitación a un amigo para unirse al lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para enviar una invitación a un amigo para unirse al lobby. 
+            La petición debe incluir el ID del lobby al que se quiere invitar, el nombre de usuario de la persona que envía la invitación y el nombre de usuario de la persona a la que se quiere invitar.`,
             params: Type.Object({
                 "lobby-id": Type.String()
             }),
@@ -164,6 +180,14 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.put("/:lobby-id/invitations", {
         schema: {
+            summary: "Responder a una invitación para unirse al lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para responder a una invitación para unirse al lobby. 
+            La petición debe incluir el ID del lobby al que se ha sido invitado, 
+            el nombre de usuario de la persona que envió la invitación, 
+            el nombre de usuario de la persona que responde la invitación y
+            si acepta o rechaza la invitación.`,
             params: Type.Object({
                 "lobby-id": Type.String()
             }),
@@ -233,6 +257,12 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.post("/:lobby-id/bots", {
         schema: {
+            summary: "Agregar un bot a un lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para agregar un bot a un lobby. 
+            La petición debe incluir el ID del lobby al que se quiere agregar el bot y 
+            el nombre de usuario de la persona que solicita la acción.`,
             params: Type.Object({
                 "lobby-id": Type.String()
             }),
@@ -297,6 +327,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.put("/:lobby-id/players/:username/deck", {
         schema: {
+            summary: "Seleccionar el mazo con el que se jugará en el lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para seleccionar el mazo con el que se jugará en el lobby.
+            La petición debe incluir el ID del lobby en el que se va a jugar, 
+            el nombre de usuario de la persona que selecciona el mazo y 
+            el nombre del mazo que se quiere seleccionar.`,
             params: Type.Object({
                 "lobby-id": Type.String(),
                 "username": Type.String()
@@ -364,6 +401,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.put("/:lobby-id/players/:username/ready", {
         schema: {
+            summary: "Marcar a un jugador como listo para jugar en el lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para marcar a un jugador como listo para jugar en el lobby. 
+            La petición debe incluir el ID del lobby en el que se va a jugar, 
+            el nombre de usuario de la persona que se va a marcar como lista y 
+            un booleano indicando si se marca como listo o no.`,
             params: Type.Object({
                 "lobby-id": Type.String(),
                 "username": Type.String()
@@ -419,6 +463,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.put("/:lobby-id/board", {
         schema: {
+            summary: "Cambiar el tablero del lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para cambiar el tablero del lobby. 
+            La petición debe incluir el ID del lobby al que se quiere cambiar el tablero, 
+            el nombre de usuario de la persona que solicita la acción y 
+            el nombre del nuevo tablero que se quiere establecer para el lobby.`,
             params: Type.Object({
                 "lobby-id": Type.String()
             }),
@@ -483,6 +534,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
 
     app.delete("/:lobby-id/players/:username", {
         schema: {
+            summary: "Eliminar a un jugador del lobby",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar a un jugador del lobby. 
+            La petición debe incluir el ID del lobby del que se quiere eliminar al jugador, 
+            el nombre de usuario del jugador que se quiere eliminar y 
+            el nombre de usuario de la persona que solicita la acción.`,
             params: Type.Object({
                 "lobby-id": Type.String(),
                 "username": Type.String()

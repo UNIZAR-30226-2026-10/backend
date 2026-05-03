@@ -10,7 +10,11 @@ export default function cardsRoutes(app: FastifyInstance) : void {
 
     app.get("/", {
         schema: 
-            { response: {
+        {       summary: "Obtener todas las cartas",
+                tags: ["cards"],
+                security: [{ CookieAuth: [] }],
+                description: "Endpoint para obtener todas las cartas disponibles en el juego.",
+                response: {
                 200: {
                     cards: Type.Array(Type.Object({
                         nombre: Type.String(),

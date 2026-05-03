@@ -8,6 +8,11 @@ export default function cosmeticsRoutes(app: FastifyInstance) : void {
 
     app.get("/store/:email", {
         schema: {
+            summary: "Obtener los cosméticos disponibles en la tienda para un usuario",
+            tags: ["Cosmetics"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los cosméticos disponibles en la tienda para un usuario específico. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener los cosméticos disponibles en la tienda.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }), response: {
@@ -39,6 +44,11 @@ export default function cosmeticsRoutes(app: FastifyInstance) : void {
 
     app.post("/store/:email", {
         schema: {
+            summary: "Comprar un cosmético de la tienda",
+            tags: ["Cosmetics"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para comprar un cosmético de la tienda para un usuario específico. 
+            La petición debe incluir el email del usuario que quiere comprar el cosmético y el nombre del cosmético que quiere comprar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),

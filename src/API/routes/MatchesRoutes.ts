@@ -8,6 +8,13 @@ export default function matchesRoutes(app: FastifyInstance) : void {
 
     app.post("/", {
         schema: {
+            summary: "Iniciar una nueva partida a partir de un lobby",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para iniciar una nueva partida a partir de un lobby. 
+            Al iniciar una partida esta utiliza la información del lobby para configurar la partida y
+            se borra el lobby del que se ha partido para crearla.
+            La petición debe incluir el ID del lobby a partir del cual se quiere iniciar la partida.`,
             body: Type.Object({
                 lobby_id: Type.String()
             }),
@@ -37,6 +44,14 @@ export default function matchesRoutes(app: FastifyInstance) : void {
 
     app.get("/:match_id/:username", {
         schema: {
+            summary: "Obtener el estado de una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener el estado de una partida específica. 
+            La petición debe incluir el ID de la partida de la cual se quiere obtener el estado y
+            el nombre de usuario del jugador que realiza la petición (para verificar que el jugador forma parte de la partida).
+            Devolvemos información exclusiva para ese jugador, como su mano de cartas, sus logros, etc. 
+            junto con información general de la partida como el estado del tablero, el turno actual, etc.`,
             params: Type.Object({
                 match_id: Type.String(),
                 username: Type.String()
@@ -67,6 +82,13 @@ export default function matchesRoutes(app: FastifyInstance) : void {
 
     app.post("/:match_id/cards/:username", {
         schema: {
+            summary: "Jugar una carta en una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para jugar una carta en una partida. 
+            La petición debe incluir el ID de la partida en la que se quiere jugar la carta, 
+            el nombre de usuario del jugador que quiere jugar la carta, 
+            el ID de la carta que se quiere jugar y opcionalmente dependiendo de la carta se pueden incluir otros parámetros como a quién se le juega la carta, en qué posición del tablero, etc.`,
             params: Type.Object({
                 match_id: Type.String(),
                 username: Type.String()
@@ -117,6 +139,12 @@ export default function matchesRoutes(app: FastifyInstance) : void {
 
     app.post("/:match_id/dice/:username", {
         schema: {
+            summary: "Tirar el dado en una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para tirar el dado en una partida. 
+            La petición debe incluir el ID de la partida en la que se quiere tirar el dado y 
+            el nombre de usuario del jugador que quiere tirar el dado.`,
             params: Type.Object({
                 match_id: Type.String(),
                 username: Type.String()
@@ -154,6 +182,13 @@ export default function matchesRoutes(app: FastifyInstance) : void {
 
     app.post("/:match_id/pawn/:username", {
         schema: {
+            summary: "Mover una ficha en una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para mover una ficha en una partida. 
+            La petición debe incluir el ID de la partida en la que se quiere mover la ficha, 
+            el nombre de usuario del jugador que quiere mover la ficha, 
+            el ID de la ficha que se quiere mover y las coordenadas de la posición final.`,
             params: Type.Object({
                 match_id: Type.String(),
                 username: Type.String()

@@ -17,6 +17,10 @@ export default function authRoutes(app: FastifyInstance) : void {
 
     app.post("/new_users", {
         schema: {
+            summary: "Registrar un nuevo usuario",
+            tags: ["auth"],
+            description: `Endpoint para registrar un nuevo usuario. 
+            La petición debe incluir un email, un nombre de usuario y una contraseña.`,
             body: Type.Object({
                 email: Type.String({ format: "email" }),
                 username: Type.String(),
@@ -55,6 +59,11 @@ export default function authRoutes(app: FastifyInstance) : void {
 
     app.post("/login", {
         schema: {
+            summary: "Iniciar sesión",
+            tags: ["auth"],
+            description: `Endpoint para iniciar sesión. 
+            La petición debe incluir un email y una contraseña válidos. 
+            Si las credenciales son correctas, se emitirá un token JWT en una cookie llamada "session" y otra cookie llamada "autologin" para el sistema de autologin.`,
             body: Type.Object({
                 email: Type.String({ format: "email" }),
                 password: Type.String()
@@ -80,14 +89,12 @@ export default function authRoutes(app: FastifyInstance) : void {
             const token = app.jwt.sign({ email: email, username: user.nombre });
             reply.setCookie("autologin", token, {
                 httpOnly: true,
-                secure: true,
                 sameSite: 'lax', 
                 path: '/',         
                 maxAge: 60 * 60 * 24 * 7 // 7 dias
             });
             reply.setCookie("session", token, {
                 httpOnly: true,
-                secure: true,
                 sameSite: 'lax',
                 path: '/',         
             });
@@ -99,6 +106,10 @@ export default function authRoutes(app: FastifyInstance) : void {
 
     app.post("/cookie_login", {
         schema: {
+            summary: "Iniciar sesión con cookie",
+            tags: ["auth"],
+            description: `Endpoint para iniciar sesión con una cookie de autologin. 
+            La petición debe incluir una cookie llamada "autologin" con un token JWT válido.`,
             response: {
                 200: Type.Object({
                     email: Type.String({ format: "email" }),
@@ -120,7 +131,6 @@ export default function authRoutes(app: FastifyInstance) : void {
         // Añadimos cookie de sesion como en el login normal
         reply.setCookie("session", autologin, {
             httpOnly: true,
-            secure: true,
             sameSite: 'lax',
             path: '/',
         });
@@ -139,6 +149,12 @@ export default function authRoutes(app: FastifyInstance) : void {
     app.post("/logout", {
         preHandler: app.verifyToken,
         schema: {
+            summary: "Cerrar sesión",
+            tags: ["auth"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para cerrar sesión. 
+            La petición debe incluir una cookie de sesión válida. 
+            Este endpoint eliminará las cookies "session" y "autologin" para cerrar la sesión del usuario.`,
             response: {
                 200: Type.String(),
                 400: Type.Object({
@@ -151,14 +167,12 @@ export default function authRoutes(app: FastifyInstance) : void {
 
         reply.clearCookie("session", {
             httpOnly: true,
-            secure: true,
             sameSite: 'lax',
             path: '/',
         });
 
         reply.clearCookie("autologin", {
             httpOnly: true,
-            secure: true,
             sameSite: 'lax',
             path: '/',
         });

@@ -10,7 +10,12 @@ export default function achievementsRoutes(app: FastifyInstance) : void {
 
     app.get("/", {
         schema: 
-            { response: {
+            { 
+                summary: "Obtener todos los logros",
+                tags: ["Achievements"],
+                security: [{ CookieAuth: [] }],
+                description: "Endpoint para obtener todos los logros disponibles en el juego, junto con sus detalles y las cartas de recompensa asociadas (si las hay) o el dinero de recompensa.",
+                response: {
                 200: {
                     logros: Type.Array(Type.Object({
                         nombre: Type.String(),

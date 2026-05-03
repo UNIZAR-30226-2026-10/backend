@@ -13,6 +13,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/profile", {
         schema: {
+            summary: "Obtener el perfil de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener la información del perfil de tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quiere obtener la información del perfil.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -58,6 +63,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/icons", {
         schema: {
+            summary: "Obtener los iconos disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los iconos disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener los iconos disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -85,6 +95,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/icon", {
         schema: {
+            summary: "Actualizar el icono actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar el icono actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre del nuevo icono que se desea establecer como icono actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -116,6 +131,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/stairs", {
         schema: {
+            summary: "Obtener las escaleras disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las escaleras disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las escaleras disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -143,6 +163,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/stair", {
         schema: {
+            summary: "Actualizar la escalera actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la escalera actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva escalera que se desea establecer como escalera actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -174,6 +199,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/pawns", {
         schema: {
+            summary: "Obtener las fichas disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las fichas disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las fichas disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -202,6 +232,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/pawn", {
         schema: {
+            summary: "Actualizar la ficha actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la ficha actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva ficha que se desea establecer como ficha actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -233,6 +268,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/snakes", {
         schema: {
+            summary: "Obtener las serpientes disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las serpientes disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las serpientes disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -260,6 +300,11 @@ export default function userRoutes(app: FastifyInstance) : void {
      
      app.put("/:email/snake", {
         schema: {
+            summary: "Actualizar la serpiente actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la serpiente actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva serpiente que se desea establecer como serpiente actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -291,6 +336,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/username", {
         schema: {
+            summary: "Actualizar el nombre de usuario de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar el nombre de usuario de tu cuenta. 
+            La petición debe incluir el email del usuario y el nuevo nombre de usuario que se desea establecer.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -323,6 +373,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/stats", {
         schema: {
+            summary: "Obtener las estadísticas de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las estadísticas de tu cuenta 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las estadísticas.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -370,6 +425,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.post("/:email/achievements" , {
         schema: {
+            summary: "Completar un logro y conectarlo a tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para conectar un logro a tu cuenta. 
+            La petición debe incluir el email del usuario y el id del logro que se desea completar/conectar a la cuenta.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -451,6 +511,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/decks", {
         schema: {
+            summary: "Obtener los mazos de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los mazos disponibles para tu cuenta con sus respectivas cartas. 
+            La petición debe incluir el email del usuario.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -495,6 +560,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/decks/:deck-id/cards", {
         schema: {
+            summary: "Obtener las cartas de un mazo específico",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las cartas de un mazo específico de tu cuenta. 
+            La petición debe incluir el email del usuario y el id del mazo del cual se quieren obtener las cartas.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
                 "deck-id": Type.String()
@@ -528,6 +598,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.post("/:email/decks", {
         schema: {
+            summary: "Crear un nuevo mazo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para crear un nuevo mazo en tu cuenta. 
+            La petición debe incluir el email del usuario y la información del mazo a crear.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -579,6 +654,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.delete("/:email/decks/:deck-id", {
         schema: {
+            summary: "Eliminar un mazo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar un mazo de tu cuenta. 
+            La petición debe incluir el email del usuario y el id del mazo que se desea eliminar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
                 "deck-id": Type.String()
@@ -611,6 +691,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/matches", {
         schema: {
+            summary: "Obtener las partidas de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las partidas de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -654,6 +739,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/friends", {
         schema: {
+            summary: "Obtener los amigos de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los amigos de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -681,6 +771,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/invites", {
         schema: {
+            summary: "Obtener las invitaciones de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las invitaciones de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -740,6 +835,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.delete("/:email/friends", {
         schema: {
+            summary: "Eliminar un amigo de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar un amigo de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de usuario del amigo que se desea eliminar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
                 friendUsername: Type.String()
