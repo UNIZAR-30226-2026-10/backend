@@ -141,7 +141,7 @@ export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: 
         });
         const userCosmetics = await getCosmeticsByUser(email);
 
-        const storeCosmetics = cosmetics.map(cosmetic => ({
+        const storeCosmetics = cosmetics.map((cosmetic: any) => ({
             nomCosmetico: cosmetic.nombre,
             precio: cosmetic.precio,
             desc: cosmetic.descripcion,

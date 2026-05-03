@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import test, { describe, afterEach, before } from "node:test"
 import prisma from "../prismaClient.js"
 import { Tipo_Cosmetico } from "../generated/prisma/client.js"
-import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
+import { cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 
 const runId = Date.now()
 const TEST_USER_EMAIL = `user_${runId}@gmail.com`

@@ -124,7 +124,7 @@ export async function getAllCardsFromADeck(nombre: string, usuarioEmail: string)
                 carta: true
             }
         });
-        return barajaCartas.map(bc => bc.carta);
+        return barajaCartas.map((bc: any) => bc.carta);
     } catch (error) {
         console.error("Error al obtener las cartas de la baraja:", error);
         throw new Error("Error al obtener las cartas de la baraja");
