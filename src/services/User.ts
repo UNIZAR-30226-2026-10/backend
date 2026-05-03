@@ -218,7 +218,7 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 escaleraActual: true
             }
         })
-        const defaultDeck = await Deck.createDefaultDeckForUser(user)
+        await Deck.createDefaultDeckForUser(user)
         return user
     } catch (error) {
         console.error("Error al crear el usuario:", error)
