@@ -4,7 +4,7 @@ import { SnapshotJugadoresJSON, SnapshotTableroJSON, ChatPartidaJSON } from "./J
 import { lobbyManager } from "../managers/lobbyManager.js";
 import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento, ChatReturnType } from "./ReturnTypes.js";
 import { randomInt } from "node:crypto";
-import { modifyUserByEmail, getUserByEmail, getUserByName } from "./User.js";
+import { modifyUserByEmail, getUserByName } from "./User.js";
 import { checkAchievementsForCompletion } from "./Achievements.js";
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
@@ -136,10 +136,16 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             }
         },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -151,12 +157,16 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 }
 
 export async function sendMessage(partidaId: string, player: string, mensaje: string): Promise<ChatReturnType> {
-    const partida = await prisma.partida.findUnique({
-        where: { ID: partidaId },
-        include: {
-            partidaJugadores: true
-        }
-    });
+
+    const chatUpdated = await prisma.$transaction(async (tx) => {
+        const partida = await tx.partida.findUnique({
+            where: { ID: partidaId },
+            include: {
+                partidaJugadores: {
+                    select: { nombre: true }
+                }
+            }
+        });
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
@@ -168,12 +178,13 @@ export async function sendMessage(partidaId: string, player: string, mensaje: st
         mandadoPor: player,
         mensaje: mensaje
     });
-    const chatUpdated = await prisma.partida.update({
-        where: { ID: partidaId },
-        data: { chat: chat },
-        select: {
-            chat: true,
-        }
+    return await tx.partida.update({
+            where: { ID: partidaId },
+            data: { chat: chat },
+            select: {
+                chat: true,
+            }
+        });
     });
     return chatUpdated;
 }
@@ -182,7 +193,11 @@ export async function getChat(partidaId: string, player: string): Promise<ChatRe
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
+            partidaJugadores: {
+                select: {
+                    nombre: true
+                }
+            }
         }
     });
     if (!partida) {
@@ -200,12 +215,18 @@ export async function getMatchState(partidaId: string, player: string): Promise<
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
                 select: {
-                    nombre: true
+                    nombre: true                
                 }
             }
         }
@@ -423,10 +444,16 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+         },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -561,14 +588,20 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
                 select: {
                     nombre: true
                 }
-            }
+             }
         }
 
     });
@@ -585,10 +618,16 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -727,10 +766,16 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -745,10 +790,16 @@ async function finishMatch(partidaId: string, ganador: string): Promise<PartidaR
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -787,10 +838,16 @@ async function finishMatch(partidaId: string, ganador: string): Promise<PartidaR
         where: { ID: partidaId },
         data: { ganadorEmail: emailGanador, estado: Estado.Finalizada, fechaFin: new Date() },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -818,10 +875,16 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -1076,10 +1139,16 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores, snapshotTablero: tableroPartida },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }

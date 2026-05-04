@@ -2,6 +2,58 @@ import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
 import { UnauthorizedSessionToken, ForbiddenSessionToken } from "./AuxFunctionsAPI.js";
 import { getMatchState, moveToken, sendMessage, getChat, startMatch, throwDice, useCard }  from "../../services/Matches.js";
+import { SnapshotJugadoresSchema, snapshotTableroSchema, chatPartidaSchema } from "../../services/JsonTypes.js";
+
+const partidaJugadorSchema = Type.Object({
+    nombre: Type.String(),
+    iconoActualField: Type.String(),
+    fichaActualField: Type.String(),
+    serpienteActualField: Type.String(),
+    escaleraActualField: Type.String(),
+});
+
+const ganadorSchema = Type.Union([
+    Type.Null(),
+    Type.Object({
+        nombre: Type.String()
+    })
+]);
+
+const partidaSchema = Type.Object({
+    ID: Type.String(),
+    estado: Type.Union([
+        Type.Literal("EnEspera"),
+        Type.Literal("EnCurso"),
+        Type.Literal("Finalizada"),
+    ]),
+    snapshotJugadores: SnapshotJugadoresSchema,
+    fechaInicio: Type.String({ format: "date-time" }),
+    fechaFin: Type.Union([Type.String({ format: "date-time" }), Type.Null()]),
+    configuracion: Type.Object({
+        tablero: Type.String(),
+        numeroJugadores: Type.Number(),
+        numeroBots: Type.Number(),
+    }),
+    snapshotTablero: snapshotTableroSchema,
+    chat: chatPartidaSchema,
+    tableroInicialNombre: Type.String(),
+    partidaJugadores: Type.Array(partidaJugadorSchema),
+    ganador: ganadorSchema
+});
+
+const movimientoSchema = Type.Object({
+    fichaId: Type.Number(),
+    casillaDestino: Type.Number(),
+    esBifurcacion: Type.Boolean(),
+    pasosRestantes: Type.Optional(Type.Number())
+});
+
+const throwDiceResponseSchema = Type.Object({
+    partida: partidaSchema,
+    tirada: Type.Number(),
+    movimientos: Type.Array(movimientoSchema),
+    tiradaExtra: Type.Optional(Type.Number())
+});
 
 export default function matchesRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
@@ -19,7 +71,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 lobby_id: Type.String()
             }),
             response: {
-                200: Type.Any(),
+                200: partidaSchema,
                 401: UnauthorizedSessionToken,
                 404: Type.Object({
                     error: Type.String()
@@ -58,10 +110,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 message: Type.String()
             }), response: {
                 200: Type.Object({
-                    chat: Type.Array(Type.Object({
-                        mandadoPor: Type.String(),
-                        mensaje: Type.String(),
-                    }))
+                    chat: chatPartidaSchema
                 }),
                 401: UnauthorizedSessionToken,
                 403: Type.Union([ForbiddenSessionToken, Type.Object({
@@ -101,10 +150,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }),
             response: {
                 200: Type.Object({
-                    chat: Type.Array(Type.Object({
-                        mandadoPor: Type.String(),
-                        mensaje: Type.String(),
-                    }))
+                    chat: chatPartidaSchema
                 }),
                 401: UnauthorizedSessionToken,
                 403: Type.Union([ForbiddenSessionToken, Type.Object({
@@ -143,7 +189,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 username: Type.String()
             }),
             response: {
-                200: Type.Any(),
+                200: partidaSchema,
                 401: UnauthorizedSessionToken,
                 403: Type.Union([ForbiddenSessionToken, Type.Object({
                     error: Type.String()
@@ -186,7 +232,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 fin: Type.Optional(Type.Number())
             }),
             response: {
-                200: Type.Any(),
+                200: partidaSchema,
                 400: Type.Object({
                     error: Type.String()
                 }),
@@ -236,7 +282,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 username: Type.String()
             }),
             response: {
-                200: Type.Any(),
+                200: throwDiceResponseSchema,
                 401: UnauthorizedSessionToken,
                 403: Type.Union([ForbiddenSessionToken, Type.Object({
                     error: Type.String()
@@ -285,7 +331,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 steps_remaining: Type.Optional(Type.Number())
             }),
             response: {
-                200: Type.Any(),
+                200: partidaSchema,
                 400: Type.Object({
                     error: Type.String()
                 }),

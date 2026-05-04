@@ -34,14 +34,14 @@ export type CompleteUserReturnType = Prisma.UsuarioGetPayload<{
         cartas: true,
         barajas: {
             include: {
-               usadaEn: true,
-               barajaCartas: {
-                include: {
-                    carta: true
+                usadaEn: true,
+                barajaCartas: {
+                    include: {
+                        carta: true
+                    }
                 }
-               } 
             }
-        }, 
+        },
         logros: true,
         cosmeticos: true,
         partidas: true,
@@ -89,12 +89,19 @@ export type CosmeticosReturnType = Prisma.CosmeticosGetPayload<{
 
 export type PartidaReturnType = Prisma.PartidaGetPayload<{
     include: {
-        partidaJugadores: true,
-        barajas: true,
-        ganador: true,
-        tableroInicial: {
+        partidaJugadores: {
             select: {
-                nombre: true }
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+        ganador: {
+            select: {
+                nombre: true
+            }
         }
     }
 }>
