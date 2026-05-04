@@ -150,6 +150,13 @@
 - Inicia la partida. Dados los datos del lobby crea la partida y destruye el lobby.
 - Body: "lobby_id".
 
+### **POST** /api/matches/:match_id/chat/:username
+- Envía un mensaje al chat de la partida.
+- Body: "message".
+
+### **GET** /api/matches/:match_id/chat/:username
+- Devuelve el chat de la partida. Valida que el usuario que hace la petición pertenece a la partida.
+
 ### **GET** /api/matches/:match_id/:username
 - Devuelve el estado de los jugadores de la partida en el momento actual. Recibiendo el usuario que hace la petición le devuelve información exclusiva, como la mano del mazo en el turno.
 

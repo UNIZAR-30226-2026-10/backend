@@ -1,8 +1,8 @@
 import prisma from "../prismaClient.js";
 import { Usuario, Estado } from "../generated/prisma/client.js";
-import { SnapshotJugadoresJSON, SnapshotTableroJSON } from "./JsonTypes.js";
+import { SnapshotJugadoresJSON, SnapshotTableroJSON, ChatPartidaJSON } from "./JsonTypes.js";
 import { lobbyManager } from "../managers/lobbyManager.js";
-import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento } from "./ReturnTypes.js";
+import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento, ChatReturnType } from "./ReturnTypes.js";
 import { randomInt } from "node:crypto";
 import { modifyUserByEmail, getUserByEmail, getUserByName } from "./User.js";
 import { checkAchievementsForCompletion } from "./Achievements.js";
@@ -93,10 +93,15 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     }
 
     const jsonTablero: SnapshotTableroJSON = tableroAUtilizar.snapshotTableroInicial as SnapshotTableroJSON;
+    let chat: ChatPartidaJSON = [{
+        mandadoPor: "Sistema",
+        mensaje: "Bienvenidos a S&E ReMix! La partida ha comenzado."
+    }];
     const partidaCreada = await prisma.partida.create({
         data: {
             estado: Estado.EnCurso,
             snapshotJugadores: jsonJugadores,
+            chat: chat,
             configuracion: {
                 tablero,
                 numeroJugadores: jugadores.length,
@@ -143,6 +148,52 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     });
     lobbyManager.deleteLobby(lobbyId);
     return partidaCreada
+}
+
+export async function sendMessage(partidaId: string, player: string, mensaje: string): Promise<ChatReturnType> {
+    const partida = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        include: {
+            partidaJugadores: true
+        }
+    });
+    if (!partida) {
+        throw new Error("Partida no encontrada");
+    }
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+        throw new Error("El jugador no pertenece a esta partida");
+    }
+    let chat = partida.chat as ChatPartidaJSON;
+    chat.push({
+        mandadoPor: player,
+        mensaje: mensaje
+    });
+    const chatUpdated = await prisma.partida.update({
+        where: { ID: partidaId },
+        data: { chat: chat },
+        select: {
+            chat: true,
+        }
+    });
+    return chatUpdated;
+}
+
+export async function getChat(partidaId: string, player: string): Promise<ChatReturnType> {
+    const partida = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        include: {
+            partidaJugadores: true,
+        }
+    });
+    if (!partida) {
+        throw new Error("Partida no encontrada");
+    }
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+        throw new Error("El jugador no pertenece a esta partida");
+    }
+    return {
+        chat: partida.chat as ChatPartidaJSON
+    };
 }
 
 export async function getMatchState(partidaId: string, player: string): Promise<PartidaReturnType> {

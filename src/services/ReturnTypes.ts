@@ -161,3 +161,9 @@ export type MovimientoReturnType = {
     movimientos: Movimiento[],
     tiradaExtra?: number,
 }
+
+export type ChatReturnType = Prisma.PartidaGetPayload<{
+    select: {
+        chat: true
+    }
+}>

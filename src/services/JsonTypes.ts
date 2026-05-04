@@ -53,6 +53,12 @@ export const snapshotTableroSchema = Type.Object({
     casillas: Type.Array(casillaTableroSchema)
 })
 
+export const chatPartidaSchema = Type.Array(Type.Object({
+    mandadoPor: Type.String(),
+    mensaje: Type.String(),
+}))
+
 
 export type SnapshotJugadoresJSON = Static<typeof SnapshotJugadoresSchema>;
 export type SnapshotTableroJSON = Static<typeof snapshotTableroSchema>;
+export type ChatPartidaJSON = Static<typeof chatPartidaSchema>;

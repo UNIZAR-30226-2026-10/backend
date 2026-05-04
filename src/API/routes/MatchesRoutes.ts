@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
 import { UnauthorizedSessionToken, ForbiddenSessionToken } from "./AuxFunctionsAPI.js";
-import { getMatchState, moveToken, startMatch, throwDice, useCard }  from "../../services/Matches.js";
+import { getMatchState, moveToken, sendMessage, getChat, startMatch, throwDice, useCard }  from "../../services/Matches.js";
 
 export default function matchesRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
@@ -39,6 +39,92 @@ export default function matchesRoutes(app: FastifyInstance) : void {
                 return reply.status(404).send({ error: (error as Error).message });
             } 
             return reply.status(409).send({ error: (error as Error).message });
+        }
+    });
+
+    app.post("/:match_id/chat/:username", {
+        schema: {
+            summary: "Enviar un mensaje al chat de una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para enviar un mensaje al chat de una partida. 
+            La petición debe incluir el ID de la partida a la que se quiere enviar el mensaje, 
+            el nombre de usuario del jugador que envía el mensaje y el contenido del mensaje.`,
+            params: Type.Object({
+                match_id: Type.String(),
+                username: Type.String()
+            }),
+            body: Type.Object({
+                message: Type.String()
+            }), response: {
+                200: Type.Object({
+                    chat: Type.Array(Type.Object({
+                        mandadoPor: Type.String(),
+                        mensaje: Type.String(),
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: Type.Union([ForbiddenSessionToken, Type.Object({
+                    error: Type.String()
+                })]),
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { message } = request.body as { message: string };
+        try {
+            const chat = await sendMessage(match_id, username, message);
+            return reply.status(200).send(chat);
+        } catch (error) {
+            if ((error as Error).message === "Partida no encontrada") {
+                return reply.status(404).send({ error: (error as Error).message });
+            }
+            return reply.status(403).send({ error: (error as Error).message });
+        }
+    });
+
+    app.get("/:match_id/chat/:username", {
+        schema: {
+            summary: "Obtener el chat de una partida",
+            tags: ["matches"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener el chat de una partida.
+            La petición debe incluir el ID de la partida de la cual se quiere obtener el chat y
+            el nombre de usuario del jugador que realiza la petición (para verificar que el jugador forma parte de la partida).
+            Devolvemos los mensajes del chat, cada mensaje incluye el nombre del jugador que lo ha mandado y el contenido del mensaje.`,
+            params: Type.Object({
+                match_id: Type.String(),
+                username: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    chat: Type.Array(Type.Object({
+                        mandadoPor: Type.String(),
+                        mensaje: Type.String(),
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: Type.Union([ForbiddenSessionToken, Type.Object({
+                    error: Type.String()
+                })]),
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { match_id, username } = request.params as { match_id: string; username: string };
+        try {
+            const chat = await getChat(match_id, username);
+            return reply.status(200).send(chat);
+        } catch (error) {
+            if ((error as Error).message === "Partida no encontrada") {
+                return reply.status(404).send({ error: (error as Error).message });
+            }
+            return reply.status(403).send({ error: (error as Error).message });
         }
     });
 
