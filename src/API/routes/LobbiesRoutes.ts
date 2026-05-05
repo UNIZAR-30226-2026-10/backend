@@ -150,7 +150,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
+        const { lobbyId } = request.params as { lobbyId: string }
         let lobby
         try {
             lobby = lobbyManager.getLobbyById(lobbyId)
@@ -198,7 +198,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
+        const { lobbyId } = request.params as { lobbyId: string }
         const { inviteFrom, inviteFor } = request.body as { inviteFrom: string, inviteFor: string }
         let invite = {
             inviteFor: inviteFor,
@@ -276,7 +276,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
+        const { lobbyId } = request.params as { lobbyId: string }
         const { inviteFor, inviteFrom, accept } = request.body as { inviteFor: string, inviteFrom: string, accept: boolean }
         let lobby
         let jugadorLobby = {
@@ -348,7 +348,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
+        const { lobbyId } = request.params as { lobbyId: string }
         const { requested_by } = request.body as { requested_by: string }
         let lobby
         try {
@@ -416,7 +416,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId, "user": username } = request.params as { "lobbyId": string, "user": string }
+        const { lobbyId, username } = request.params as { lobbyId: string, username: string }
         const { deck } = request.body as { deck: string }
         let lobby;
         try {
@@ -490,7 +490,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId, "username": username } = request.params as { "lobbyId": string, "username": string }
+        const { lobbyId, username } = request.params as { lobbyId: string, username: string }
         const { ready } = request.body as { ready: boolean }
         let lobby
         try {
@@ -551,7 +551,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
+        const { lobbyId } = request.params as { lobbyId: string }
         const { board, requested_by } = request.body as { board: string, requested_by: string }
         let lobby
         try {
@@ -628,7 +628,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobbyId": lobbyId, "targetUsername": targetUsername } = request.params as { "lobbyId": string, "targetUsername": string }
+        const { lobbyId, targetUsername } = request.params as { lobbyId: string, targetUsername: string }
         const { requested_by } = request.body as { requested_by: string }
         let lobby
         try {

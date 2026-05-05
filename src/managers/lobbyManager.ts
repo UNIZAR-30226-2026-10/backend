@@ -1,5 +1,4 @@
 import nombresBots from "../data/nombresBots.json" with {type: "json"}
-import prisma from "../prismaClient.js"
 import { getUserByName } from "../services/User.js"
 
 
@@ -78,7 +77,7 @@ export class LobbyManager {
             if (!user) throw new Error("USER_NOT_FOUND")
             jugador.icono = user.iconoActualField
             const lobby = this.joinLobby(jugador, lobbyId)
-            invites = invites.filter(i => i.lobbyID !== lobbyId && i.inviteFrom !== inviteFrom)
+            invites = invites.filter(i => i.lobbyID !== lobbyId || i.inviteFrom !== inviteFrom)
             this.invitaciones.set(jugador.nombre, invites)
             return lobby
         } else {
