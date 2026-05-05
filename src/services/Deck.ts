@@ -1,5 +1,6 @@
 import { Baraja, BarajaCarta, BarajaPartida, Carta, Partida, Usuario } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
+import { getCardById } from "./Cards.js";
 import { BarajaCartaReturnType, BarajaPartidaReturnType, BarajaReturnType } from "./ReturnTypes.js";
 
 export async function createDeck(data: { nombre: string, usuario: Usuario, carta: Carta[] }): Promise<BarajaReturnType> {
@@ -52,6 +53,42 @@ export async function createDeck(data: { nombre: string, usuario: Usuario, carta
     } catch (error) {
         console.error("Error al crear la baraja:", error);
         throw new Error("Error al crear la baraja");
+    }
+}
+
+export async function createDefaultDeckForUser(usuario: Usuario): Promise<BarajaReturnType> {
+    try {
+        const nombreMazo = "Medios Escamosos";
+        const cartasParaMazo = [
+            "Exceso de medios",
+            "Salto de longitud",
+            "Dia de la marmota",
+            "Antidoto",
+            "Bolsillo roto",
+            "Moises",
+            "Robo de identidad",
+            "Agujero de serpiente",
+            "Coleccionista",
+            "Noqueo",
+        ];
+
+        const cartasExistentes = [];
+        for (const nombreCarta of cartasParaMazo) {
+            const carta = await getCardById(nombreCarta);
+            if (carta) cartasExistentes.push(carta);
+        }
+
+        const mazoPorDefecto = await createDeck({
+            nombre: nombreMazo,
+            usuario,
+            carta: cartasExistentes
+        });
+
+        return mazoPorDefecto;
+
+    } catch (error) {
+        console.error("Error al crear la baraja por defecto:", error);
+        throw new Error("Error al crear la baraja por defecto");
     }
 }
 
@@ -344,6 +381,7 @@ export async function deleteDeck(nombre: string, usuarioEmail: string): Promise<
 
 export default {
     createDeck,
+    createDefaultDeckForUser,
     createBarajaCarta,
     createBarajaPartida,
     getDeckById,

@@ -1,4 +1,3 @@
-
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts";
 import { Tipo_Carta, Rareza } from "../generated/prisma/enums.ts";
 import { createCard, getCardById } from "../dist/services/Cards.js";
@@ -557,6 +556,10 @@ export async function logrosPoblacion() {
             cartaID : null
         }
     ];
+    for (const logro of logros) {
+        logro.carta = logro.cartaID ? await getCardByIdBasic(logro.cartaID) : null;
+        logro.cartaID = undefined; // Elimina el campo temporal
+    }
     for (const logro of logros) {
         await createAchievement(logro);
     }

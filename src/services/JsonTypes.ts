@@ -13,7 +13,7 @@ export const FichaSchema = Type.Object({
 });
 
 export const JugadorEstadoSchema = Type.Object({
-    email: Type.String({ format: 'email' }),
+    username: Type.String(),
     fase: Type.Union([Type.Literal("Cartas"), Type.Literal("Movimiento")]),
     ultimaTirada: Type.Optional(Type.Integer({ minimum: 1, maximum: 6 })),
     fichas: Type.Array(FichaSchema, { minItems: 3, maxItems: 3 }),
@@ -53,6 +53,12 @@ export const snapshotTableroSchema = Type.Object({
     casillas: Type.Array(casillaTableroSchema)
 })
 
+export const chatPartidaSchema = Type.Array(Type.Object({
+    mandadoPor: Type.String(),
+    mensaje: Type.String(),
+}))
+
 
 export type SnapshotJugadoresJSON = Static<typeof SnapshotJugadoresSchema>;
 export type SnapshotTableroJSON = Static<typeof snapshotTableroSchema>;
+export type ChatPartidaJSON = Static<typeof chatPartidaSchema>;
