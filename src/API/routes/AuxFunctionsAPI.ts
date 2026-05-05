@@ -22,8 +22,18 @@ const AuxFunctionsAPI = fp(async (app: FastifyInstance) => {
             if (!decoded.email) {
                 return reply.status(401).send({ error: "Invalid token payload" });
             }
+
+            if(!decoded.username) {
+                return reply.status(401).send({ error: "Invalid token payload" });
+            }
             
             const email_param = (request.params as { email?: string }).email;
+
+            const username_param = (request.params as { username?: string }).username;
+
+            if (username_param && username_param !== decoded.username) {
+                return reply.status(403).send({ error: "Forbidden: Token does not match the requested resource" });
+            }
 
             if (email_param && email_param !== decoded.email) {
                 return reply.status(403).send({ error: "Forbidden: Token does not match the requested resource" });
