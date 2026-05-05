@@ -4,27 +4,25 @@ import {
     cosmeticosPorDefecto,
     cuentaAdminPorDefecto,
     efectosPoblacion,
-    getAchievementById,
+    //getAchievementById,
     getCardById,
-    getEffectById,
+    //getEffectById,
     tablerosPoblacion,
     getUserByEmail,
     logrosPoblacion,
     mazosPorDefecto
 } from "./poblation/CrearDatosBase.js";
-import { getBoardByName } from "./services/Boards.js";
-import { getCosmeticByName } from "./services/Cosmetics.js";
-import { getAchievementById } from "./services/Achievements.js";
-import { getCardById } from "./services/Cards.js";
-import { getEffectById } from "./services/Effects.js";
-import { createBoard } from "./services/Boards.js";
-import { createAchievement } from "./services/Achievements.js";
-import { createCosmetic } from "./services/Cosmetics.js";
-import { createCard } from "./services/Cards.js";
-import { createEffect } from "./services/Effects.js";
-import { createUser } from "./services/Users.js";
-import { createDeck } from "./services/Decks.js";
-import { getUserByEmail } from "./services/User.js";
+import { getBoardByName } from "./dist/services/Boards.js";
+import { getCosmeticByName } from "./dist/services/Cosmetics.js";
+import { getAchievementById } from "./dist/services/Achievements.js";
+//import { getCardById } from "./dist/services/Cards.js";
+import { getEffectById } from "./dist/services/Effects.js";
+import { createBoard } from "./dist/services/Boards.js";
+import { createAchievement } from "./dist/services/Achievements.js";
+import { createCosmetic } from "./dist/services/Cosmetics.js";
+import { createCard } from "./dist/services/Cards.js";
+import { createEffect } from "./dist/services/Effects.js";
+import { createUser } from "./dist/services/Users.js";
 
 async function seedIfMissing<T>(
     label: string,
