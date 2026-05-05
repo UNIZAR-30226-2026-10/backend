@@ -113,6 +113,9 @@
 - Crea un nuevo lobby en el sistema. El usuario que la crea se convierte en el líder.
 - Body: "username".
 
+### **GET** /api/lobbies/:username
+- Devuelve la información del lobby al que pertenece un jugador.
+
 ### **GET** /api/lobbies/:lobby-id
 - Devuelve la información asociada a un lobby. Sirve también para comprobar si la partida ya ha sido iniciada.
 

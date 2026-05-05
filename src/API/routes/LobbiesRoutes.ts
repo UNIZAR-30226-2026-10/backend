@@ -68,6 +68,56 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
+    app.get("/:username", {
+        schema: {
+            summary: "Obtener el lobby al que pertenece un jugador",
+            tags: ["lobbies"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener el lobby al que pertenece un jugador. 
+            La petición debe incluir el nombre de usuario del jugador.`,
+            params: Type.Object({
+                username: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    idLobby: Type.String(),
+                    idCreador: Type.String(),
+                    jugadores: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        esIA: Type.Boolean(),
+                        estaListo: Type.Boolean(),
+                        nombreMazo: Type.Optional(Type.String()),
+                        icono: Type.Optional(Type.String())
+                    })),
+                    numJugadores: Type.Number(),
+                    numBots: Type.Number(),
+                    tablero: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { username } = request.params as { username: string }
+        let lobby
+        try {
+            lobby = lobbyManager.getLobbyOfPlayer(username)
+        } catch (error) {
+            return reply.status(404).send({ error: (error as Error).message })
+        }
+        return reply.status(200).send({
+            idLobby: lobby.idLobby,
+            idCreador: lobby.usernameCreador,
+            jugadores: lobby.jugadores,
+            numJugadores: lobby.numJugadores,
+            numBots: lobby.numBots,
+            tablero: lobby.tablero
+        })
+    })
+
     app.get("/:lobby-id", {
         schema: {
             summary: "Obtener la información de un lobby",
@@ -103,9 +153,9 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
         let lobby
         try {
-            lobby = lobbyManager.getLobby(lobbyId)
+            lobby = lobbyManager.getLobbyById(lobbyId)
         } catch (error) {
-            return reply.status(404).send({ error: "Lobby no encontrado" })
+            return reply.status(404).send({ error: (error as Error).message })
         }
         return reply.status(200).send({
             idLobby: lobby.idLobby,
@@ -505,7 +555,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         const { board, requested_by } = request.body as { board: string, requested_by: string }
         let lobby
         try {
-            lobby = lobbyManager.getLobby(lobbyId)
+            lobby = lobbyManager.getLobbyById(lobbyId)
         } catch (error) {
             return reply.status(404).send({ error: "Lobby no encontrado" })
         }
