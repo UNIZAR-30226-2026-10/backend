@@ -1,6 +1,6 @@
 import test, { after, before, describe } from "node:test"
 import assert from "node:assert/strict"
-import usersBL from "../dist/services/User.ts"
+import usersBL from "../services/User.ts"
 import prisma from "../prismaClient.ts"
 import { cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts"

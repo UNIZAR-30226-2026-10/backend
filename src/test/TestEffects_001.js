@@ -1,4 +1,4 @@
-import Effects from "../dist/services/Effects";
+import Effects from "../services/Effects.ts";
 import test, { before, describe } from "node:test"
 import assert from "node:assert/strict"
 import { Tipo_Afeccion, Tipo_Efecto } from "../generated/prisma/enums";
