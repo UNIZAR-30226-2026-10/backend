@@ -1,3 +1,4 @@
+import { get } from "node:http";
 import { Carta, Tipo_Carta, Rareza, Logros, Efecto } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import { CartaReturnType } from "./ReturnTypes.js";
@@ -39,6 +40,18 @@ export async function getCardById(nombre: string): Promise<CartaReturnType | nul
                 efectos: true,
                 barajas: true
             }
+        });
+        return card;
+    } catch (error) {
+        console.error("Error al obtener la carta por ID:", error);
+        throw new Error("Error al obtener la carta por ID");
+    }
+}
+
+export async function getCardByIdBasic(nombre: string): Promise<Carta | null> {
+    try {
+        const card = await prisma.carta.findUnique({
+            where: { nombre }
         });
         return card;
     } catch (error) {
@@ -102,6 +115,7 @@ export async function deleteCard(nombre: string): Promise<{ message: string }> {
 export default {
     createCard,
     getCardById,
+    getCardByIdBasic,
     getAllCards,
     updateCard,
     deleteCard

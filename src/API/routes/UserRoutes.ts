@@ -49,15 +49,15 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
 
         return reply.status(200).send({
-            iconoActual: user.iconoActual,
+            iconoActual: user.iconoActual.nombre,
             nombre: user.nombre,
             email: user.email,
             victorias: user.victorias,
             derrotas: user.derrotas,
             SEP: user.SEP,
-            SerpienteActual: user.serpienteActual,
-            EscaleraActual: user.escaleraActual,
-            FichaActual: user.fichaActual
+            SerpienteActual: user.serpienteActual.nombre,
+            EscaleraActual: user.escaleraActual.nombre,
+            FichaActual: user.fichaActual.nombre
         });
     });
 
