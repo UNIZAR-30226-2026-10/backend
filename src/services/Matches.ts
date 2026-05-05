@@ -9,7 +9,7 @@ import { checkAchievementsForCompletion } from "./Achievements.js";
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 
-    let lobby = lobbyManager.getLobby(lobbyId);
+    let lobby = lobbyManager.getLobbyById(lobbyId);
     if (!lobby) {
         throw new Error("Lobby no encontrado");
     }
