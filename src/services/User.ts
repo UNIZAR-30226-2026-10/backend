@@ -574,7 +574,7 @@ const passwordHelper = (password:string): string | null => {
 
     if(!regexPasswordLower.test(password)) return "La contraseña debe contener al menos una letra minúscula"
 
-    if(!regexPasswordSpecial.test(password)) return "La contraseña debe contener al menos un carácter especial"
+    if(!regexPasswordSpecial.test(password)) return `La contraseña debe contener al menos un carácter especial de los siguientes: ! @ # $ % ^ & * ( ) , . ? \ " : { } | < > `
 
     return null
 
