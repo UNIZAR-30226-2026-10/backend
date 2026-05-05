@@ -4,6 +4,7 @@ WORKDIR /usr/src/app
 
 # 1. Copiamos solo archivos de dependencias
 COPY ./src/package.json ./src/package-lock.json ./
+COPY ./src/tsconfig.json ./
 
 # 2. Instalamos dependencias
 RUN npm ci
@@ -27,6 +28,9 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/generated ./generated
+# COPIAMOS EL SEED Y LA POBLACIÓN (por si aca)
+COPY --from=builder /usr/src/app/seed.ts ./seed.ts
+COPY --from=builder /usr/src/app/poblation ./poblation
 
 COPY --from=builder /usr/src/app/prisma ./prisma
 COPY --from=builder /usr/src/app/prisma.config.ts ./prisma.config.ts

@@ -1,15 +1,16 @@
-import { Tipo_Cosmetico } from "../generated/prisma/enums.js";
-import { Tipo_Carta, Rareza } from "../generated/prisma/enums.js";
-import { createCard, getCardById } from "../services/Cards.ts";
-import { createDeck, getDeckById, updateDeck } from "../services/Deck.ts";
-import { createCosmetic } from "../services/Cosmetics.ts";
-import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../services/User.ts";
-import { createEffect } from "../services/Effects.js";
-import { Tipo_Afeccion} from "../generated/prisma/enums.js";
-import { Tipo_Efecto } from "../generated/prisma/enums.js";
-import { createAchievement } from "../services/Achievements.ts";
-import { Tipo_Logro } from "../generated/prisma/enums.js";
-import { createBoard } from "../services/Boards.ts";
+
+import { Tipo_Cosmetico } from "../generated/prisma/enums.ts";
+import { Tipo_Carta, Rareza } from "../generated/prisma/enums.ts";
+import { createCard, getCardById } from "../dist/services/Cards.js";
+import { createDeck, getDeckById, updateDeck } from "../dist/services/Deck.js";
+import { createCosmetic } from "../dist/services/Cosmetics.js";
+import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../dist/services/User.js";
+import { createEffect } from "../dist/services/Effects.js";
+import { Tipo_Afeccion} from "../generated/prisma/enums.ts";
+import { Tipo_Efecto } from "../generated/prisma/enums.ts";
+import { createAchievement } from "../dist/services/Achievements.js";
+import { Tipo_Logro } from "../generated/prisma/enums.ts";
+import { createBoard } from "../dist/services/Boards.js";
 import { generarTableros } from "./tableros.tsx";
 export async function cosmeticosPorDefecto() {
     const cosmeticos = [
