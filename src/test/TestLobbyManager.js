@@ -1,6 +1,7 @@
 import { LobbyManager } from "../managers/lobbyManager"
 import assert from 'node:assert/strict'
 import test, { describe, beforeEach } from 'node:test'
+import { createUser } from "../services/User"
 
 describe("Lobby Manager", () => {
     let manager
@@ -214,32 +215,38 @@ describe("Lobby Manager", () => {
             manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
         }, new Error("INVITE_ALREADY_SENT"))
     })
-    test("Aceptar invitación", () => {
+    test("Aceptar invitación", async () => {
+        const invitedName = `invitado_${Date.now()}`
         let lobby = manager.createLobby({ nombre: "ag", esIA: false, estaListo: false })
-        manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
-        let jugadorInvitado = { nombre: "invitado", esIA: false, estaListo: false }
-        let devuelto = manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
+        manager.sendInvite({ inviteFrom: "ag", inviteFor: invitedName, lobbyID: lobby.idLobby })
+        let jugadorInvitado = { nombre: invitedName, esIA: false, estaListo: false }
+        await createUser({
+            email: `${invitedName}@test.com`,
+            password: "Password1!",
+            nombre: invitedName
+        })
+        let devuelto = await manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
         assert.equal(devuelto.idLobby, lobby.idLobby)
         assert.equal(lobby.numJugadores, 2)
-        assert.equal(manager.getInvitesOfPlayer("invitado").length, 0)
+        assert.equal(manager.getInvitesOfPlayer(invitedName).length, 0)
     })
 
-    test("Rechazar invitación", () => {
+    test("Rechazar invitación", async () => {
         let lobby = manager.createLobby({ nombre: "ag", esIA: false, estaListo: false })
         manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
         let jugadorInvitado = { nombre: "invitado", esIA: false, estaListo: false }
-        let devuelto = manager.manageInvite(jugadorInvitado, false, lobby.idLobby, "ag")
+        let devuelto = await manager.manageInvite(jugadorInvitado, false, lobby.idLobby, "ag")
         assert.equal(devuelto, "INVITE_DECLINED")
         assert.equal(lobby.numJugadores, 1)
         assert.equal(manager.getInvitesOfPlayer("invitado").length, 0)
     })
-    test("Aceptar o rechazar invitación en un lobby que no existe", () => {
+    test("Aceptar o rechazar invitación en un lobby que no existe", async () => {
         let lobby = manager.createLobby({ nombre: "ag", esIA: false, estaListo: false })
         manager.sendInvite({ inviteFrom: "ag", inviteFor: "invitado", lobbyID: lobby.idLobby })
         let jugadorInvitado = { nombre: "invitado", esIA: false, estaListo: false }
         manager.deleteLobby(lobby.idLobby)
-        assert.throws(() => {
-            manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
+        await assert.rejects(async () => {
+            await manager.manageInvite(jugadorInvitado, true, lobby.idLobby, "ag")
         }, new Error("LOBBY_NOT_FOUND"))
     })
 })

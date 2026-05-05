@@ -94,7 +94,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/chat/:username", {
+    app.post("/:matchId/chat/:username", {
         schema: {
             summary: "Enviar un mensaje al chat de una partida",
             tags: ["matches"],
@@ -103,7 +103,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             La petición debe incluir el ID de la partida a la que se quiere enviar el mensaje, 
             el nombre de usuario del jugador que envía el mensaje y el contenido del mensaje.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             body: Type.Object({
@@ -122,10 +122,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         const { message } = request.body as { message: string };
         try {
-            const chat = await sendMessage(match_id, username, message);
+            const chat = await sendMessage(matchId, username, message);
             return reply.status(200).send(chat);
         } catch (error) {
             if ((error as Error).message === "Partida no encontrada") {
@@ -135,7 +135,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:match_id/chat/:username", {
+    app.get("/:matchId/chat/:username", {
         schema: {
             summary: "Obtener el chat de una partida",
             tags: ["matches"],
@@ -145,7 +145,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             el nombre de usuario del jugador que realiza la petición (para verificar que el jugador forma parte de la partida).
             Devolvemos los mensajes del chat, cada mensaje incluye el nombre del jugador que lo ha mandado y el contenido del mensaje.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             response: {
@@ -162,9 +162,9 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         try {
-            const chat = await getChat(match_id, username);
+            const chat = await getChat(matchId, username);
             return reply.status(200).send(chat);
         } catch (error) {
             if ((error as Error).message === "Partida no encontrada") {
@@ -174,7 +174,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:match_id/:username", {
+    app.get("/:matchId/:username", {
         schema: {
             summary: "Obtener el estado de una partida",
             tags: ["matches"],
@@ -185,7 +185,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             Devolvemos información exclusiva para ese jugador, como su mano de cartas, sus logros, etc. 
             junto con información general de la partida como el estado del tablero, el turno actual, etc.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             response: {
@@ -200,9 +200,9 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         try {
-            const partida = await getMatchState(match_id, username);
+            const partida = await getMatchState(matchId, username);
             return reply.status(200).send(partida);
         } catch (error) {
             if ((error as Error).message === "Partida no encontrada") {
@@ -212,7 +212,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/cards/:username", {
+    app.post("/:matchId/cards/:username", {
         schema: {
             summary: "Jugar una carta en una partida",
             tags: ["matches"],
@@ -222,7 +222,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             el nombre de usuario del jugador que quiere jugar la carta, 
             el ID de la carta que se quiere jugar y opcionalmente dependiendo de la carta se pueden incluir otros parámetros como a quién se le juega la carta, en qué posición del tablero, etc.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             body: Type.Object({
@@ -249,10 +249,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         const { card_id, who, inicio, fin } = request.body as { card_id: string; who?: number | string; inicio?: number; fin?: number };
         try {
-            const partida = await useCard(match_id, username, card_id, who, inicio, fin);
+            const partida = await useCard(matchId, username, card_id, who, inicio, fin);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;
@@ -269,7 +269,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/dice/:username", {
+    app.post("/:matchId/dice/:username", {
         schema: {
             summary: "Tirar el dado en una partida",
             tags: ["matches"],
@@ -278,7 +278,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             La petición debe incluir el ID de la partida en la que se quiere tirar el dado y 
             el nombre de usuario del jugador que quiere tirar el dado.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             response: {
@@ -296,9 +296,9 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         try {
-            const partida = await throwDice(match_id, username);
+            const partida = await throwDice(matchId, username);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;
@@ -312,7 +312,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.post("/:match_id/pawn/:username", {
+    app.post("/:matchId/pawn/:username", {
         schema: {
             summary: "Mover una ficha en una partida",
             tags: ["matches"],
@@ -322,7 +322,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             el nombre de usuario del jugador que quiere mover la ficha, 
             el ID de la ficha que se quiere mover y las coordenadas de la posición final.`,
             params: Type.Object({
-                match_id: Type.String(),
+                matchId: Type.String(),
                 username: Type.String()
             }),
             body: Type.Object({
@@ -348,10 +348,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { match_id, username } = request.params as { match_id: string; username: string };
+        const { matchId, username } = request.params as { matchId: string; username: string };
         const { pawn_id, final_position, steps_remaining } = request.body as { pawn_id: number; final_position: number; steps_remaining?: number };
         try {
-            const partida = await moveToken(match_id, username, pawn_id, final_position, steps_remaining);
+            const partida = await moveToken(matchId, username, pawn_id, final_position, steps_remaining);
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;

@@ -118,7 +118,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.get("/:lobby-id", {
+    app.get("/:lobbyId", {
         schema: {
             summary: "Obtener la información de un lobby",
             tags: ["lobbies"],
@@ -126,7 +126,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             description: `Endpoint para obtener la información de un lobby específico. 
             La petición debe incluir el ID del lobby del cual se quiere obtener la información.`,
             params: Type.Object({
-                "lobby-id": Type.String()
+                "lobbyId": Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -150,7 +150,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
+        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
         let lobby
         try {
             lobby = lobbyManager.getLobbyById(lobbyId)
@@ -167,7 +167,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.post("/:lobby-id/invitations", {
+    app.post("/:lobbyId/invitations", {
         schema: {
             summary: "Enviar una invitación a un amigo para unirse al lobby",
             tags: ["lobbies"],
@@ -175,7 +175,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             description: `Endpoint para enviar una invitación a un amigo para unirse al lobby. 
             La petición debe incluir el ID del lobby al que se quiere invitar, el nombre de usuario de la persona que envía la invitación y el nombre de usuario de la persona a la que se quiere invitar.`,
             params: Type.Object({
-                "lobby-id": Type.String()
+                "lobbyId": Type.String()
             }),
             body: Type.Object({
                 inviteFrom: Type.String(),
@@ -198,14 +198,14 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
+        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
         const { inviteFrom, inviteFor } = request.body as { inviteFrom: string, inviteFor: string }
         let invite = {
             inviteFor: inviteFor,
             inviteFrom: inviteFrom,
             lobbyID: lobbyId
         }
-        try {            
+        try {
             const user = await User.getUserByName(inviteFrom)
             if (!user) {
                 return reply.status(404).send({ error: "Usuario que intenta invitar no encontrado" })
@@ -228,7 +228,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         return reply.status(200).send({ message: "Invitación enviada con éxito" })
     })
 
-    app.put("/:lobby-id/invitations", {
+    app.put("/:lobbyId/invitations", {
         schema: {
             summary: "Responder a una invitación para unirse al lobby",
             tags: ["lobbies"],
@@ -239,7 +239,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             el nombre de usuario de la persona que responde la invitación y
             si acepta o rechaza la invitación.`,
             params: Type.Object({
-                "lobby-id": Type.String()
+                "lobbyId": Type.String()
             }),
             body: Type.Object({
                 inviteFor: Type.String(),
@@ -252,18 +252,18 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                         message: Type.String()
                     }),
                     Type.Object({
-                    idLobby: Type.String(),
-                    idCreador: Type.String(),
-                    jugadores: Type.Array(Type.Object({
-                        nombre: Type.String(),
-                        esIA: Type.Boolean(),
-                        estaListo: Type.Boolean(),
-                        nombreMazo: Type.Optional(Type.String()),
-                        icono: Type.Optional(Type.String())
-                    })),
-                    numJugadores: Type.Number(),
-                    numBots: Type.Number(),
-                    tablero: Type.String()
+                        idLobby: Type.String(),
+                        idCreador: Type.String(),
+                        jugadores: Type.Array(Type.Object({
+                            nombre: Type.String(),
+                            esIA: Type.Boolean(),
+                            estaListo: Type.Boolean(),
+                            nombreMazo: Type.Optional(Type.String()),
+                            icono: Type.Optional(Type.String())
+                        })),
+                        numJugadores: Type.Number(),
+                        numBots: Type.Number(),
+                        tablero: Type.String()
                     }),
                 ]),
                 401: UnauthorizedSessionToken,
@@ -276,16 +276,16 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
+        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
         const { inviteFor, inviteFrom, accept } = request.body as { inviteFor: string, inviteFrom: string, accept: boolean }
         let lobby
         let jugadorLobby = {
             nombre: inviteFor,
             esIA: false,
             estaListo: false
-        }   
+        }
         try {
-            lobby = lobbyManager.manageInvite(jugadorLobby, accept, lobbyId, inviteFrom)
+            lobby = await lobbyManager.manageInvite(jugadorLobby, accept, lobbyId, inviteFrom)
         } catch (error) {
             if ((error as Error).message === "LOBBY_NOT_FOUND") {
                 return reply.status(404).send({ error: (error as Error).message })
@@ -305,7 +305,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.post("/:lobby-id/bots", {
+    app.post("/:lobbyId/bots", {
         schema: {
             summary: "Agregar un bot a un lobby",
             tags: ["lobbies"],
@@ -314,7 +314,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             La petición debe incluir el ID del lobby al que se quiere agregar el bot y 
             el nombre de usuario de la persona que solicita la acción.`,
             params: Type.Object({
-                "lobby-id": Type.String()
+                "lobbyId": Type.String()
             }),
             body: Type.Object({
                 requested_by: Type.String()
@@ -341,14 +341,14 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                 }),
                 404: Type.Object({
                     error: Type.String()
-                }), 
+                }),
                 409: Type.Object({
                     error: Type.String()
                 })
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
+        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
         const { requested_by } = request.body as { requested_by: string }
         let lobby
         try {
@@ -375,7 +375,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.put("/:lobby-id/players/:username/deck", {
+    app.put("/:lobbyId/players/:username/deck", {
         schema: {
             summary: "Seleccionar el mazo con el que se jugará en el lobby",
             tags: ["lobbies"],
@@ -385,7 +385,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             el nombre de usuario de la persona que selecciona el mazo y 
             el nombre del mazo que se quiere seleccionar.`,
             params: Type.Object({
-                "lobby-id": Type.String(),
+                "lobbyId": Type.String(),
                 "username": Type.String()
             }),
             body: Type.Object({
@@ -416,7 +416,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "user": username } = request.params as { "lobby-id": string, "user": string }
+        const { "lobbyId": lobbyId, "user": username } = request.params as { "lobbyId": string, "user": string }
         const { deck } = request.body as { deck: string }
         let lobby;
         try {
@@ -449,7 +449,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.put("/:lobby-id/players/:username/ready", {
+    app.put("/:lobbyId/players/:username/ready", {
         schema: {
             summary: "Marcar a un jugador como listo para jugar en el lobby",
             tags: ["lobbies"],
@@ -459,7 +459,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             el nombre de usuario de la persona que se va a marcar como lista y 
             un booleano indicando si se marca como listo o no.`,
             params: Type.Object({
-                "lobby-id": Type.String(),
+                "lobbyId": Type.String(),
                 "username": Type.String()
             }),
             body: Type.Object({
@@ -490,7 +490,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "username": username } = request.params as { "lobby-id": string, "username": string }
+        const { "lobbyId": lobbyId, "username": username } = request.params as { "lobbyId": string, "username": string }
         const { ready } = request.body as { ready: boolean }
         let lobby
         try {
@@ -511,7 +511,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.put("/:lobby-id/board", {
+    app.put("/:lobbyId/board", {
         schema: {
             summary: "Cambiar el tablero del lobby",
             tags: ["lobbies"],
@@ -521,7 +521,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             el nombre de usuario de la persona que solicita la acción y 
             el nombre del nuevo tablero que se quiere establecer para el lobby.`,
             params: Type.Object({
-                "lobby-id": Type.String()
+                "lobbyId": Type.String()
             }),
             body: Type.Object({
                 requested_by: Type.String(),
@@ -551,7 +551,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             }
         }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId } = request.params as { "lobby-id": string }
+        const { "lobbyId": lobbyId } = request.params as { "lobbyId": string }
         const { board, requested_by } = request.body as { board: string, requested_by: string }
         let lobby
         try {
@@ -582,7 +582,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.delete("/:lobby-id/players/:username", {
+    app.delete("/:lobbyId/players/:targetUsername", {
         schema: {
             summary: "Eliminar a un jugador del lobby",
             tags: ["lobbies"],
@@ -592,8 +592,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             el nombre de usuario del jugador que se quiere eliminar y 
             el nombre de usuario de la persona que solicita la acción.`,
             params: Type.Object({
-                "lobby-id": Type.String(),
-                "username": Type.String()
+                "lobbyId": Type.String(),
+                "targetUsername": Type.String()
             }),
             body: Type.Object({
                 requested_by: Type.String()
@@ -626,13 +626,13 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     error: Type.String()
                 })
             }
-        }  
+        }
     }, async (request, reply) => {
-        const { "lobby-id": lobbyId, "username": username } = request.params as { "lobby-id": string, "username": string }
+        const { "lobbyId": lobbyId, "targetUsername": targetUsername } = request.params as { "lobbyId": string, "targetUsername": string }
         const { requested_by } = request.body as { requested_by: string }
         let lobby
         try {
-            lobby = lobbyManager.deletePlayer(requested_by, username, lobbyId)
+            lobby = lobbyManager.deletePlayer(requested_by, targetUsername, lobbyId)
         }
         catch (error) {
             if ((error as Error).message === "WRONG_LOBBY") {
