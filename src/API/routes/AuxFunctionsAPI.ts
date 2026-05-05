@@ -17,7 +17,17 @@ const AuxFunctionsAPI = fp(async (app: FastifyInstance) => {
         }
 
         try {
-            app.jwt.verify(token);
+            const decoded = app.jwt.verify<{ email: string; username: string }>(token);
+
+            if (!decoded.email) {
+                return reply.status(401).send({ error: "Invalid token payload" });
+            }
+            
+            const email_param = (request.params as { email?: string }).email;
+
+            if (email_param && email_param !== decoded.email) {
+                return reply.status(403).send({ error: "Forbidden: Token does not match the requested resource" });
+            }
         } catch (error) {
             return reply.status(401).send({ error: "Invalid token" });
         }
@@ -31,6 +41,10 @@ export const UnauthorizedSessionToken = Type.Object({
 })
 
 export const NotFoundSessionToken = Type.Object({
+    error: Type.String()
+})
+
+export const ForbiddenSessionToken = Type.Object({
     error: Type.String()
 })
 

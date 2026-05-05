@@ -1,10 +1,10 @@
 import prisma from "../prismaClient.js";
 import { Usuario, Estado } from "../generated/prisma/client.js";
-import { SnapshotJugadoresJSON, SnapshotTableroJSON } from "./JsonTypes.js";
+import { SnapshotJugadoresJSON, SnapshotTableroJSON, ChatPartidaJSON } from "./JsonTypes.js";
 import { lobbyManager } from "../managers/lobbyManager.js";
-import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento } from "./ReturnTypes.js";
+import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Movimiento, ChatReturnType } from "./ReturnTypes.js";
 import { randomInt } from "node:crypto";
-import { modifyUserByEmail,getUserByEmail } from "./User.js";
+import { modifyUserByEmail, getUserByName } from "./User.js";
 import { checkAchievementsForCompletion } from "./Achievements.js";
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
@@ -32,7 +32,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         turnoActual: 0,
         ronda: 1,
         jugadores: jugadores.map(jugador => ({
-            email: jugador.idJugador,
+            username: jugador.nombre,
             fase: "Cartas",
             fichas: [
                 { id: 1, casilla: 0, meta: false },
@@ -51,7 +51,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     };
 
     for (let jugador of jugadores) {
-        let jugadorJson = jsonJugadores.jugadores.find(j => j.email === jugador.idJugador)!;
+        let jugadorJson = jsonJugadores.jugadores.find(j => j.username === jugador.nombre)!;
         if (!jugador.esIA) {
             const cartas = await prisma.barajaCarta.findMany({
                 where: { barajaNombre: jugador.nombreMazo },
@@ -60,7 +60,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
             jugadorJson.mazoRestante = nombresCartas;
         } else {
-            const cartas  = await prisma.barajaCarta.findMany({
+            const cartas = await prisma.barajaCarta.findMany({
                 where: { barajaNombre: "mazoPorDefecto" },
                 select: { cartaNombre: true }
             });
@@ -81,11 +81,27 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         throw new Error("Tablero no encontrado");
     }
 
+    let jugadoresEmail = new Map<string, string>();
+    for (let jugador of jugadores) {
+        if (!jugador.esIA) {
+            const user = await getUserByName(jugador.nombre);
+            if (!user) {
+                throw new Error(`Usuario ${jugador.nombre} no encontrado`);
+            }
+            jugadoresEmail.set(jugador.nombre, user.email);
+        }
+    }
+
     const jsonTablero: SnapshotTableroJSON = tableroAUtilizar.snapshotTableroInicial as SnapshotTableroJSON;
+    let chat: ChatPartidaJSON = [{
+        mandadoPor: "Sistema",
+        mensaje: "Bienvenidos a S&E ReMix! La partida ha comenzado."
+    }];
     const partidaCreada = await prisma.partida.create({
         data: {
             estado: Estado.EnCurso,
             snapshotJugadores: jsonJugadores,
+            chat: chat,
             configuracion: {
                 tablero,
                 numeroJugadores: jugadores.length,
@@ -96,22 +112,40 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             partidaJugadores: {
                 connect: jugadores
                     .filter(jugador => !jugador.esIA)
-                    .map(jugador => ({ email: jugador.idJugador }))
+                    .map(jugador => {
+                        const emailJugador = jugadoresEmail.get(jugador.nombre);
+                        if (!emailJugador) {
+                            throw new Error(`No se pudo resolver el email del jugador ${jugador.nombre}`);
+                        }
+                        return { email: emailJugador };
+                    })
             },
             barajas: {
                 create: jugadores
                     .filter(jugador => !jugador.esIA)
-                    .map(jugador => ({
-                        barajaNombre: jugador.nombreMazo!,
-                        barajaUsuarioEmail: jugador.idJugador
-                    }))
+                    .map(jugador => {
+                        const emailJugador = jugadoresEmail.get(jugador.nombre);
+                        if (!emailJugador) {
+                            throw new Error(`No se pudo resolver el email del jugador ${jugador.nombre}`);
+                        }
+                        return {
+                            barajaNombre: jugador.nombreMazo!,
+                            barajaUsuarioEmail: emailJugador
+                        };
+                    })
             }
         },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -122,14 +156,44 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     return partidaCreada
 }
 
-export async function getMatchState(partidaId: string, player: string): Promise<PartidaReturnType> {
+export async function sendMessage(partidaId: string, player: string, mensaje: string): Promise<ChatReturnType> {
+
+    const chatUpdated = await prisma.$transaction(async (tx) => {
+        const partida = await tx.partida.findUnique({
+            where: { ID: partidaId },
+            include: {
+                partidaJugadores: {
+                    select: { nombre: true }
+                }
+            }
+        });
+    if (!partida) {
+        throw new Error("Partida no encontrada");
+    }
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+        throw new Error("El jugador no pertenece a esta partida");
+    }
+    let chat = partida.chat as ChatPartidaJSON;
+    chat.push({
+        mandadoPor: player,
+        mensaje: mensaje
+    });
+    return await tx.partida.update({
+            where: { ID: partidaId },
+            data: { chat: chat },
+            select: {
+                chat: true,
+            }
+        });
+    });
+    return chatUpdated;
+}
+
+export async function getChat(partidaId: string, player: string): Promise<ChatReturnType> {
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
                 select: {
                     nombre: true
                 }
@@ -139,13 +203,43 @@ export async function getMatchState(partidaId: string, player: string): Promise<
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.email === player)) {
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
+    return {
+        chat: partida.chat as ChatPartidaJSON
+    };
+}
 
+export async function getMatchState(partidaId: string, player: string): Promise<PartidaReturnType> {
+    const partida = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        include: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
+                select: {
+                    nombre: true                
+                }
+            }
+        }
+    });
+    if (!partida) {
+        throw new Error("Partida no encontrada");
+    }
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+        throw new Error("El jugador no pertenece a esta partida");
+    }
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
     estadoJugadores.jugadores = estadoJugadores.jugadores.map(jugador => {
-        if (jugador.email !== player) {
+        if (jugador.username !== player) {
             return {
                 ...jugador,
                 mano: jugador.mano.map(() => "cartaOculta"),
@@ -167,7 +261,7 @@ export async function getActiveMatches(player: string): Promise<PartidasActivasR
         where: {
             estado: Estado.EnCurso,
             partidaJugadores: {
-                some: { email: player }
+                some: { nombre: player }
             }
         },
         select: {
@@ -220,19 +314,19 @@ function aplicarEfectoMasCuatro(
     let haciaAtras = false;
     while (pasos > 0) {
         const casillaActual = tablero.casillas[posicionFinal];
-        if(!haciaAtras){
-            if (!casillaActual|| casillaActual.siguientes.length === 0) {
+        if (!haciaAtras) {
+            if (!casillaActual || casillaActual.siguientes.length === 0) {
                 break;
             }
-            if(casillaActual.tipo === "Meta"){
+            if (casillaActual.tipo === "Meta") {
                 haciaAtras = true;
             }
-            if(pasos===1&&checkBlockInBox(estadoJugadores, casillaActual.siguientes[0])){
+            if (pasos === 1 && checkBlockInBox(estadoJugadores, casillaActual.siguientes[0])) {
                 break;
             }
             posicionFinal = casillaActual.siguientes[0];
             pasos--;
-        }else{
+        } else {
             let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(posicionFinal));
             if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)) {
                 break;
@@ -255,13 +349,13 @@ function aplicarEfectoMasCuatro(
         }
         return casillaFinal.saltoA ?? posicionFinal;
     }
-    if(casillaFinal.efecto==="+4"){
-        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
+    if (casillaFinal.efecto === "+4") {
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
     }
-    if(casillaFinal.efecto==="-4"){
-        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
+    if (casillaFinal.efecto === "-4") {
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
     }
-    if(casillaFinal.efecto === "Agujero de serpiente"){
+    if (casillaFinal.efecto === "Agujero de serpiente") {
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
     }
 
@@ -278,8 +372,8 @@ function aplicarEfectoMenosCuatro(
     while (pasos > 0) {
         const casillaActual = tablero.casillas[posicionFinal];
         let casillaAnterior = tablero.casillas.findIndex(casilla => casilla.siguientes.includes(posicionFinal));
-            if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)&&pasos===1) {
-                break;
+        if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior) && pasos === 1) {
+            break;
         }
         posicionFinal = casillaAnterior;
         pasos--;
@@ -298,13 +392,13 @@ function aplicarEfectoMenosCuatro(
         }
         return casillaFinal.saltoA ?? posicionFinal;
     }
-    if(casillaFinal.efecto==="+4"){
-        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
+    if (casillaFinal.efecto === "+4") {
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
     }
-    if(casillaFinal.efecto==="-4"){
-        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
+    if (casillaFinal.efecto === "-4") {
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
     }
-    if(casillaFinal.efecto === "Agujero de serpiente"){
+    if (casillaFinal.efecto === "Agujero de serpiente") {
         return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
     }
 
@@ -316,33 +410,33 @@ function aplicarEfectoAgujeroSerpiente(
     estadoJugadores: SnapshotJugadoresJSON
 ): number {
     //tpea a una posicion aleatoria
-        let posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
-        while (checkBlockInBox(estadoJugadores, posicionFinal) || tablero.casillas[posicionFinal].tipo === "Vacía") {
-            posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
-        }
-        
+    let posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
+    while (checkBlockInBox(estadoJugadores, posicionFinal) || tablero.casillas[posicionFinal].tipo === "Vacía") {
+        posicionFinal = Math.floor(Math.random() * tablero.casillas.length);
+    }
+
     const casillaFinal = tablero.casillas[posicionFinal];
-        if (casillaFinal.tipo === "Escalera") {
-            return casillaFinal.saltoA ?? posicionFinal;
+    if (casillaFinal.tipo === "Escalera") {
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+    if (casillaFinal.tipo === "Serpiente") {
+        const tieneAntidoto = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto");
+        if (tieneAntidoto) {
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+            return posicionFinal;
         }
-        if (casillaFinal.tipo === "Serpiente") {
-            const tieneAntidoto = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto");
-            if (tieneAntidoto) {
-                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
-                return posicionFinal;
-            }
-            return casillaFinal.saltoA ?? posicionFinal;
-        }
-        if(casillaFinal.efecto==="+4"){
-            return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
-        }
-        if(casillaFinal.efecto==="-4"){
-            return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal,estadoJugadores);
-        }
-        if(casillaFinal.efecto === "Agujero de serpiente"){
-            return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
-        }
-        return posicionFinal;
+        return casillaFinal.saltoA ?? posicionFinal;
+    }
+    if (casillaFinal.efecto === "+4") {
+        return aplicarEfectoMasCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
+    }
+    if (casillaFinal.efecto === "-4") {
+        return aplicarEfectoMenosCuatro(tablero, jugadorActual, posicionFinal, estadoJugadores);
+    }
+    if (casillaFinal.efecto === "Agujero de serpiente") {
+        return aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+    }
+    return posicionFinal;
 
 }
 export async function throwDice(partidaId: string, player: string): Promise<MovimientoReturnType> {
@@ -350,10 +444,16 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+         },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -365,7 +465,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.email === player)) {
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
         throw new Error("El jugador no está jugando esta partida");
     }
 
@@ -375,7 +475,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
 
 
-    if (jugadorActual.email !== player) {
+    if (jugadorActual.username !== player) {
         throw new Error("No es tu turno");
     }
     if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
@@ -410,12 +510,12 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         }
     }
     let tiradaExtra = 0;
-    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "+1 dado")){
-        tiradaExtra = randomInt(1,7);
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "+1 dado")) {
+        tiradaExtra = randomInt(1, 7);
         tirada = tirada + tiradaExtra;
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "+1 dado");
     }
-    if(jugadorActual.efectosActivos.some(e=> e.resumenEfecto ==="-3")){
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "-3")) {
         tiradaExtra = -3;
         tirada = tirada + tiradaExtra;
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "-3");
@@ -441,10 +541,10 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                     break;
                 }
                 if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
-                    if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")){
+                    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
                         pasos++;
-                    }else{
-                    break;
+                    } else {
+                        break;
                     }
                 }
                 casillaActual = casillaTablero.siguientes[0];
@@ -458,7 +558,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 pasos--;
             }
         }
-        if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")){
+        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
             jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
         }
         casillaTablero = tablero.casillas[casillaActual];
@@ -467,7 +567,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
             casillaDestino: casillaActual,
             esBifurcacion: esBifurcacion
         };
-        if (esBifurcacion&&pasos>0) {
+        if (esBifurcacion && pasos > 0) {
             movimiento.pasosRestantes = pasos;
         }
         movimientos.push(movimiento);
@@ -475,27 +575,33 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     jugadorActual.movimientosPermitidos = movimientos.map(m => {
         let final = m.casillaDestino;
         let casilla = tablero.casillas[final];
-        if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente"&&!jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
+        if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
             return casilla.saltoA!;
         }
         return final;
     });
-    
-    if(jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")){
+
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
     }
-       const partidaUpdated = await prisma.partida.update({
+    const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+            select: {
+                nombre: true,
+                iconoActualField: true,
+                fichaActualField: true,
+                serpienteActualField: true,
+                escaleraActualField: true,
+            }
+        },
+            ganador: {
                 select: {
                     nombre: true
                 }
-            }
+             }
         }
 
     });
@@ -512,10 +618,16 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -525,7 +637,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.email === player)) {
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     if (casillaDestino < 0 || casillaDestino > 100) {
@@ -535,7 +647,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
     const tablero = partida.snapshotTablero as SnapshotTableroJSON;
     const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
-    if (jugadorActual.email !== player) {
+    if (jugadorActual.username !== player) {
         throw new Error("No es tu turno");
     }
     if (jugadorActual.fase !== "Movimiento") {
@@ -553,11 +665,11 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
         fichaAActualizar.meta = true;
     }
-    
+
     if (jugadorActual.fichas.every(f => f.meta)) {
-        return await finishMatch(partidaId, jugadorActual.email);
-    } else {        
-        if(pasosRestantes!==undefined&&pasosRestantes>0){
+        return await finishMatch(partidaId, jugadorActual.username);
+    } else {
+        if (pasosRestantes !== undefined && pasosRestantes > 0) {
             let haciaAtras = false;
             let esBifurcacion = false;
             let casillaTablero;
@@ -582,54 +694,54 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     if (casillaAnterior === -1 || checkBlockInBox(estadoJugadores, casillaAnterior)) {
                         break;
                     }
-                        casillaActual = casillaAnterior;
+                    casillaActual = casillaAnterior;
                     pasosRestantes--;
                 }
             }
-            fichaAActualizar.casilla = casillaActual;        
-        }  
+            fichaAActualizar.casilla = casillaActual;
+        }
 
-        if(tablero.casillas[casillaDestino].tipo !== "Bifurcacion"||(tablero.casillas[casillaDestino].tipo==="Bifurcacion"&&(pasosRestantes===undefined||pasosRestantes===0))){
+        if (tablero.casillas[casillaDestino].tipo !== "Bifurcacion" || (tablero.casillas[casillaDestino].tipo === "Bifurcacion" && (pasosRestantes === undefined || pasosRestantes === 0))) {
             const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
-            if(casillaConEfecto.efecto==="-4"){
-                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla,estadoJugadores);
+            if (casillaConEfecto.efecto === "-4") {
+                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
                 }
             }
-            if(casillaConEfecto.efecto ==="+4"){
-                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla,estadoJugadores);
+            if (casillaConEfecto.efecto === "+4") {
+                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
                 }
             }
-            if(casillaConEfecto.efecto === "Agujero de serpiente"){
+            if (casillaConEfecto.efecto === "Agujero de serpiente") {
                 const nuevaCasilla = aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
                 fichaAActualizar.casilla = nuevaCasilla;
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
                 }
             }
-            if(fichaAActualizar.meta){
-                if(jugadorActual.fichas.every(f => f.meta)){
-                    return await finishMatch(partidaId, jugadorActual.email);
+            if (fichaAActualizar.meta) {
+                if (jugadorActual.fichas.every(f => f.meta)) {
+                    return await finishMatch(partidaId, jugadorActual.username);
                 }
             }
-           estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+            estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
             let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
             siguienteJugador.fase = "Cartas";
             if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
                 const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-                if (cartaRobada){
-                   siguienteJugador.mano.push(cartaRobada);
+                if (cartaRobada) {
+                    siguienteJugador.mano.push(cartaRobada);
                 }
-                
-                if(siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")){
-                    if(siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4){
+
+                if (siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")) {
+                    if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
                         const cartaRobada2 = siguienteJugador.mazoRestante.shift()!;
-                        if(cartaRobada2){
+                        if (cartaRobada2) {
                             siguienteJugador.mano.push(cartaRobada2);
                         }
 
@@ -641,7 +753,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                 siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
                 siguienteJugador.cementerio = [];
                 const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-                if (cartaRobada){
+                if (cartaRobada) {
                     siguienteJugador.mano.push(cartaRobada);
                 }
             }
@@ -649,15 +761,21 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                 estadoJugadores.ronda++;
             }
         }
-    }  
+    }
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -667,15 +785,21 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     return partidaUpdated;
 }
 
-async function finishMatch(partidaId: string, ganadorEmail: string): Promise<PartidaReturnType> {
+async function finishMatch(partidaId: string, ganador: string): Promise<PartidaReturnType> {
 
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -687,32 +811,43 @@ async function finishMatch(partidaId: string, ganadorEmail: string): Promise<Par
     }
     //sep a ganador 100
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
-    const jugadorGanador = estadoJugadores.jugadores.find(j => j.email === ganadorEmail);
-    for (let jugador of estadoJugadores.jugadores){
-        let jugadorJuego = await getUserByEmail(jugador.email) as Usuario;
+    const jugadorGanador = estadoJugadores.jugadores.find(j => j.username === ganador);
+    let emailGanador = "";
+    for (let jugador of estadoJugadores.jugadores) {
+        let jugadorJuego = await getUserByName(jugador.username) as Usuario;
         if (!jugadorJuego) {
             continue;
         }
-        await modifyUserByEmail(jugador.email, {
-            SEP: jugadorJuego.SEP+ (jugador.email === ganadorEmail ? 100 : 30),
-            victorias: jugador.email === ganadorEmail ? 1 : 0,
+        const esGanador = jugador.username === ganador;
+        if (esGanador) {
+            emailGanador = jugadorJuego.email;
+        }
+        await modifyUserByEmail(jugadorJuego.email, {
+            SEP: jugadorJuego.SEP + (esGanador ? 100 : 30),
+            victorias: jugadorJuego.victorias + (esGanador ? 1 : 0),
             partidasJugadas: jugadorJuego.partidasJugadas + 1,
-            derrotas: jugador.email === ganadorEmail ? 0 : 1,
+            derrotas: jugadorJuego.derrotas + (esGanador ? 0 : 1),
             cartasJugadas: jugador.cartasJugadas,
-        });        
-        let LogrosAnt=checkAchievementsForCompletion(jugador.email);
+        });
+        let LogrosAnt = checkAchievementsForCompletion(jugadorJuego.email);
     }
     if (!jugadorGanador) {
         throw new Error("El jugador ganador no pertenece a esta partida");
     }
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
-        data: {ganadorEmail: ganadorEmail, estado: Estado.Finalizada, fechaFin: new Date()},
+        data: { ganadorEmail: emailGanador, estado: Estado.Finalizada, fechaFin: new Date() },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -740,10 +875,16 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     const partida = await prisma.partida.findUnique({
         where: { ID: partidaId },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {   
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
                 select: {
                     nombre: true
                 }
@@ -753,13 +894,13 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.email === player)) {
+    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
     const tableroPartida = partida.snapshotTablero as SnapshotTableroJSON;
     const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
-    if (jugadorActual.email !== player) {
+    if (jugadorActual.username !== player) {
         throw new Error("No es tu turno");
     }
     if (jugadorActual.fase !== "Cartas") {
@@ -795,7 +936,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
             validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
-            if (fin%10 >= inicio%10) {
+            if (fin % 10 >= inicio % 10) {
                 throw new Error("La casilla fin debe ser menor que la casilla inicio");
             }
             tableroPartida.casillas[inicio].tipo = "Serpiente";
@@ -808,7 +949,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
             validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
-            if (fin%10 <= inicio%10) {
+            if (fin % 10 <= inicio % 10) {
                 throw new Error("La casilla fin debe ser mayor que la casilla inicio");
             }
             tableroPartida.casillas[inicio].tipo = "Escalera";
@@ -819,7 +960,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto= "-4";
+            casillaTablero.efecto = "-4";
             break;
         case "Salto de longitud"://done 🈴
             if (prohibidas) {
@@ -830,7 +971,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         case "Robo de identidad"://done 🈴
             let posFichas = []
             for (let jugador of estadoJugadores.jugadores) {
-                if (jugador.email === player) {
+                if (jugador.username === player) {
                     continue;
                 }
                 for (let ficha of jugador.fichas) {
@@ -844,32 +985,32 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             const posicionAleatoria = Math.floor(Math.random() * posFichas.length);
             // Lógica para teletransportar la ficha
             // Cambiar la ficha del jugador en la posicion aleatoria por una ficha del jugador actual
-            if(typeof who !== "number"){
+            if (typeof who !== "number") {
                 throw new Error("Debes indicar el id de la ficha a mover para Robo de identidad");
             }
             jugadorActual.fichas[who].casilla = posFichas[posicionAleatoria];
             let numFicha = 0;
             for (let jugador of estadoJugadores.jugadores) {
-                if (jugador.email === player) {
+                if (jugador.username === player) {
                     continue;
                 }
                 for (let ficha of jugador.fichas) {
-                    if (!ficha.meta && ficha.casilla === posFichas[posicionAleatoria]&&numFicha===0) {
+                    if (!ficha.meta && ficha.casilla === posFichas[posicionAleatoria] && numFicha === 0) {
                         ficha.casilla = casillaActual;
                         numFicha++;
                         break;
                     }
                 }
-                if(numFicha>0){
+                if (numFicha > 0) {
                     break;
-                }                
+                }
             }
 
             // Y cambia a la ficha que habia ahi por la posicion en la que estaba el jugador actual
-            
+
             break;
         case "Mal de ojo"://done 🈴
-            let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -879,7 +1020,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.efectosActivos.push({ resumenEfecto: "Antidoto" });
             break;
         case "Pickpocket"://done 🈴
-            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -890,7 +1031,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.mano.push(cartaRobada);
             break;
         case "Dado envenenado"://done  🈴
-            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -901,7 +1042,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             break;
         case "Serpiente en tu bota"://done 🈴
             // Pasar una ronda entera
-            const jugadorAfectado = estadoJugadores.jugadores.find(j => j.email === who);
+            const jugadorAfectado = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorAfectado) {
                 throw new Error("Jugador afectado no encontrado");
             }
@@ -935,14 +1076,14 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             break;
         case "Agujero de serpiente"://done 🈴
-            if(prohibidas){
+            if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
             casillaTablero.efecto = "Agujero de serpiente";
             // Coger posición del tablero aleatoria y teletransportar una ficha ahí
             break;
         case "Bolsillo roto"://done 🈴
-            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -984,7 +1125,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.efectosActivos.push({ resumenEfecto: "Coleccionista" });
             break;
         case "Noqueo"://done 🈴
-            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.email === who);
+            jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -998,12 +1139,19 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores, snapshotTablero: tableroPartida },
         include: {
-            partidaJugadores: true,
-            barajas: true,
-            ganador: true,
-            tableroInicial: {
+            partidaJugadores: {
                 select: {
-                    nombre: true                }
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
+                select: {
+                    nombre: true
+                }
             }
         }
     });

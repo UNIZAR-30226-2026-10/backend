@@ -9,7 +9,7 @@ datasource db {
 
 model Usuario {
   email           String       @id
-  nombre          String
+  nombre          String       @unique
   passwordHash    String
   SEP             Int          @default(0)
   ELO             Int          @default(500)
@@ -74,11 +74,12 @@ model Partida {
   fechaFin             DateTime?
   configuracion        Json
   snapshotTablero      Json
-  tableroInicialNombre String?
+  chat                 Json
+  tableroInicialNombre String
   ganadorEmail         String?
   barajas              BarajaPartida[]
   ganador              Usuario?        @relation("partidaGanador", fields: [ganadorEmail], references: [email])
-  tableroInicial       TableroInicial? @relation("inicio", fields: [tableroInicialNombre], references: [nombre])
+  tableroInicial       TableroInicial  @relation("inicio", fields: [tableroInicialNombre], references: [nombre])
   partidaJugadores     Usuario[]       @relation("partidaJugadores")
 }
 
@@ -89,7 +90,7 @@ model TableroInicial {
 }
 
 model Baraja {
-  nombre       String          @unique
+  nombre       String          
   usuarioEmail String
   usuario      Usuario         @relation("crea", fields: [usuarioEmail], references: [email], onDelete: Cascade)
   barajaCartas BarajaCarta[]

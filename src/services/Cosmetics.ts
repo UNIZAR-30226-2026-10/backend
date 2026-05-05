@@ -14,8 +14,8 @@ export async function createCosmetic(data: { nombre: string, tipo: Tipo_Cosmetic
         });
         return cosmetic;
     } catch (error) {
-        console.error("Error al crear el cosmetico:", error);
-        throw new Error("Error al crear el cosmetico");
+        console.error("Error al crear el cosmético:", error);
+        throw new Error("Error al crear el cosmético");
     }
 }
 
@@ -31,8 +31,8 @@ export async function updateCosmetic(nombre: string, data: { tipo?: Tipo_Cosmeti
         });
         return cosmetic;
     } catch (error) {
-        console.error("Error al actualizar el cosmetico:", error);
-        throw new Error("Error al actualizar el cosmetico");
+        console.error("Error al actualizar el cosmético:", error);
+        throw new Error("Error al actualizar el cosmético");
     }
 }
 
@@ -41,10 +41,10 @@ export async function deleteCosmetic(nombre: string): Promise<{ message: string 
         await prisma.cosmeticos.delete({
             where: { nombre }
         });
-        return { message: "Cosmetico eliminado correctamente" };
+        return { message: "Cosmético eliminado correctamente" };
     } catch (error) {
-        console.error("Error al eliminar el cosmetico:", error);
-        throw new Error("Error al eliminar el cosmetico");
+        console.error("Error al eliminar el cosmético:", error);
+        throw new Error("Error al eliminar el cosmético");
     }
 }
 
@@ -64,8 +64,8 @@ export async function getEquippedCosmetics(email: string): Promise<CosmeticosEqu
         }
         return user;
     } catch (error) {
-        console.error("Error al obtener los cosmeticos equipados:", error);
-        throw new Error("Error al obtener los cosmeticos equipados");
+        console.error("Error al obtener los cosméticos equipados:", error);
+        throw new Error("Error al obtener los cosméticos equipados");
     }
 }
 
@@ -87,8 +87,8 @@ export async function getCosmeticsByTypeAndUser(tipo: Tipo_Cosmetico, email: str
         }
         return cosmetics;
     } catch (error) {
-        console.error("Error al obtener los cosmeticos por tipo y usuario:", error);
-        throw new Error("Error al obtener los cosmeticos por tipo y usuario");
+        console.error("Error al obtener los cosméticos por tipo y usuario:", error);
+        throw new Error("Error al obtener los cosméticos por tipo y usuario");
     }
 }
 
@@ -109,8 +109,8 @@ async function getCosmeticsByUser(email: string): Promise<CosmeticosDisponiblesU
         }
         return cosmetics;
     } catch (error) {
-        console.error("Error al obtener los cosmeticos por usuario:", error);
-        throw new Error("Error al obtener los cosmeticos por usuario");
+        console.error("Error al obtener los cosméticos por usuario:", error);
+        throw new Error("Error al obtener los cosméticos por usuario");
     }
 }
 
@@ -120,12 +120,12 @@ export async function getCosmeticByName(nombre: string): Promise<Cosmeticos> {
             where: { nombre }
         });
         if (!cosmetic) {
-            throw new Error("Cosmetico no encontrado");
+            throw new Error("Cosmético no encontrado");
         }
         return cosmetic;
     } catch (error) {
-        console.error("Error al obtener el cosmetico por nombre:", error);
-        throw new Error("Error al obtener el cosmetico por nombre");
+        console.error("Error al obtener el cosmético por nombre:", error);
+        throw new Error("Error al obtener el cosmético por nombre");
     }
 }
 
@@ -141,7 +141,7 @@ export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: 
         });
         const userCosmetics = await getCosmeticsByUser(email);
 
-        const storeCosmetics = cosmetics.map(cosmetic => ({
+        const storeCosmetics = cosmetics.map((cosmetic: any) => ({
             nomCosmetico: cosmetic.nombre,
             precio: cosmetic.precio,
             desc: cosmetic.descripcion,
@@ -149,8 +149,8 @@ export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: 
         }));
         return storeCosmetics;
     } catch (error) {
-        console.error("Error al obtener los cosmeticos de la tienda:", error);
-        throw new Error("Error al obtener los cosmeticos de la tienda");
+        console.error("Error al obtener los cosméticos de la tienda:", error);
+        throw new Error("Error al obtener los cosméticos de la tienda");
     }
 }
 
@@ -160,7 +160,7 @@ export async function purchaseCosmetic(email: string, nombreCosmetico: string): 
             where: { nombre: nombreCosmetico }
         });
         if (!cosmetic) {
-            throw new Error("Cosmetico no encontrado");
+            throw new Error("Cosmético no encontrado");
         }
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -174,19 +174,19 @@ export async function purchaseCosmetic(email: string, nombreCosmetico: string): 
             throw new Error("Usuario no encontrado");
         }
         if (user.cosmeticos.length > 0) {
-            throw new Error("Ya tienes este cosmetico");
+            throw new Error("Ya tienes este cosmético");
         }
         if (user.SEP < cosmetic.precio) {
-            throw new Error("No tienes suficientes SEP para comprar este cosmetico");
+            throw new Error("No tienes suficientes SEP para comprar este cosmético");
         }
         await prisma.usuario.update({
             where: { email },
             data: { SEP: user.SEP - cosmetic.precio, cosmeticos: { connect: { nombre: nombreCosmetico } } }
         });
-        return { message: "Compra realizada con exito" };
+        return { message: "Compra realizada con éxito" };
     } catch (error) {
-        console.error("Error al comprar el cosmetico:", error);
-        throw new Error("Error al comprar el cosmetico");
+        console.error("Error al comprar el cosmético:", error);
+        throw error;
     }
 }
 

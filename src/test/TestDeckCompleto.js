@@ -1,11 +1,11 @@
-import Deck from "../services/Deck"
+import Deck from "../services/Deck.js"
 import test, { before, describe } from "node:test"
 import assert from "node:assert/strict"
-import User from "../services/User"
-import Cards from "../services/Cards"
-import Effects from "../services/Effects"
-import { Tipo_Afeccion, Tipo_Carta, Rareza, Tipo_Efecto } from "../generated/prisma/enums"
-import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
+import User from "../services/User.js"
+import Cards from "../services/Cards.js"
+import Effects from "../services/Effects.js"
+import { Tipo_Afeccion, Tipo_Carta, Rareza, Tipo_Efecto } from "../generated/prisma/enums.js"
+import { cartasPoblación, cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 
 const runid = Date.now()
 
@@ -22,6 +22,7 @@ function makeIds(suffix) {
 before(async () => {
     try {
         await cosmeticosPorDefecto()
+        await cartasPoblación()
     } catch (error) {
         console.error("Error al crear los cosméticos por defecto:", error)
     }

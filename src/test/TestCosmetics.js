@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import test, { describe, afterEach, before } from "node:test"
 import prisma from "../prismaClient.js"
 import { Tipo_Cosmetico } from "../generated/prisma/client.js"
-import { cosmeticosPorDefecto } from "./CrearDatosBase.js"
+import { cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 
 const runId = Date.now()
 const TEST_USER_EMAIL = `user_${runId}@gmail.com`
@@ -55,7 +55,7 @@ describe("Cosmetics Test", () => {
                 precio: 300,
                 descripcion: TEST_COSMETIC_DESC
             }),
-            /Error al crear el cosmetico/
+            /Error al crear el cosmético/
         )
     })
 
@@ -73,7 +73,7 @@ describe("Cosmetics Test", () => {
     test("Actualizar cosmético no existente", async () => {
         await assert.rejects(
             Cosmetics.updateCosmetic("No existe", { precio: 500 }),
-            /Error al actualizar el cosmetico/
+            /Error al actualizar el cosmético/
         )
     })
 
@@ -85,13 +85,13 @@ describe("Cosmetics Test", () => {
             descripcion: TEST_COSMETIC_DESC
         })
         const deleted = await Cosmetics.deleteCosmetic(TEST_COSMETIC_NAME)
-        assert.equal(deleted.message, "Cosmetico eliminado correctamente")
+        assert.equal(deleted.message, "Cosmético eliminado correctamente")
     })
 
     test("Eliminar cosmético no existente", async () => {
         await assert.rejects(
             Cosmetics.deleteCosmetic("No existe"),
-            /Error al eliminar el cosmetico/
+            /Error al eliminar el cosmético/
         )
     })
 
@@ -131,7 +131,7 @@ describe("Cosmetics Test", () => {
     test("Obtener cosméticos equipados por un usuario que no existe", async () => {
         await assert.rejects(
             Cosmetics.getEquippedCosmetics("noexiste@gmail.com"),
-            /Error al obtener los cosmeticos equipados/
+            /Error al obtener los cosméticos equipados/
         )
     })
 
@@ -157,7 +157,7 @@ describe("Cosmetics Test", () => {
     test("Obtener un cosmético que no existe mediante su nombre", async () => {
         await assert.rejects(
             Cosmetics.getCosmeticByName("No existe"),
-            /Error al obtener el cosmetico por nombre/
+            /Error al obtener el cosmético por nombre/
         )
     })
 
@@ -194,7 +194,7 @@ describe("Cosmetics Test", () => {
             descripcion: TEST_COSMETIC_DESC
         })
         const purchase = await Cosmetics.purchaseCosmetic(TEST_USER_EMAIL, TEST_COSMETIC_NAME)
-        assert.equal(purchase.message, "Compra realizada con exito")
+        assert.equal(purchase.message, "Compra realizada con éxito")
     })
 
     test("Comprar cosmético sin suficiente SEP", async () => {
@@ -209,7 +209,7 @@ describe("Cosmetics Test", () => {
         })
         await assert.rejects(
             Cosmetics.purchaseCosmetic(TEST_USER_EMAIL, TEST_COSMETIC_NAME),
-            /Error al comprar el cosmetico/
+            /No tienes suficientes SEP para comprar este cosmético/
         )
     })
 
@@ -219,7 +219,7 @@ describe("Cosmetics Test", () => {
         })
         await assert.rejects(
             Cosmetics.purchaseCosmetic(TEST_USER_EMAIL, "No existe"),
-            /Error al comprar el cosmetico/
+            /Cosmético no encontrado/
         )
     })
 
@@ -236,7 +236,7 @@ describe("Cosmetics Test", () => {
         await Cosmetics.purchaseCosmetic(TEST_USER_EMAIL, TEST_COSMETIC_NAME)
         await assert.rejects(
             Cosmetics.purchaseCosmetic(TEST_USER_EMAIL, TEST_COSMETIC_NAME),
-            /Error al comprar el cosmetico/
+            /Ya tienes este cosmético/
         )
     })
 })

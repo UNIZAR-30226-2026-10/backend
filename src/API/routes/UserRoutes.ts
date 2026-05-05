@@ -1,16 +1,23 @@
 import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
-import { UnauthorizedSessionToken } from "./AuxFunctionsAPI.js";
+import { ForbiddenSessionToken, UnauthorizedSessionToken } from "./AuxFunctionsAPI.js";
 import User from "../../services/User.js";
 import Cosmetics from "../../services/Cosmetics.js";
 import Achievements from "../../services/Achievements.js";
 import { Rareza, Tipo_Carta, Tipo_Cosmetico, Tipo_Logro } from "../../generated/prisma/enums.js";
+import Deck from "../../services/Deck.js";
+import { lobbyManager } from "../../managers/lobbyManager.js";
 
 export default function userRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
 
     app.get("/:email/profile", {
         schema: {
+            summary: "Obtener el perfil de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener la información del perfil de tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quiere obtener la información del perfil.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -27,6 +34,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     FichaActual: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -55,6 +63,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/icons", {
         schema: {
+            summary: "Obtener los iconos disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los iconos disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener los iconos disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -63,6 +76,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     iconos: Type.Array(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -81,6 +95,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/icon", {
         schema: {
+            summary: "Actualizar el icono actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar el icono actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre del nuevo icono que se desea establecer como icono actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -92,6 +111,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     message: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -111,6 +131,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/stairs", {
         schema: {
+            summary: "Obtener las escaleras disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las escaleras disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las escaleras disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -119,6 +144,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     escaleras: Type.Array(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -137,6 +163,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/stair", {
         schema: {
+            summary: "Actualizar la escalera actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la escalera actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva escalera que se desea establecer como escalera actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -148,6 +179,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     message: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -167,6 +199,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/pawns", {
         schema: {
+            summary: "Obtener las fichas disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las fichas disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las fichas disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -175,6 +212,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     fichas: Type.Array(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -194,6 +232,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/pawn", {
         schema: {
+            summary: "Actualizar la ficha actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la ficha actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva ficha que se desea establecer como ficha actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -205,6 +248,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     message: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -224,6 +268,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/snakes", {
         schema: {
+            summary: "Obtener las serpientes disponibles para un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las serpientes disponibles para tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las serpientes disponibles.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -232,6 +281,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     serpientes: Type.Array(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -250,6 +300,11 @@ export default function userRoutes(app: FastifyInstance) : void {
      
      app.put("/:email/snake", {
         schema: {
+            summary: "Actualizar la serpiente actual de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar la serpiente actual de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de la nueva serpiente que se desea establecer como serpiente actual.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -261,6 +316,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     message: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -280,6 +336,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.put("/:email/username", {
         schema: {
+            summary: "Actualizar el nombre de usuario de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar el nombre de usuario de tu cuenta. 
+            La petición debe incluir el email del usuario y el nuevo nombre de usuario que se desea establecer.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -291,6 +352,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     message: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -311,6 +373,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/stats", {
         schema: {
+            summary: "Obtener las estadísticas de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las estadísticas de tu cuenta 
+            La petición debe incluir el email del usuario para el cual se quieren obtener las estadísticas.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -326,6 +393,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     LogrosCompletados: Type.Array(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -357,6 +425,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.post("/:email/achievements" , {
         schema: {
+            summary: "Completar un logro y conectarlo a tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para conectar un logro a tu cuenta. 
+            La petición debe incluir el email del usuario y el id del logro que se desea completar/conectar a la cuenta.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -371,9 +444,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                 402: Type.Object({
                     error: Type.String()
                 }),
-                403: Type.Object({
-                    error: Type.String()
-                }),
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -440,6 +511,11 @@ export default function userRoutes(app: FastifyInstance) : void {
 
     app.get("/:email/decks", {
         schema: {
+            summary: "Obtener los mazos de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los mazos disponibles para tu cuenta con sus respectivas cartas. 
+            La petición debe incluir el email del usuario.`,
             params: Type.Object({
                 email: Type.String({ format: "email" })
             }),
@@ -456,6 +532,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     }))
                 }),
                 401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
                 404: Type.Object({
                     error: Type.String()
                 })
@@ -469,7 +546,6 @@ export default function userRoutes(app: FastifyInstance) : void {
             if (!user) {
                 return reply.status(404).send({ error: "usuario no encontrado" });
             }
-
             const decks = user.barajas.map(m => ({
                 nombre: m.nombre,
                 cartas: m.barajaCartas.map(bc => bc.carta)
@@ -477,7 +553,321 @@ export default function userRoutes(app: FastifyInstance) : void {
 
             return reply.status(200).send({ decks });
         } catch (error) {
+            return reply.status(404).send({ error: "Error catch user decks" });
+        }
+    });
+
+    app.get("/:email/decks/:deck-id/cards", {
+        schema: {
+            summary: "Obtener las cartas de un mazo específico",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las cartas de un mazo específico de tu cuenta. 
+            La petición debe incluir el email del usuario y el id del mazo del cual se quieren obtener las cartas.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                "deck-id": Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    cards: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        calidad: Type.Enum(Rareza),
+                        tipo: Type.Enum(Tipo_Carta),
+                        descripcion: Type.String(),
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                400: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+        let cartas_mazo;
+        try {
+            cartas_mazo = Deck.getAllCardsFromADeck(deckId, email);
+        } catch (error) {
+            return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al obtener las cartas del mazo" });
+        }
+        return cartas_mazo;
+    });
+
+    app.post("/:email/decks", {
+        schema: {
+            summary: "Crear un nuevo mazo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para crear un nuevo mazo en tu cuenta. 
+            La petición debe incluir el email del usuario y la información del mazo a crear.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            body: Type.Object({
+                nombre: Type.String(),
+                cartas: Type.Array(Type.Object({
+                    nombre: Type.String(),
+                    calidad: Type.Enum(Rareza),
+                    tipo: Type.Enum(Tipo_Carta),
+                    descripcion: Type.String(),
+                }))
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                400: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+        const { nombre, cartas } = request.body as {
+            nombre: string;
+            cartas: {
+                nombre: string;
+                calidad: Rareza;
+                tipo: Tipo_Carta;
+                descripcion: string;
+            }[];
+        };
+        
+        try {
+            const usuario = await User.getUserByEmail(email);
+            if (!usuario) {
+                return reply.status(400).send({ error: "Usuario no encontrado" });
+            }
+            if(usuario.barajas.length >= 8) {
+                return reply.status(400).send({ error: "El usuario ya tiene el máximo de mazos permitidos (8)" });
+            }
+            await Deck.createDeck({ nombre, carta: cartas, usuario });
+            return reply.status(200).send({ message: "Mazo creado correctamente" });
+        } catch (error) {
+            return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al crear el mazo" });
+        }
+    });
+
+    app.delete("/:email/decks/:deck-id", {
+        schema: {
+            summary: "Eliminar un mazo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar un mazo de tu cuenta. 
+            La petición debe incluir el email del usuario y el id del mazo que se desea eliminar.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                "deck-id": Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                400: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+
+        try {
+            const usuario = await User.getUserByEmail(email);
+            if (!usuario) {
+                return reply.status(400).send({ error: "Usuario no encontrado" });
+            }
+            await Deck.deleteDeck(deckId, email);
+            return reply.status(200).send({ message: "Mazo eliminado correctamente" });
+        } catch (error) {
+            return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al eliminar el mazo" });
+        }
+    });
+
+    app.get("/:email/matches", {
+        schema: {
+            summary: "Obtener las partidas de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las partidas de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    matches: Type.Array(Type.Object({
+                        jugadores: Type.Array(Type.String()),
+                        fecha: Type.String(),
+                        mapa: Type.String(),
+                        ID: Type.String()
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+
+        try {
+            const matches = await User.getUserMatches(email);
+            if (!matches) {
+                return reply.status(404).send({ error: "usuario no encontrado" });
+            }
+            const returnData = {
+                matches: matches.partidas.map(p => ({
+                    jugadores: p.partidaJugadores.map(j => j.nombre),
+                    fecha: p.fechaFin ? p.fechaFin.toISOString() : "Partida en curso",
+                    mapa: p.tableroInicialNombre,
+                    ID: p.ID
+                }))
+            }
+            return reply.status(200).send(returnData);
+        } catch (error) {
             return reply.status(404).send({ error: "usuario no encontrado" });
         }
     });
+
+    app.get("/:email/friends", {
+        schema: {
+            summary: "Obtener los amigos de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los amigos de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    friends: Type.Array(Type.String())
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+
+        try {
+            const friends = await User.getAmigos(email);
+            return reply.status(200).send({ friends });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
+    app.get("/:email/invites", {
+        schema: {
+            summary: "Obtener las invitaciones de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las invitaciones de tu cuenta. 
+            La petición debe incluir el email del usuario.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    invites: Type.Array(Type.Object({
+                        inviteFor: Type.String(),
+                        inviteFrom: Type.String(),
+                        partidaID: Type.String()
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+        
+        try {
+            const invites = lobbyManager.getInvitesOfPlayer(email);
+            return reply.status(200).send({ invites });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
+    app.post("/:email/:friendUsername/invites", {
+        schema: {
+            summary: "Agregar a un jugador como amigo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para agregar a un jugador como amigo. 
+            La petición debe incluir el email del usuario y el nombre de usuario del amigo que se desea agregar.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                friendUsername: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        try {
+            const amigos = await User.addAmigo(email, friendUsername);
+            return reply.status(200).send({ message: amigos });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
+    app.delete("/:email/friends", {
+        schema: {
+            summary: "Eliminar un amigo de tu cuenta",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar un amigo de tu cuenta. 
+            La petición debe incluir el email del usuario y el nombre de usuario del amigo que se desea eliminar.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                friendUsername: Type.String()
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        try {
+            const amigos = await User.removeAmigo(email, friendUsername);
+            return reply.status(200).send({ message: amigos });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
 }
