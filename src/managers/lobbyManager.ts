@@ -174,7 +174,15 @@ export class LobbyManager {
         return lobby
     }
 
-    getLobby(lobbyID: string): Lobby {
+    getLobbyById(lobbyID: string): Lobby {
+        const lobby = this.lobbies.get(lobbyID)
+        if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+        return lobby
+    }
+    
+    getLobbyOfPlayer(idJugador: string): Lobby {
+        const lobbyID = this.jugadoresEnCola.get(idJugador)
+        if (!lobbyID) throw new Error("NOT_IN_A_LOBBY")
         const lobby = this.lobbies.get(lobbyID)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
         return lobby

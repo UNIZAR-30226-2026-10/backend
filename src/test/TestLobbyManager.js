@@ -82,7 +82,7 @@ describe("Lobby Manager", () => {
         let devuelto = manager.deletePlayer("ag", "ag", lobby.idLobby)
         assert.equal(devuelto, lobby)
         assert.throws(() => {
-            manager.getLobby(lobby.idLobby)
+            manager.getLobbyById(lobby.idLobby)
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Salir de un Lobby", () => {
@@ -137,12 +137,22 @@ describe("Lobby Manager", () => {
     })
     test("Obtener una lobby existente", () => {
         let lobby = manager.createLobby({ nombre: "ag", esIA: false, estaListo: false })
-        let obtenida = manager.getLobby(lobby.idLobby)
+        let obtenida = manager.getLobbyById(lobby.idLobby)
         assert.deepStrictEqual(lobby, obtenida)
+    })
+    test("Obtener la lobby de un jugador", () => {
+        let lobby = manager.createLobby({ nombre: "ag", esIA: false, estaListo: false })
+        let obtenida = manager.getLobbyOfPlayer("ag")
+        assert.deepStrictEqual(lobby, obtenida)
+    })
+    test("Obtener la lobby de un jugador que no está en ningún lobby", () => {
+        assert.throws(() => {
+            manager.getLobbyOfPlayer("aplayer")
+        }, new Error("NOT_IN_A_LOBBY"))
     })
     test("Obtener una lobby que no existe", () => {
         assert.throws(() => {
-            manager.getLobby("noexiste")
+            manager.getLobbyById("noexiste")
         }, new Error("LOBBY_NOT_FOUND"))
     })
     test("Eliminar Lobby existente", () => {
