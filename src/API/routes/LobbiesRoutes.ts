@@ -68,7 +68,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         })
     })
 
-    app.get("/:username", {
+    app.get("/by-player/:username", {
         schema: {
             summary: "Obtener el lobby al que pertenece un jugador",
             tags: ["lobbies"],
