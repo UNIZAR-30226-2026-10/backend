@@ -74,6 +74,7 @@ model Partida {
   fechaFin             DateTime?
   configuracion        Json
   snapshotTablero      Json
+  chat                 Json
   tableroInicialNombre String
   ganadorEmail         String?
   barajas              BarajaPartida[]
