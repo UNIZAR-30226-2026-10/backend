@@ -1,4 +1,4 @@
-import Boards from '../services/Boards.ts'
+import Boards from '../dist/services/Boards.ts'
 import assert from 'node:assert/strict'
 import test, { describe, beforeEach } from 'node:test'
 import prisma from '../prismaClient.js' // Necesario para limpiar la BBDD

@@ -1,6 +1,6 @@
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts";
 import { Tipo_Carta, Rareza } from "../generated/prisma/enums.ts";
-import { createCard, getCardById } from "../dist/services/Cards.js";
+import { createCard, getCardById, getCardByIdBasic } from "../dist/services/Cards.js";
 import { createDeck, getDeckById, updateDeck } from "../dist/services/Deck.js";
 import { createCosmetic } from "../dist/services/Cosmetics.js";
 import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../dist/services/User.js";

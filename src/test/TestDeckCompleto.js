@@ -1,9 +1,9 @@
-import Deck from "../services/Deck.js"
+import Deck from "../dist/services/Deck.js"
 import test, { before, describe } from "node:test"
 import assert from "node:assert/strict"
-import User from "../services/User.js"
-import Cards from "../services/Cards.js"
-import Effects from "../services/Effects.js"
+import User from "../dist/services/User.js"
+import Cards from "../dist/services/Cards.js"
+import Effects from "../dist/services/Effects.js"
 import { Tipo_Afeccion, Tipo_Carta, Rareza, Tipo_Efecto } from "../generated/prisma/enums.js"
 import { cartasPoblación, cosmeticosPorDefecto } from "../poblation/CrearDatosBase.js"
 

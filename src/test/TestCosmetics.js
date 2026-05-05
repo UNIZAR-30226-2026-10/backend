@@ -1,4 +1,4 @@
-import Cosmetics from "../services/Cosmetics.js"
+import Cosmetics from "../dist/services/Cosmetics.js"
 import assert from "node:assert/strict"
 import test, { describe, afterEach, before } from "node:test"
 import prisma from "../prismaClient.js"
