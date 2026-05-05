@@ -1,17 +1,70 @@
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts";
 import { Tipo_Carta, Rareza } from "../generated/prisma/enums.ts";
-import { createCard, getCardById, getCardByIdBasic } from "../dist/services/Cards.js";
-import { createDeck, getDeckById, updateDeck } from "../dist/services/Deck.js";
-import { createCosmetic } from "../dist/services/Cosmetics.js";
-import { createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } from "../dist/services/User.js";
-import { createEffect } from "../dist/services/Effects.js";
 import { Tipo_Afeccion} from "../generated/prisma/enums.ts";
 import { Tipo_Efecto } from "../generated/prisma/enums.ts";
-import { createAchievement } from "../dist/services/Achievements.js";
 import { Tipo_Logro } from "../generated/prisma/enums.ts";
-import { createBoard } from "../dist/services/Boards.js";
 import { generarTableros } from "./tableros.tsx";
+
+let createCard;
+let getCardById;
+let getCardByIdBasic;
+let createDeck;
+let getDeckById;
+let updateDeck;
+let createCosmetic;
+let createUser;
+let getUserByEmail;
+let modifyUserByEmail;
+let updateCosmeticOnUser;
+let createEffect;
+let createAchievement;
+let createBoard;
+
+let servicesLoaded = false;
+
+// Usa código fuente en tests (tsx) y hace fallback a dist para ejecución compilada.
+async function loadServices() {
+    if (servicesLoaded) return;
+
+    let cards;
+    let deck;
+    let cosmetics;
+    let user;
+    let effects;
+    let achievements;
+    let boards;
+
+    try {
+        cards = await import("../services/Cards.ts");
+        deck = await import("../services/Deck.ts");
+        cosmetics = await import("../services/Cosmetics.ts");
+        user = await import("../services/User.ts");
+        effects = await import("../services/Effects.ts");
+        achievements = await import("../services/Achievements.ts");
+        boards = await import("../services/Boards.ts");
+    } catch {
+        cards = await import("../dist/services/Cards.js");
+        deck = await import("../dist/services/Deck.js");
+        cosmetics = await import("../dist/services/Cosmetics.js");
+        user = await import("../dist/services/User.js");
+        effects = await import("../dist/services/Effects.js");
+        achievements = await import("../dist/services/Achievements.js");
+        boards = await import("../dist/services/Boards.js");
+    }
+
+    ({ createCard, getCardById, getCardByIdBasic } = cards);
+    ({ createDeck, getDeckById, updateDeck } = deck);
+    ({ createCosmetic } = cosmetics);
+    ({ createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } = user);
+    ({ createEffect } = effects);
+    ({ createAchievement } = achievements);
+    ({ createBoard } = boards);
+
+    servicesLoaded = true;
+}
+
 export async function cosmeticosPorDefecto() {
+    await loadServices();
     const cosmeticos = [
         {
             nombre: "icono_default",
@@ -146,6 +199,7 @@ export async function cosmeticosPorDefecto() {
 }
 
 export async function cartasPoblación() {
+    await loadServices();
     const cartas = [
         {
             nombre: "Exceso de medios",
@@ -281,6 +335,7 @@ export async function cartasPoblación() {
     }
 }
 export async function mazosPorDefecto(usuarioEmail = "admin@gmail.com") {
+    await loadServices();
     const nombreMazo = "MazoPorDefecto";
     const cartasParaMazo = [
         "Exceso de medios",
@@ -327,6 +382,7 @@ export async function mazosPorDefecto(usuarioEmail = "admin@gmail.com") {
 }
 
 export async function cuentaAdminPorDefecto() {
+    await loadServices();
     const emailAdmin = "admin@gmail.com";
     await createUser({
         email: emailAdmin,
@@ -358,6 +414,7 @@ export async function cuentaAdminPorDefecto() {
 }
 
 export async function efectosPoblacion(){
+    await loadServices();
         const efectos = [{
                 nombre: "Efecto 1: Tiras 2 dados",
                     descripcion: "Tiras 2 dados en tu próximo turno",
@@ -463,6 +520,7 @@ export async function efectosPoblacion(){
 }
 
 export async function logrosPoblacion() {
+    await loadServices();
     const logros = [
         {
             nombre: "Primeros pasos",
@@ -566,6 +624,7 @@ export async function logrosPoblacion() {
 }
 
 export async function tablerosPoblacion() {
+    await loadServices();
     const tablero1 = generarTableros(1);
     const tablero2 = generarTableros(2);
     const tablero3 = generarTableros(3);
