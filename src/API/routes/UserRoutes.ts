@@ -819,7 +819,9 @@ export default function userRoutes(app: FastifyInstance) : void {
                 friendUsername: Type.String()
             }),
             response: {
-                200: Type.String(),
+                200: Type.Object({
+                    message: Type.String()
+                }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
                 404: Type.Object({
