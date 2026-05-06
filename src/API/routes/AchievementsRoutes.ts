@@ -4,6 +4,10 @@ import Achievements from "../../services/Achievements.js";
 
 export default function achievementsRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
+    //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.get("/", {
         schema: 
