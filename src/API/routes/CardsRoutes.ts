@@ -3,11 +3,11 @@ import { Type } from "@sinclair/typebox";
 import Cards from "../../services/Cards.js";
 
 export default function cardsRoutes(app: FastifyInstance) : void {
-    app.addHook("preHandler", app.verifyToken);
-        //Llamada ping pong para test
+    //Llamada ping pong para test
     app.get("/ping", async (request, reply) => {
         return reply.status(200).send("pong");
     });
+    app.addHook("preHandler", app.verifyToken);
 
     app.get("/", {
         schema: 
