@@ -187,7 +187,7 @@
 ### **DELETE** /api/users/:email/decks/:deck-id
 - Borra, si posible, el mazo del usuario.
 
-### **DELETE** /api/users/:email/friends
+### **DELETE** /api/users/:email/friends/:friendUsername
 - Elimina a un usuario de la lista de amigos de :email y el usuario correspondiente a :email del amigo borrado.
 - Body: "friendUsername".
 
