@@ -786,7 +786,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                     invites: Type.Array(Type.Object({
                         inviteFor: Type.String(),
                         inviteFrom: Type.String(),
-                        partidaID: Type.String()
+                        lobbyID: Type.String()
                     }))
                 }),
                 401: UnauthorizedSessionToken,
