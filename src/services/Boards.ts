@@ -66,10 +66,10 @@ export async function getBoardByName(boardName: string): Promise<TableroInicial>
     }
 }
 
-export async function getAllBoards(): Promise<TableroInicial[]> {
+export async function getAllBoards(): Promise<string[]> {
     try {
         const boards = await prisma.tableroInicial.findMany();
-        return boards;
+        return boards.map((board) => board.nombre);
     } catch (error) {
         console.error("Error al obtener los tableros:", error);
         throw new Error("Error al obtener los tableros");

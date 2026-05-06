@@ -7,8 +7,9 @@ import lobbiesRoutes from "./LobbiesRoutes.js";
 import matchesRoutes from "./MatchesRoutes.js";
 import userRoutes from "./UserRoutes.js";
 import AuxFunctionsAPI from "./AuxFunctionsAPI.js";
+import boardsRoutes from "./BoardsRoutes.js";
 
-export default async function registerRoutes(app: FastifyInstance) : Promise<void> {
+export default async function registerRoutes(app: FastifyInstance): Promise<void> {
 
     app.register(
         AuxFunctionsAPI
@@ -29,6 +30,10 @@ export default async function registerRoutes(app: FastifyInstance) : Promise<voi
     app.register(
         cosmeticsRoutes,
         { prefix: "api/cosmetics" }
+    )
+    app.register(
+        boardsRoutes,
+        { prefix: "api/boards" }
     )
     app.register(
         lobbiesRoutes,
