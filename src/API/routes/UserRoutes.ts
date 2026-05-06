@@ -748,7 +748,10 @@ export default function userRoutes(app: FastifyInstance) : void {
             }),
             response: {
                 200: Type.Object({
-                    friends: Type.Array(Type.String())
+                    friends: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        icono: Type.String()
+                    }))
                 }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
@@ -816,9 +819,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                 friendUsername: Type.String()
             }),
             response: {
-                200: Type.Object({
-                    message: Type.String()
-                }),
+                200: Type.String(),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
                 404: Type.Object({
@@ -837,17 +838,13 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.delete("/:email/friends", {
+    app.delete("/:email/friends/:friendUsername", {
         schema: {
             summary: "Eliminar un amigo de tu cuenta",
             tags: ["users"],
             security: [{ CookieAuth: [] }],
             description: `Endpoint para eliminar un amigo de tu cuenta. 
             La petición debe incluir el email del usuario y el nombre de usuario del amigo que se desea eliminar.`,
-            params: Type.Object({
-                email: Type.String({ format: "email" }),
-                friendUsername: Type.String()
-            }),
             response: {
                 200: Type.Object({
                     message: Type.String()

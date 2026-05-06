@@ -387,7 +387,7 @@ export async function getAllUsers() : Promise<UsuarioReturnType[]> {
     }
 }
 
-export async function getAmigos(userEmail:string) : Promise<String[]> {
+export async function getAmigos(userEmail:string) {
     try {
         const user = await prisma.usuario.findUnique({
             where: { email: userEmail },
@@ -395,6 +395,11 @@ export async function getAmigos(userEmail:string) : Promise<String[]> {
                 amigos: {
                     select: {
                         nombre: true,
+                        iconoActual: {
+                            select: {
+                                nombre: true
+                            }
+                        }
                     }
                 }
             }
@@ -402,7 +407,7 @@ export async function getAmigos(userEmail:string) : Promise<String[]> {
         if (!user) {
             throw new Error("Usuario no encontrado");
         }
-        return user.amigos.map((amigo: any) => amigo.email);
+        return user.amigos.map((amigo: any) => ({ nombre: amigo.nombre, icono: amigo.iconoActual?.nombre }));
     } catch (error) {
         console.error("Error al obtener amigos:", error);
         throw new Error("Error al obtener amigos");
