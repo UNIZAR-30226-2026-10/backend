@@ -557,7 +557,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:email/decks/:deck-id/cards", {
+    app.get("/:email/decks/:deckId/cards", {
         schema: {
             summary: "Obtener las cartas de un mazo específico",
             tags: ["users"],
@@ -566,7 +566,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             La petición debe incluir el email del usuario y el id del mazo del cual se quieren obtener las cartas.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
-                "deck-id": Type.String()
+                "deckId": Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -585,7 +585,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+        const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
         let cartas_mazo;
         try {
             cartas_mazo = Deck.getAllCardsFromADeck(deckId, email);
@@ -651,7 +651,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.delete("/:email/decks/:deck-id", {
+    app.delete("/:email/decks/:deckId", {
         schema: {
             summary: "Eliminar un mazo",
             tags: ["users"],
@@ -660,7 +660,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             La petición debe incluir el email del usuario y el id del mazo que se desea eliminar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
-                "deck-id": Type.String()
+                "deckId": Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -674,7 +674,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+        const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
 
         try {
             const usuario = await User.getUserByEmail(email);
