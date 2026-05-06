@@ -57,6 +57,10 @@ const throwDiceResponseSchema = Type.Object({
 
 export default function matchesRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
+        //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.post("/", {
         schema: {

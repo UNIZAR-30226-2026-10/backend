@@ -10,6 +10,10 @@ import { lobbyManager } from "../../managers/lobbyManager.js";
 
 export default function userRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
+        //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.get("/:email/profile", {
         schema: {
@@ -557,7 +561,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:email/decks/:deck-id/cards", {
+    app.get("/:email/decks/:deckId/cards", {
         schema: {
             summary: "Obtener las cartas de un mazo específico",
             tags: ["users"],
@@ -566,7 +570,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             La petición debe incluir el email del usuario y el id del mazo del cual se quieren obtener las cartas.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
-                "deck-id": Type.String()
+                "deckId": Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -585,7 +589,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+        const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
         let cartas_mazo;
         try {
             cartas_mazo = Deck.getAllCardsFromADeck(deckId, email);
@@ -644,14 +648,14 @@ export default function userRoutes(app: FastifyInstance) : void {
             if(usuario.barajas.length >= 8) {
                 return reply.status(400).send({ error: "El usuario ya tiene el máximo de mazos permitidos (8)" });
             }
-            await Deck.createDeck({ nombre, carta: cartas, usuario });
+            await Deck.createDeck({ nombre, usuario, carta: cartas });
             return reply.status(200).send({ message: "Mazo creado correctamente" });
         } catch (error) {
             return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al crear el mazo" });
         }
     });
 
-    app.delete("/:email/decks/:deck-id", {
+    app.delete("/:email/decks/:deckId", {
         schema: {
             summary: "Eliminar un mazo",
             tags: ["users"],
@@ -660,7 +664,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             La petición debe incluir el email del usuario y el id del mazo que se desea eliminar.`,
             params: Type.Object({
                 email: Type.String({ format: "email" }),
-                "deck-id": Type.String()
+                "deckId": Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -674,7 +678,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email, "deck-id": deckId } = request.params as { email: string, "deck-id": string };
+        const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
 
         try {
             const usuario = await User.getUserByEmail(email);
@@ -771,22 +775,22 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:email/invites", {
+    app.get("/:username/invites", {
         schema: {
             summary: "Obtener las invitaciones de tu cuenta",
             tags: ["users"],
             security: [{ CookieAuth: [] }],
             description: `Endpoint para obtener las invitaciones de tu cuenta. 
-            La petición debe incluir el email del usuario.`,
+            La petición debe incluir el nombre de usuario.`,
             params: Type.Object({
-                email: Type.String({ format: "email" })
+                username: Type.String()
             }),
             response: {
                 200: Type.Object({
                     invites: Type.Array(Type.Object({
                         inviteFor: Type.String(),
                         inviteFrom: Type.String(),
-                        partidaID: Type.String()
+                        lobbyID: Type.String()
                     }))
                 }),
                 401: UnauthorizedSessionToken,
@@ -797,10 +801,10 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email } = request.params as { email: string };
+        const { username } = request.params as { username: string };
         
         try {
-            const invites = lobbyManager.getInvitesOfPlayer(email);
+            const invites = lobbyManager.getInvitesOfPlayer(username);
             return reply.status(200).send({ invites });
         } catch (error) {
             return reply.status(404).send({ error: "Usuario no encontrado" });
@@ -819,7 +823,12 @@ export default function userRoutes(app: FastifyInstance) : void {
                 friendUsername: Type.String()
             }),
             response: {
-                200: Type.String(),
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                400: Type.Object({
+                    error: Type.String()
+                }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
                 404: Type.Object({
@@ -829,6 +838,16 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     }, async (request, reply) => {
         const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        const usuario = await User.getUserByEmailBasic(email);
+
+        if(!usuario) {
+            return reply.status(400).send({ error: "Usuario no encontrado" });
+        }
+
+        if(usuario.nombre === friendUsername) {
+            return reply.status(400).send({ error: "No puedes agregarte a ti mismo como amigo" });
+        }
 
         try {
             const amigos = await User.addAmigo(email, friendUsername);

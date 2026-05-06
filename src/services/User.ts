@@ -219,6 +219,33 @@ export async function createUser(data: { email:string, password:string, nombre:s
             }
         })
         await Deck.createDefaultDeckForUser(user)
+
+        await prisma.usuario.update({
+            where: { email: user.email },
+            data: {
+                cosmeticos: {
+                    connect: [
+                        { nombre: "icono_default" },
+                        { nombre: "ficha_default" },
+                        { nombre: "serpiente_default" },
+                        { nombre: "escalera_default" }
+                    ]
+                },
+                iconoActual: {
+                    connect: { nombre: "icono_default" }
+                },
+                fichaActual: {
+                    connect: { nombre: "ficha_default" }
+                },
+                serpienteActual: {
+                    connect: { nombre: "serpiente_default" }
+                },
+                escaleraActual: {
+                    connect: { nombre: "escalera_default" }
+                }
+            }
+        })
+
         return user
     } catch (error) {
         console.error("Error al crear el usuario:", error)
@@ -613,6 +640,7 @@ export async function getUserByName(nombre:string) : Promise<UsuarioReturnType |
 export default {
     createUser,
     getUserByEmail,
+    getUserByEmailBasic,
     getUserMatches,
     deleteUserByEmail,
     modifyUserByEmail,

@@ -4,6 +4,10 @@ import Cards from "../../services/Cards.js";
 
 export default function cardsRoutes(app: FastifyInstance) : void {
     app.addHook("preHandler", app.verifyToken);
+        //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.get("/", {
         schema: 

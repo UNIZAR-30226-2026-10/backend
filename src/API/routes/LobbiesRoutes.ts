@@ -7,6 +7,10 @@ import User from "../../services/User.js";
 
 export default function lobbiesRoutes(app: FastifyInstance): void {
     app.addHook("preHandler", app.verifyToken);
+        //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.post("/", {
         schema: {

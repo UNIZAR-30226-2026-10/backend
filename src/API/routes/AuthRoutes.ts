@@ -11,6 +11,10 @@ declare module "@fastify/jwt" {
 }
 
 export default function authRoutes(app: FastifyInstance) : void {
+        //Llamada ping pong para test
+    app.get("/ping", async (request, reply) => {
+        return reply.status(200).send("pong");
+    });
 
     app.post("/new_users", {
         schema: {
