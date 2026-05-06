@@ -63,7 +63,7 @@ export class LobbyManager {
         return "INVITE_SENT"
     }
 
-    async manageInvite(jugador: jugadorLobby, accept: boolean, lobbyId: string, inviteFrom: string): Promise<Lobby | string> {
+    manageInvite(jugador: jugadorLobby, accept: boolean, lobbyId: string, inviteFrom: string): Lobby | string {
         const lobby = this.lobbies.get(lobbyId)
         if (!lobby) throw new Error("LOBBY_NOT_FOUND")
 
@@ -82,6 +82,9 @@ export class LobbyManager {
                 }
             }
             const updatedLobby = this.joinLobby(jugador, lobbyId)
+            for (const [player, playerInvites] of this.invitaciones.entries()) {
+                this.invitaciones.set(player, playerInvites.filter(i => i.inviteFrom !== jugador.nombre))
+            }
             invites = invites.filter(i => i.lobbyID !== lobbyId || i.inviteFrom !== inviteFrom)
             this.invitaciones.set(jugador.nombre, invites)
             return updatedLobby
@@ -217,6 +220,31 @@ export class LobbyManager {
         if (!jugador) throw new Error("NOT_IN_LOBBY")
         jugador.estaListo = ready
         return lobby
+    }
+    updateUsername(oldUsername: string, newUsername: string): void {
+        const lobbyId = this.jugadoresEnCola.get(oldUsername)
+        if (lobbyId) {
+            const lobby = this.lobbies.get(lobbyId)
+            if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+            const jugador = lobby.jugadores.find(i => i.nombre === oldUsername)
+            if (!jugador) throw new Error("PLAYER_NOT_FOUND")
+            jugador.nombre = newUsername
+            this.jugadoresEnCola.delete(oldUsername)
+            this.jugadoresEnCola.set(newUsername, lobbyId)
+            if (lobby.usernameCreador === oldUsername) {
+                lobby.usernameCreador = newUsername
+            }
+        }
+        const invitesUpdated: [string, invitation[]][] = []
+        for (const [player, invites] of this.invitaciones.entries()) {
+            const updatedInvites = invites.map(invite => ({
+                ...invite,
+                inviteFrom: invite.inviteFrom === oldUsername ? newUsername : invite.inviteFrom,
+                inviteFor:  invite.inviteFor  === oldUsername ? newUsername : invite.inviteFor,
+            }))
+            invitesUpdated.push([player === oldUsername ? newUsername : player, updatedInvites])
+        }
+        this.invitaciones = new Map(invitesUpdated)
     }
 }
 
