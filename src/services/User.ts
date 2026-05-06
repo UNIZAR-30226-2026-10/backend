@@ -640,6 +640,7 @@ export async function getUserByName(nombre:string) : Promise<UsuarioReturnType |
 export default {
     createUser,
     getUserByEmail,
+    getUserByEmailBasic,
     getUserMatches,
     deleteUserByEmail,
     modifyUserByEmail,

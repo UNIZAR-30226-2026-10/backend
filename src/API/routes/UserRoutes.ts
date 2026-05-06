@@ -822,6 +822,9 @@ export default function userRoutes(app: FastifyInstance) : void {
                 200: Type.Object({
                     message: Type.String()
                 }),
+                400: Type.Object({
+                    error: Type.String()
+                }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
                 404: Type.Object({
@@ -831,6 +834,16 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     }, async (request, reply) => {
         const { email, friendUsername } = request.params as { email: string, friendUsername: string };
+
+        const usuario = await User.getUserByEmailBasic(email);
+
+        if(!usuario) {
+            return reply.status(400).send({ error: "Usuario no encontrado" });
+        }
+
+        if(usuario.nombre === friendUsername) {
+            return reply.status(400).send({ error: "No puedes agregarte a ti mismo como amigo" });
+        }
 
         try {
             const amigos = await User.addAmigo(email, friendUsername);
