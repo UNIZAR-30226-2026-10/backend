@@ -771,15 +771,15 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
-    app.get("/:email/invites", {
+    app.get("/:username/invites", {
         schema: {
             summary: "Obtener las invitaciones de tu cuenta",
             tags: ["users"],
             security: [{ CookieAuth: [] }],
             description: `Endpoint para obtener las invitaciones de tu cuenta. 
-            La petición debe incluir el email del usuario.`,
+            La petición debe incluir el nombre de usuario.`,
             params: Type.Object({
-                email: Type.String({ format: "email" })
+                username: Type.String()
             }),
             response: {
                 200: Type.Object({
@@ -797,10 +797,10 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email } = request.params as { email: string };
+        const { username } = request.params as { username: string };
         
         try {
-            const invites = lobbyManager.getInvitesOfPlayer(email);
+            const invites = lobbyManager.getInvitesOfPlayer(username);
             return reply.status(200).send({ invites });
         } catch (error) {
             return reply.status(404).send({ error: "Usuario no encontrado" });
