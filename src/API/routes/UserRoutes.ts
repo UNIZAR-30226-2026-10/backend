@@ -925,7 +925,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         const { email } = request.params as { email: string };
 
         try {
-            await User.deleteUserByEmail(email);
+            await User.deleteUserByEmailForApiUsage(email);
             reply.clearCookie("session", { path: '/' });
             reply.clearCookie("autologin", { path: '/' });
             return reply.status(200).send({ message: "Usuario eliminado correctamente" });
