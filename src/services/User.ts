@@ -335,8 +335,23 @@ export async function getUserByEmailBasic(email:string) {
 
 export async function deleteUserByEmail(email:string) : Promise<{ message: string }> {
     try {
-        await prisma.usuario.delete({
-            where: { email }
+        const partidas = await prisma.usuario.findMany({
+            where: { email },
+            include: {
+                partidas: {
+                    select: { ID: true },
+                    where: { ganadorEmail: null }
+                }
+            }
+        })
+
+        if(partidas.length > 0) {
+            throw new Error("Error al eliminar el usuario: El usuario tiene partidas activas")
+        }
+
+        await prisma.usuario.update({
+            where: { email },
+            data: { borrado: true }
         });
         return { message: "Usuario eliminado correctamente" }
     } catch (error) {

@@ -18,6 +18,7 @@ model Usuario {
   derrotas        Int          @default(0)
   fechaCreacion   DateTime     @default(now())
   cartasJugadas   Int          @default(0)
+  borrado         Boolean      @default(false)
   barajas         Baraja[]     @relation("crea") 
   partidasGanadas Partida[]    @relation("partidaGanador")
   amigos       Usuario[]    @relation("amigos")

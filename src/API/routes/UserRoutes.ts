@@ -900,4 +900,38 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
+    app.delete("/:email", {
+        schema: {
+            summary: "Eliminar tu cuenta de usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para eliminar tu cuenta de usuario. 
+            La petición debe incluir el email del usuario que desea eliminar su cuenta.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+
+        try {
+            await User.deleteUserByEmail(email);
+            reply.clearCookie("session", { path: '/' });
+            reply.clearCookie("autologin", { path: '/' });
+            return reply.status(200).send({ message: "Usuario eliminado correctamente" });
+        } catch (error) {
+            return reply.status(404).send({ error: "Usuario no encontrado" });
+        }
+    });
+
 }
