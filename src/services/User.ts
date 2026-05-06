@@ -335,10 +335,9 @@ export async function getUserByEmailBasic(email:string) {
 
 export async function deleteUserByEmail(email:string) : Promise<{ message: string }> {
     try {
-        await prisma.usuario.update({
-            where: { email },
-            data: { borrado: true }
-        });
+        await prisma.usuario.delete({
+            where: { email }
+        })
         return { message: "Usuario eliminado correctamente" }
     } catch (error) {
         console.error("Error al eliminar el usuario:", error)
