@@ -3,6 +3,7 @@ import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt"
 import { UsuarioReturnType, AuthUserReturnType, CompleteUserReturnType } from "./ReturnTypes.js";
 import Deck from "./Deck.js";
+import { lobbyManager } from "../managers/lobbyManager.js";
 
 type RelacionConfig = {
     disconnect: (prisma: any, userEmail: string, relatedId: string) => Promise<any>
@@ -357,6 +358,13 @@ export async function modifyUserByEmail(email:string, data: { password?:string, 
         updateData.passwordHash = await bcrypt.hash(data.password, saltRounds)
     }
 
+    // Capturar el nombre anterior si va a cambiar
+    let oldUsername: string | null = null
+    if (data.nombre) {
+        const userBefore = await getUserByEmailBasic(email)
+        oldUsername = userBefore?.nombre || null
+    }
+
     for(let key in data) {
         if(key !== "password") {
             updateData[key] = (data as any)[key]
@@ -381,6 +389,14 @@ export async function modifyUserByEmail(email:string, data: { password?:string, 
                 escaleraActual: true
             }
         })
+        if (oldUsername && data.nombre && oldUsername !== data.nombre) {
+            try {
+                lobbyManager.updateUsername(oldUsername, data.nombre)
+            } catch (error) {                
+                console.error("Error al actualizar el nombre de usuario en el lobby manager:", error)
+                throw new Error("Error al actualizar el nombre de usuario en el lobby manager")
+            }
+        }
         return user
     } catch (error) {
         console.error("Error al modificar el usuario:", error)

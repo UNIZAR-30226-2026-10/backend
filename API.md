@@ -107,6 +107,11 @@
 ### **GET** /api/cards
 - Devuelve todas las cartas disponibles en el sistema, junto a toda su información.
 
+## /api/boards
+
+### **GET** /api/boards
+- Devuelve todos los tableros disponibles en el sistema. Devuelve el nombre de cada uno.
+
 ## /api/lobbies
 
 ### **POST** /api/lobbies

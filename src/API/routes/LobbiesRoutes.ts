@@ -578,7 +578,7 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             return reply.status(404).send({ error: "Lobby no encontrado" })
         }
         const tableros = await Boards.getAllBoards()
-        const tableroExiste = tableros.some(t => t.nombre === board)
+        const tableroExiste = tableros.includes(board)
         if (!tableroExiste) {
             return reply.status(404).send({ error: "Tablero no encontrado" })
         }
