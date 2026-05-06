@@ -9,11 +9,11 @@ import Deck from "../../services/Deck.js";
 import { lobbyManager } from "../../managers/lobbyManager.js";
 
 export default function userRoutes(app: FastifyInstance) : void {
-    app.addHook("preHandler", app.verifyToken);
-        //Llamada ping pong para test
+    //Llamada ping pong para test
     app.get("/ping", async (request, reply) => {
         return reply.status(200).send("pong");
     });
+    app.addHook("preHandler", app.verifyToken);
 
     app.get("/:email/profile", {
         schema: {
