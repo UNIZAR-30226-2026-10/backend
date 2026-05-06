@@ -10,6 +10,12 @@ declare module "fastify" {
 
 const AuxFunctionsAPI = fp(async (app: FastifyInstance) => {
     app.decorate("verifyToken", async (request: FastifyRequest, reply: FastifyReply) => {
+        const pathname = (request.raw.url ?? request.url).split("?")[0];
+
+        if (pathname === "/ping" || pathname.endsWith("/ping")) {
+            return;
+        }
+
         const token = request.cookies.session;
 
         if (!token) {
