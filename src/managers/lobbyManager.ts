@@ -1,5 +1,4 @@
 import nombresBots from "../data/nombresBots.json" with {type: "json"}
-import { getUserByName } from "../services/User.js"
 
 
 interface jugadorLobby {
@@ -73,13 +72,19 @@ export class LobbyManager {
         const invite = invites.find(i => i.inviteFrom === inviteFrom && i.lobbyID === lobbyId)
         if (!invite) throw new Error("INVITE_NOT_FOUND")
         if (accept) {
-            const user = await getUserByName(jugador.nombre)
-            if (!user) throw new Error("USER_NOT_FOUND")
-            jugador.icono = user.iconoActualField
-            const lobby = this.joinLobby(jugador, lobbyId)
+            if (this.jugadoresEnCola.has(jugador.nombre)) {
+                if (lobbyId === this.jugadoresEnCola.get(jugador.nombre)) {
+                    invites = invites.filter(i => i.lobbyID !== lobbyId || i.inviteFrom !== inviteFrom)
+                    this.invitaciones.set(jugador.nombre, invites)
+                    return lobby
+                } else {
+                this.deletePlayer(jugador.nombre, jugador.nombre, this.jugadoresEnCola.get(jugador.nombre)!)
+                }
+            }
+            const updatedLobby = this.joinLobby(jugador, lobbyId)
             invites = invites.filter(i => i.lobbyID !== lobbyId || i.inviteFrom !== inviteFrom)
             this.invitaciones.set(jugador.nombre, invites)
-            return lobby
+            return updatedLobby
         } else {
             invites = invites.filter(i => !(i.lobbyID === lobbyId && i.inviteFrom === inviteFrom))
             this.invitaciones.set(jugador.nombre, invites)

@@ -38,6 +38,9 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     error: Type.String()
                 }),
                 401: UnauthorizedSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                }),
                 409: Type.Object({
                     error: Type.String()
                 })
@@ -45,12 +48,17 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
         }
     }, async (request, reply) => {
         const { username } = request.body as { username: string }
+        const user = await User.getUserByName(username)
+        if (!user) {
+            return reply.status(404).send({ error: "Usuario no encontrado" })
+        }
         let lobby
         try {
             lobby = lobbyManager.createLobby({
                 nombre: username,
                 esIA: false,
-                estaListo: false
+                estaListo: false,
+                icono: user.iconoActualField
             })
             if (!lobby) {
                 return reply.status(400).send({ error: "Error al crear el lobby" })
@@ -278,11 +286,16 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
     }, async (request, reply) => {
         const { lobbyId } = request.params as { lobbyId: string }
         const { inviteFor, inviteFrom, accept } = request.body as { inviteFor: string, inviteFrom: string, accept: boolean }
+        const user = await User.getUserByName(inviteFor)
+        if (!user) {
+            return reply.status(404).send({ error: "Usuario no encontrado" })
+        }
         let lobby
         let jugadorLobby = {
             nombre: inviteFor,
             esIA: false,
-            estaListo: false
+            estaListo: false,
+            icono: user.iconoActualField
         }
         try {
             lobby = await lobbyManager.manageInvite(jugadorLobby, accept, lobbyId, inviteFrom)
