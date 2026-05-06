@@ -100,13 +100,12 @@ model Baraja {
 }
 
 model BarajaCarta {
+  Id            Int     @id @default(autoincrement())
   barajaNombre       String
   barajaUsuarioEmail String
   cartaNombre        String
   baraja             Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail], onDelete: Cascade)
   carta              Carta  @relation(fields: [cartaNombre], references: [nombre], onDelete: Cascade)
-
-  @@id([barajaNombre, barajaUsuarioEmail, cartaNombre])
 }
 
 model BarajaPartida {

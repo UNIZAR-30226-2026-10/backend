@@ -644,7 +644,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             if(usuario.barajas.length >= 8) {
                 return reply.status(400).send({ error: "El usuario ya tiene el máximo de mazos permitidos (8)" });
             }
-            await Deck.createDeck({ nombre, carta: cartas, usuario });
+            await Deck.createDeck({ nombre, usuario, carta: cartas });
             return reply.status(200).send({ message: "Mazo creado correctamente" });
         } catch (error) {
             return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al crear el mazo" });
