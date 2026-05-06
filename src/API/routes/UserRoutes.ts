@@ -368,6 +368,20 @@ export default function userRoutes(app: FastifyInstance) : void {
 
         try {
             await User.modifyUserByEmail(email, { nombre: username });
+
+            const token =  app.jwt.sign({ email: email, username: username });
+
+            reply.setCookie("autologin", token, {
+                httpOnly: true,
+                sameSite: 'lax', 
+                path: '/',         
+                maxAge: 60 * 60 * 24 * 7 // 7 dias
+            });
+            reply.setCookie("session", token, {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',         
+            });
             return reply.status(200).send({ message: "Nombre de usuario actualizado correctamente" });
         } catch (error) {
             return reply.status(404).send({ error: error instanceof Error ? error.message : "Usuario no encontrado" });
