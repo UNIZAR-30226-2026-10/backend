@@ -100,12 +100,13 @@ model Baraja {
 }
 
 model BarajaCarta {
-  id                 String   @id @default(uuid())
   barajaNombre       String
   barajaUsuarioEmail String
   cartaNombre        String
   baraja             Baraja @relation(fields: [barajaNombre, barajaUsuarioEmail], references: [nombre, usuarioEmail], onDelete: Cascade)
   carta              Carta  @relation(fields: [cartaNombre], references: [nombre], onDelete: Cascade)
+
+  @@id([barajaNombre, barajaUsuarioEmail, cartaNombre])
 }
 
 model BarajaPartida {
