@@ -140,14 +140,14 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         },
         include: {
             partidaJugadores: {
-            select: {
-                nombre: true,
-                iconoActualField: true,
-                fichaActualField: true,
-                serpienteActualField: true,
-                escaleraActualField: true,
-            }
-        },
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
             ganador: {
                 select: {
                     nombre: true
@@ -176,18 +176,18 @@ export async function sendMessage(partidaId: string, player: string, mensaje: st
                 }
             }
         });
-    if (!partida) {
-        throw new Error("Partida no encontrada");
-    }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
-        throw new Error("El jugador no pertenece a esta partida");
-    }
-    let chat = partida.chat as ChatPartidaJSON;
-    chat.push({
-        mandadoPor: player,
-        mensaje: mensaje
-    });
-    return await tx.partida.update({
+        if (!partida) {
+            throw new Error("Partida no encontrada");
+        }
+        if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+            throw new Error("El jugador no pertenece a esta partida");
+        }
+        let chat = partida.chat as ChatPartidaJSON;
+        chat.push({
+            mandadoPor: player,
+            mensaje: mensaje
+        });
+        return await tx.partida.update({
             where: { ID: partidaId },
             data: { chat: chat },
             select: {
@@ -225,17 +225,17 @@ export async function getMatchState(partidaId: string, player: string): Promise<
         where: { ID: partidaId },
         include: {
             partidaJugadores: {
-            select: {
-                nombre: true,
-                iconoActualField: true,
-                fichaActualField: true,
-                serpienteActualField: true,
-                escaleraActualField: true,
-            }
-        },
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
             ganador: {
                 select: {
-                    nombre: true                
+                    nombre: true
                 }
             }
         }
@@ -454,14 +454,14 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         where: { ID: partidaId },
         include: {
             partidaJugadores: {
-            select: {
-                nombre: true,
-                iconoActualField: true,
-                fichaActualField: true,
-                serpienteActualField: true,
-                escaleraActualField: true,
-            }
-         },
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
             ganador: {
                 select: {
                     nombre: true
@@ -598,19 +598,19 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         data: { snapshotJugadores: estadoJugadores },
         include: {
             partidaJugadores: {
-            select: {
-                nombre: true,
-                iconoActualField: true,
-                fichaActualField: true,
-                serpienteActualField: true,
-                escaleraActualField: true,
-            }
-        },
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
             ganador: {
                 select: {
                     nombre: true
                 }
-             }
+            }
         }
 
     });
@@ -662,13 +662,19 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (jugadorActual.fase !== "Movimiento") {
         throw new Error("No puedes mover fichas en esta fase");
     }
-    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino)) {
-        throw new Error("Movimiento no permitido");
-    }
     let fichaAActualizar = jugadorActual.fichas.find(f => f.id === fichaId)!;
     if (!fichaAActualizar) {
         throw new Error("Ficha no encontrada");
     }
+    const casillaFicha = fichaAActualizar.casilla;
+    const movimientoDesdeBifurcacionValido =
+        tablero.casillas[casillaFicha].tipo === "Bifurcacion" &&
+        tablero.casillas[casillaFicha].siguientes.includes(casillaDestino);
+
+    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino) && !movimientoDesdeBifurcacionValido) {
+        throw new Error("Movimiento no permitido");
+    }
+
     let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
@@ -679,9 +685,15 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         return await finishMatch(partidaId, jugadorActual.username);
     } else {
         if (pasosRestantes !== undefined && pasosRestantes > 0) {
+            if (movimientoDesdeBifurcacionValido) {
+                pasosRestantes--;
+            }
+
             let haciaAtras = false;
             let esBifurcacion = false;
             let casillaTablero;
+            casillaActual = fichaAActualizar.casilla;
+
             while (pasosRestantes > 0) {
                 casillaTablero = tablero.casillas[casillaActual];
                 if (!haciaAtras) {
@@ -776,13 +788,13 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         data: { snapshotJugadores: estadoJugadores },
         include: {
             partidaJugadores: {
-                    select: {
-                        nombre: true,
-                        iconoActualField: true,
-                        fichaActualField: true,
-                        serpienteActualField: true,
-                        escaleraActualField: true,
-                    }
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
             },
             ganador: {
                 select: {
@@ -800,13 +812,13 @@ async function finishMatch(partidaId: string, ganador: string): Promise<PartidaR
         where: { ID: partidaId },
         include: {
             partidaJugadores: {
-                    select: {
-                        nombre: true,
-                        iconoActualField: true,
-                        fichaActualField: true,
-                        serpienteActualField: true,
-                        escaleraActualField: true,
-                    }
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
             },
             ganador: {
                 select: {
