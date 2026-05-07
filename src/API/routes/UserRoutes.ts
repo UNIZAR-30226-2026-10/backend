@@ -934,4 +934,115 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
     });
 
+    app.put("/:email/decks/:deckId", {
+        schema: {
+            summary: "Actualizar un mazo",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para actualizar un mazo de tu cuenta. 
+            La petición debe incluir el email del usuario, el id del mazo que se desea actualizar y la nueva información del mazo.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" }),
+                "deckId": Type.String()
+            }),
+            body: Type.Object({
+                nombre: Type.String(),
+                cartaAñadir: Type.Array(Type.Object({
+                    nombre: Type.String(),
+                    calidad: Type.Enum(Rareza),
+                    tipo: Type.Enum(Tipo_Carta),
+                    descripcion: Type.String(),
+                })),
+                cartaEliminar: Type.Array(Type.Object({
+                    nombre: Type.String(),
+                    calidad: Type.Enum(Rareza),
+                    tipo: Type.Enum(Tipo_Carta),
+                    descripcion: Type.String(),
+                }))
+            }),
+            response: {
+                200: Type.Object({
+                    message: Type.String()
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                400: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        try {
+        const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
+        const { nombre, cartaAñadir, cartaEliminar } = request.body as {
+            nombre: string;
+            cartaAñadir: {
+                nombre: string;
+                calidad: Rareza;
+                tipo: Tipo_Carta;
+                descripcion: string;
+            }[];
+            cartaEliminar: {
+                nombre: string;
+                calidad: Rareza;
+                tipo: Tipo_Carta;
+                descripcion: string;
+            }[];
+        };
+
+            const usuario = await User.getUserByEmail(email);
+            if (!usuario) {
+                return reply.status(400).send({ error: "Usuario no encontrado" });
+            }
+            await Deck.updateDeck(deckId, email, { cartaAñadir, cartaEliminar });
+            await Deck.updateDeckName(deckId, email, nombre);
+            return reply.status(200).send({ message: "Mazo actualizado correctamente" });
+        } catch (error) {
+            return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al actualizar el mazo" });
+        }
+    });
+
+    app.get("/:email/cards", {
+        schema: {
+            summary: "Obtener las cartas de tu colección",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener las cartas de tu colección. 
+            La petición debe incluir el email del usuario.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Object({
+                    cards: Type.Array(Type.Object({
+                        nombre: Type.String(),
+                        calidad: Type.Enum(Rareza),
+                        tipo: Type.Enum(Tipo_Carta),
+                        descripcion: Type.String(),
+                    }))
+                }),
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+        try {
+            const user = await User.getUserByEmail(email);
+            if (!user) {
+                return reply.status(404).send({ error: "usuario no encontrado" });
+            }
+            return reply.status(200).send({ cards: user.cartas.map(c => ({
+                nombre: c.nombre,
+                calidad: c.calidad,
+                tipo: c.tipo,
+                descripcion: c.descripcion
+            })) });
+        } catch (error) {
+            return reply.status(404).send({ error: "usuario no encontrado" });
+        }
+    });
 }
