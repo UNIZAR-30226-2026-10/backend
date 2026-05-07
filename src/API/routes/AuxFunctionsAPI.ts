@@ -1,4 +1,5 @@
 import { FastifyReply, FastifyInstance, FastifyRequest } from "fastify";
+import User from "../../services/User.js";
 import { Type } from "@sinclair/typebox";
 import fp from "fastify-plugin";
 
@@ -44,11 +45,18 @@ const AuxFunctionsAPI = fp(async (app: FastifyInstance) => {
             if (email_param && email_param !== decoded.email) {
                 return reply.status(403).send({ error: "Forbidden: Token does not match the requested resource" });
             }
+
+            const user = await User.getUserByEmailBasic(decoded.email);
+
+            if(user?.borrado) {
+                return reply.status(403).send({ error: "Forbidden: User account is deleted" });
+            }
+
         } catch (error) {
             return reply.status(401).send({ error: "Invalid token" });
         }
     });
-});
+    });
 
 export default AuxFunctionsAPI;
 

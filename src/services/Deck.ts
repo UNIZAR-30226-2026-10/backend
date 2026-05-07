@@ -373,6 +373,28 @@ export async function deleteDeck(nombre: string, usuarioEmail: string): Promise<
     }
 }
 
+export async function updateDeckName(nombre: string, usuarioEmail: string, nuevoNombre: string): Promise<BarajaReturnType> {
+    try {
+        const updatedDeck = await prisma.baraja.update({
+            where: { nombre_usuarioEmail: { nombre, usuarioEmail } },
+            data: { nombre: nuevoNombre },
+            include: {
+                usuario: true,
+                barajaCartas: {
+                    include: {
+                        carta: true
+                    }
+                },
+                usadaEn: true
+            }
+        });
+        return updatedDeck;
+    } catch (error) {
+        console.error("Error al actualizar el nombre de la baraja:", error);
+        throw new Error("Error al actualizar el nombre de la baraja");
+    }
+}
+
 export default {
     createDeck,
     createDefaultDeckForUser,
@@ -383,5 +405,6 @@ export default {
     getAllPartidasFromADeck,
     getAllDecksFromAUser,
     updateDeck,
-    deleteDeck
+    deleteDeck,
+    updateDeckName
 }
