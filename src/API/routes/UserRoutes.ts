@@ -65,6 +65,36 @@ export default function userRoutes(app: FastifyInstance) : void {
         });
     });
 
+    app.get("/:email/SEP", {
+        schema: {
+            summary: "Obtener el SEP de un usuario",
+            tags: ["users"],
+            security: [{ CookieAuth: [] }],
+            description: `Endpoint para obtener los SEP de tu cuenta. 
+            La petición debe incluir el email del usuario para el cual se quiere obtener los SEP.`,
+            params: Type.Object({
+                email: Type.String({ format: "email" })
+            }),
+            response: {
+                200: Type.Number,
+                401: UnauthorizedSessionToken,
+                403: ForbiddenSessionToken,
+                404: Type.Object({
+                    error: Type.String()
+                })
+            }
+        }
+    }, async (request, reply) => {
+        const { email } = request.params as { email: string };
+        const user = await User.getUserByEmail(email);
+
+        if (!user) {
+            return reply.status(404).send({ error: "usuario no encontrado" });
+        }
+
+        return reply.status(200).send(user.SEP);
+    });
+
     app.get("/:email/icons", {
         schema: {
             summary: "Obtener los iconos disponibles para un usuario",
