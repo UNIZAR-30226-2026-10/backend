@@ -662,13 +662,19 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (jugadorActual.fase !== "Movimiento") {
         throw new Error("No puedes mover fichas en esta fase");
     }
-    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino)) {
-        throw new Error("Movimiento no permitido");
-    }
     let fichaAActualizar = jugadorActual.fichas.find(f => f.id === fichaId)!;
     if (!fichaAActualizar) {
         throw new Error("Ficha no encontrada");
     }
+    const casillaFicha = fichaAActualizar.casilla;
+    const movimientoDesdeBifurcacionValido =
+        tablero.casillas[casillaFicha].tipo === "Bifurcacion" &&
+        tablero.casillas[casillaFicha].siguientes.includes(casillaDestino);
+
+    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino) && !movimientoDesdeBifurcacionValido) {
+        throw new Error("Movimiento no permitido");
+    }
+
     let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
