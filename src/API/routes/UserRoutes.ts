@@ -76,7 +76,9 @@ export default function userRoutes(app: FastifyInstance) : void {
                 email: Type.String({ format: "email" })
             }),
             response: {
-                200: Type.Number,
+                200: Type.Object({
+                    sep: Type.Number()
+                }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
                 404: Type.Object({
@@ -92,7 +94,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             return reply.status(404).send({ error: "usuario no encontrado" });
         }
 
-        return reply.status(200).send(user.SEP);
+        return reply.status(200).send({ sep: user.SEP });
     });
 
     app.get("/:email/icons", {
