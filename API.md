@@ -226,6 +226,9 @@
 ### **GET** /api/users/:email/profile
 - Devuelve la información del perfil (icono, nombre, victorias, derrotas, monedas que tiene, skin actual de escalera, de serpiente y de ficha).
 
+### **GET** /api/users/:email/SEP
+- Devuelve los SEP que tiene el usuario como objeto con solo SEP
+
 ### **GET** /api/users/:email/snakes
 - Devuelve todas las skins de serpientes que tiene el usuario.
 
