@@ -178,6 +178,7 @@ describe("Cosmetics Test", () => {
         assert.deepStrictEqual(ficha, {
             nomCosmetico: TEST_COSMETIC_NAME,
             precio: 300,
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             desc: TEST_COSMETIC_DESC,
             loTiene: true
         })
