@@ -24,6 +24,7 @@ export default function cosmeticsRoutes(app: FastifyInstance) : void {
                     nomCosmetico: Type.String(),
                     precio: Type.Number(),
                     desc: Type.String(),
+                    tipo: Type.String(),
                     loTiene: Type.Boolean()
                 })),
                 401: UnauthorizedSessionToken,

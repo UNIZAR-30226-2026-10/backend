@@ -136,6 +136,7 @@ export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: 
             select: {
                 nombre: true,
                 precio: true,
+                tipo: true,
                 descripcion: true
             }
         });
@@ -144,6 +145,7 @@ export async function getStoreCosmetics(email: string): Promise<{ nomCosmetico: 
         const storeCosmetics = cosmetics.map((cosmetic: any) => ({
             nomCosmetico: cosmetic.nombre,
             precio: cosmetic.precio,
+            tipo: cosmetic.tipo,
             desc: cosmetic.descripcion,
             loTiene: userCosmetics.cosmeticos.some(c => c.nombre === cosmetic.nombre)
         }));
