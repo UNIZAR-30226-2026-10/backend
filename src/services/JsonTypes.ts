@@ -43,7 +43,8 @@ export const casillaTableroSchema = Type.Object({
         Type.Literal("Serpiente"),
         Type.Literal("Bifurcacion"),
         Type.Literal("Meta"),
-        Type.Literal("Vacía")
+        Type.Literal("Vacía"),
+        Type.Literal("Curva")
     ]),
     siguientes: Type.Array(Type.Integer()),
     saltoA: Type.Optional(Type.Integer()),

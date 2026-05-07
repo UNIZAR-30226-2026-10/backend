@@ -15,7 +15,8 @@ interface Lobby {
     jugadores: jugadorLobby[],
     numJugadores: number,
     numBots: number,
-    tablero: string
+    tablero: string,
+    idPartida?: string
 }
 
 interface invitation {
@@ -46,7 +47,7 @@ export class LobbyManager {
             jugadores: [jugador],
             numJugadores: 1,
             numBots: 0,
-            tablero: "Tablero 1"
+            tablero: "Basico"
         }
         this.lobbies.set(id, nuevaLobby)
         this.jugadoresEnCola.set(jugador.nombre, id)

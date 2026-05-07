@@ -13,6 +13,9 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     if (!lobby) {
         throw new Error("Lobby no encontrado");
     }
+    if (lobby.idPartida) {
+        throw new Error("La partida ya ha sido iniciada");
+    }
     if (lobby.jugadores.length < 2) {
         throw new Error("No hay suficientes jugadores para iniciar la partida");
     }
@@ -152,7 +155,13 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             }
         }
     });
-    lobbyManager.deleteLobby(lobbyId);
+    lobby.idPartida = partidaCreada.ID;
+    setTimeout(() => {
+        try {
+            lobbyManager.deleteLobby(lobbyId);
+        } catch (err) {
+        }
+    }, 10000);
     return partidaCreada
 }
 
