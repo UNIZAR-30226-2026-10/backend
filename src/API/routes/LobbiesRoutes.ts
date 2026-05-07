@@ -37,7 +37,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 400: Type.Object({
                     error: Type.String()
@@ -77,7 +78,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -104,7 +106,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
                 403: ForbiddenSessionToken,
@@ -127,7 +130,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -154,7 +158,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
                 404: Type.Object({
@@ -176,7 +181,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -276,7 +282,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                         })),
                         numJugadores: Type.Number(),
                         numBots: Type.Number(),
-                        tablero: Type.String()
+                        tablero: Type.String(),
+                        idPartida: Type.Optional(Type.String())
                     }),
                 ]),
                 401: UnauthorizedSessionToken,
@@ -319,7 +326,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -344,11 +352,14 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     jugadores: Type.Array(Type.Object({
                         nombre: Type.String(),
                         esIA: Type.Boolean(),
-                        estaListo: Type.Boolean()
+                        estaListo: Type.Boolean(),
+                        nombreMazo: Type.Optional(Type.String()),
+                        icono: Type.Optional(Type.String())
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 400: Type.Object({
                     error: Type.String()
@@ -389,7 +400,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -421,7 +433,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 400: Type.Object({
                     error: Type.String()
@@ -463,7 +476,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -495,7 +509,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 400: Type.Object({
                     error: Type.String()
@@ -525,7 +540,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -557,7 +573,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 401: UnauthorizedSessionToken,
                 403: Type.Object({
@@ -596,7 +613,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     })
 
@@ -628,7 +646,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
                     })),
                     numJugadores: Type.Number(),
                     numBots: Type.Number(),
-                    tablero: Type.String()
+                    tablero: Type.String(),
+                    idPartida: Type.Optional(Type.String())
                 }),
                 400: Type.Object({
                     error: Type.String()
@@ -667,7 +686,8 @@ export default function lobbiesRoutes(app: FastifyInstance): void {
             jugadores: lobby.jugadores,
             numJugadores: lobby.numJugadores,
             numBots: lobby.numBots,
-            tablero: lobby.tablero
+            tablero: lobby.tablero,
+            idPartida: lobby.idPartida
         })
     }
     )

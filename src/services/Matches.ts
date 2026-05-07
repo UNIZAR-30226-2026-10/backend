@@ -152,7 +152,13 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             }
         }
     });
-    lobbyManager.deleteLobby(lobbyId);
+    lobby.idPartida = partidaCreada.ID;
+    setTimeout(() => {
+        try {
+            lobbyManager.deleteLobby(lobbyId);
+        } catch (err) {
+        }
+    }, 10000);
     return partidaCreada
 }
 
