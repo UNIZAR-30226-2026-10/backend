@@ -24,7 +24,13 @@ export const JugadorEstadoSchema = Type.Object({
     cartaJugadaEnTurno: Type.Boolean(),
     cartasJugadas: Type.Integer({ minimum: 0 }),
     efectosActivos: Type.Array(EfectoActivoSchema),
-    movimientosPermitidos: Type.Array(Type.Integer())
+    movimientosPermitidos: Type.Array(Type.Object({
+        casilla: Type.Integer({ minimum: 0, maximum: 100 }),
+        casillaNoTomada: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
+        fichaId: Type.Integer({ minimum: 1, maximum: 3 }),
+        esBifurcacion: Type.Boolean(),
+        pasosRestantes: Type.Optional(Type.Integer({ minimum: 0, maximum: 12 }))
+    }))
 });
 
 export const SnapshotJugadoresSchema = Type.Object({

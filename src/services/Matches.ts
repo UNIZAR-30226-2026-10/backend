@@ -567,9 +567,6 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 pasos--;
             }
         }
-        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
-            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
-        }
         casillaTablero = tablero.casillas[casillaActual];
         let movimiento: Movimiento = {
             fichaId: ficha.id,
@@ -585,9 +582,12 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         let final = m.casillaDestino;
         let casilla = tablero.casillas[final];
         if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
-            return casilla.saltoA!;
+            if (casilla.tipo === "Escalera") {
+                return { casilla: casilla.saltoA!, casillaNoTomada: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            }
+            return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
         }
-        return final;
+        return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
     });
 
     if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
@@ -666,13 +666,33 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (!fichaAActualizar) {
         throw new Error("Ficha no encontrada");
     }
-    const casillaFicha = fichaAActualizar.casilla;
-    const movimientoDesdeBifurcacionValido =
-        tablero.casillas[casillaFicha].tipo === "Bifurcacion" &&
-        tablero.casillas[casillaFicha].siguientes.includes(casillaDestino);
+    const permitido = jugadorActual.movimientosPermitidos.some(m =>
+        (m.casilla === casillaDestino || m.casillaNoTomada === casillaDestino) &&
+        m.fichaId === fichaId &&
+        m.esBifurcacion === (pasosRestantes !== undefined) &&
+        (m.pasosRestantes ?? undefined) === pasosRestantes
+    );
 
-    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino) && !movimientoDesdeBifurcacionValido) {
+    const movimientoDesdeBifurcacionValido =
+        pasosRestantes !== undefined &&
+        jugadorActual.movimientosPermitidos.some(m =>
+            m.fichaId === fichaId &&
+            m.esBifurcacion &&
+            m.pasosRestantes === pasosRestantes &&
+            m.casilla === fichaAActualizar.casilla &&
+            tablero.casillas[m.casilla].tipo === "Bifurcacion" &&
+            tablero.casillas[m.casilla].siguientes.includes(casillaDestino)
+        );
+
+    if (!permitido && !movimientoDesdeBifurcacionValido) {
         throw new Error("Movimiento no permitido");
+    }
+    const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
+    if (checkBlockInBox(estadoJugadores, casillaDestino)) {
+        if (!tieneSaltarBloqueo) {
+            throw new Error("Movimiento no permitido, casilla bloqueada");
+        }
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
     }
 
     let casillaActual = fichaAActualizar.casilla;
@@ -750,6 +770,10 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     return await finishMatch(partidaId, jugadorActual.username);
                 }
             }
+            jugadorActual.fase = "Cartas";
+            jugadorActual.ultimaTirada = undefined;
+            jugadorActual.movimientosPermitidos = [];
+            jugadorActual.cartaJugadaEnTurno = false;
             estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
             let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
             siguienteJugador.fase = "Cartas";
