@@ -294,28 +294,24 @@ export async function getUserMatches(email:string) {
             where: { email },
             include: {
                 partidas: {
-                    select: {
-                        configuracion: false,
-                        ID: true,
-                        fechaInicio: true,
-                        tableroInicialNombre: true
-                    },
-
-                    include: {
-                        partidaJugadores: {
-                            select: {
-                                nombre: true,
-                            }
-                        }
-                    },
-                
                     where: {
                         ganadorEmail: null
+                    },
+                    select: {
+                        ID: true,
+                        fechaInicio: true,
+                        fechaFin: true,
+                        tableroInicialNombre: true,
+                        partidaJugadores: {
+                            select: {
+                                nombre: true
+                            }
+                        }
                     }
                 }
             }
-        })
-        return matches
+        });
+        return matches;
     } catch (error) {
         console.error("Error al obtener el usuario:", error)
         throw new Error("Error al obtener el usuario")
