@@ -1,6 +1,6 @@
 import { Tipo_Cosmetico } from "../generated/prisma/enums.ts";
 import { Tipo_Carta, Rareza } from "../generated/prisma/enums.ts";
-import { Tipo_Afeccion} from "../generated/prisma/enums.ts";
+import { Tipo_Afeccion } from "../generated/prisma/enums.ts";
 import { Tipo_Efecto } from "../generated/prisma/enums.ts";
 import { Tipo_Logro } from "../generated/prisma/enums.ts";
 import { generarTableros } from "./tableros.tsx";
@@ -68,121 +68,121 @@ export async function cosmeticosPorDefecto() {
     const cosmeticos = [
         {
             nombre: "icono_default",
-            tipo : Tipo_Cosmetico.Icono,
+            tipo: Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono por defecto"
         },
         {
             nombre: "ficha_default",
-            tipo : Tipo_Cosmetico.Skin_Ficha,
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 0,
             descripcion: "Ficha por defecto"
         },
         {
             nombre: "serpiente_default",
-            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            tipo: Tipo_Cosmetico.Skin_Serpiente,
             precio: 0,
             descripcion: "Serpiente por defecto"
         },
         {
             nombre: "escalera_default",
-            tipo : Tipo_Cosmetico.Skin_Escalera,
+            tipo: Tipo_Cosmetico.Skin_Escalera,
             precio: 0,
             descripcion: "Escalera por defecto"
         },
         {
             nombre: "icono_nerd",
-            tipo : Tipo_Cosmetico.Icono,
+            tipo: Tipo_Cosmetico.Icono,
             precio: 300,
             descripcion: "Icono con gafas de nerd"
         },
         {
-            nombre:"icono_completista",
-            tipo : Tipo_Cosmetico.Icono,
+            nombre: "icono_completista",
+            tipo: Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de trofeo de completista"
         },
         {
-            nombre:"icono_platino",
-            tipo : Tipo_Cosmetico.Icono,
+            nombre: "icono_platino",
+            tipo: Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de trofeo de platino"
         },
         {
-            nombre:"icono_L",
-            tipo : Tipo_Cosmetico.Icono,
+            nombre: "icono_L",
+            tipo: Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de letra L"
         },
         {
-            nombre:"icono_W",
-            tipo : Tipo_Cosmetico.Icono,
+            nombre: "icono_W",
+            tipo: Tipo_Cosmetico.Icono,
             precio: 0,
             descripcion: "Icono con diseño de letra W"
         },
         {
-            nombre:"icono_cofre",
-            tipo : Tipo_Cosmetico.Icono,
+            nombre: "icono_cofre",
+            tipo: Tipo_Cosmetico.Icono,
             precio: 500,
             descripcion: "Icono con diseño de cofre del tesoro"
         },
         {
-            nombre:"escalera_estratega",
-            tipo : Tipo_Cosmetico.Skin_Escalera,
+            nombre: "escalera_estratega",
+            tipo: Tipo_Cosmetico.Skin_Escalera,
             precio: 0,
             descripcion: "Escalera con diseño de tablero de ajedrez"
         },
         {
-            nombre:"escalera_magnate",
-            tipo : Tipo_Cosmetico.Skin_Escalera,
+            nombre: "escalera_magnate",
+            tipo: Tipo_Cosmetico.Skin_Escalera,
             precio: 0,
             descripcion: "Escalera con diseño de billetes de dinero"
         },
         {
-            nombre:"ficha_totem",
-            tipo : Tipo_Cosmetico.Skin_Ficha,
+            nombre: "ficha_totem",
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 800,
             descripcion: "Ficha con diseño de tótem"
         },
         {
-            nombre:"ficha_aventurero",
-            tipo : Tipo_Cosmetico.Skin_Ficha,
+            nombre: "ficha_aventurero",
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 1000,
             descripcion: "Ficha con diseño de sombrero de aventurero"
         },
         {
-            nombre:"ficha_esqueleto",
-            tipo : Tipo_Cosmetico.Skin_Ficha,
+            nombre: "ficha_esqueleto",
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 900,
             descripcion: "Ficha con diseño de calavera"
         },
         {
-            nombre:"ficha_moneda",
-            tipo : Tipo_Cosmetico.Skin_Ficha,
+            nombre: "ficha_moneda",
+            tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 700,
             descripcion: "Ficha con diseño de moneda"
         },
         {
-            nombre:"serpiente_calcetin",
-            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            nombre: "serpiente_calcetin",
+            tipo: Tipo_Cosmetico.Skin_Serpiente,
             precio: 800,
             descripcion: "Serpiente con diseño de calcetín"
         },
         {
             nombre: "serpiente_tribal",
-            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            tipo: Tipo_Cosmetico.Skin_Serpiente,
             precio: 700,
             descripcion: "Serpiente con diseño de patrón tribal"
         },
-        {   
+        {
             nombre: "serpiente_futuro",
-            tipo : Tipo_Cosmetico.Skin_Serpiente,
+            tipo: Tipo_Cosmetico.Skin_Serpiente,
             precio: 900,
             descripcion: "Serpiente con diseño de estilo futurista"
         },
         {
             nombre: "escalera_jungla",
-            tipo : Tipo_Cosmetico.Skin_Escalera,
+            tipo: Tipo_Cosmetico.Skin_Escalera,
             precio: 600,
             descripcion: "Escalera con diseño de lianas de jungla"
         }
@@ -203,125 +203,125 @@ export async function cartasPoblación() {
     const cartas = [
         {
             nombre: "Exceso de medios",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Comun,
-            descripcion:"Tiras 2 dados",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Comun,
+            descripcion: "Tiras 2 dados",
         },
         {
             nombre: "Moises",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Te saltas un bloqueo",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Te saltas un bloqueo",
         },
         {
-            nombre:"Wild Frank",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Epica,
-            descripcion:"Pones una serpiente donde quieras",
+            nombre: "Wild Frank",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Epica,
+            descripcion: "Pones una serpiente donde quieras",
         },
         {
-            nombre:"Carpintero",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Legendaria,
-            descripcion:"Pones una escalera donde quieras",
+            nombre: "Carpintero",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Legendaria,
+            descripcion: "Pones una escalera donde quieras",
         },
         {
-            nombre:"Dia de la marmota",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Comun,
-            descripcion:"Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
+            nombre: "Dia de la marmota",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Comun,
+            descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
         },
         {
-            nombre:"Salto de longitud",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Comun,
-            descripcion:"Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+            nombre: "Salto de longitud",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Comun,
+            descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
         },
         {
-            nombre:"Robo de identidad",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Rara,
-            descripcion:"Cambias una casilla para que al caer te lleve a la posición de otra al azar",
+            nombre: "Robo de identidad",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Rara,
+            descripcion: "Cambias la posicion de una de tus fichas por otra al azar",
         },
         {
-            nombre:"Mal de ojo",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Epica,
-            descripcion:"Le restas a un jugador 3 en su próxima tirada",
+            nombre: "Mal de ojo",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Epica,
+            descripcion: "Le restas a un jugador 3 en su próxima tirada",
         },
         {
-            nombre:"Antidoto",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Comun,
-            descripcion:"La próxima serpiente en la que caigas no te hará bajar",
+            nombre: "Antidoto",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Comun,
+            descripcion: "La próxima serpiente en la que caigas no te hará bajar",
         },
         {
-            nombre:"Pickpocket",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Robas una carta al azar a otro jugador",
+            nombre: "Pickpocket",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Robas una carta al azar a otro jugador",
         },
         {
-            nombre:"Dado envenenado",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Epica,
-            descripcion:"El rival solo puede tirar dados de 1-3 en su próximo turno",
+            nombre: "Dado envenenado",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Epica,
+            descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
         },
         {
-            nombre:"Dado dorado",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Legendaria,
-            descripcion:"Puedes tirar dados de 4-6 en tu próximo turno",
+            nombre: "Dado dorado",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Legendaria,
+            descripcion: "Puedes tirar dados de 4-6 en tu próximo turno",
         },
         {
-            nombre:"Serpiente en tu bota",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Comun,
-            descripcion:"Creas una casilla que hace perder un turno al caer en ella",
+            nombre: "Serpiente en tu bota",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Comun,
+            descripcion: "Creas una casilla que hace perder un turno al caer en ella",
         },
         {
-            nombre:"Parca",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Mandas una ficha al azar al inicio del tablero",
+            nombre: "Parca",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Mandas una ficha al azar al inicio del tablero",
         },
         {
-            nombre:'Cambiar de idea',
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Epica,
-            descripcion:'Puedes volver a tirar tus cartas en tu próximo turno',
+            nombre: 'Cambiar de idea',
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Epica,
+            descripcion: 'Descarta todas las cartas de tu mano y roba nuevas hasta llenar tu mano',
         },
         {
-            nombre:'Agujero de serpiente',
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Rara,
-            descripcion:'Te teletransporta a una casilla aleatoria del tablero',
+            nombre: 'Agujero de serpiente',
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Rara,
+            descripcion: 'Crea una casilla que te teletransporta a una casilla aleatoria del tablero al caer en ella',
         },
         {
-            nombre:"Bolsillo roto",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Comun,
-            descripcion:"Le quitas todas las cartas a un jugador y solo podrá robar 1 carta",
+            nombre: "Bolsillo roto",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Comun,
+            descripcion: "Le quitas todas las cartas a un jugador y solo podrá robar 1 carta",
         },
         {
-            nombre:"Compañerismo obligado",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Epica,
-            descripcion:"Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
+            nombre: "Compañerismo obligado",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Epica,
+            descripcion: "Teletransporta a tu ficha más atrás a la posición de una ficha aliada más avanzada",
         },
         {
-            nombre:"Coleccionista",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Roba dos cartas en tu próximo turno",
+            nombre: "Coleccionista",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Roba dos cartas en tu próximo turno",
         },
         {
-            nombre:"Noqueo",
-            tipo:Tipo_Carta.Defensiva,
-            calidad:Rareza.Epica,
-            descripcion:"Cancela el próximo turno de un rival",
+            nombre: "Noqueo",
+            tipo: Tipo_Carta.Defensiva,
+            calidad: Rareza.Epica,
+            descripcion: "Cancela el próximo turno de un rival",
         },
-        
+
     ];
 
     for (const carta of cartas) {
@@ -336,7 +336,7 @@ export async function cartasPoblación() {
 }
 export async function mazosPorDefecto(usuarioEmail = "admin@gmail.com") {
     await loadServices();
-    const nombreMazo = "MazoPorDefecto";
+    const nombreMazo = "Mazo por defecto";
     const cartasParaMazo = [
         "Exceso de medios",
         "Salto de longitud",
@@ -387,132 +387,132 @@ export async function cuentaAdminPorDefecto() {
     await createUser({
         email: emailAdmin,
         nombre: "Admin",
-        password:"#Admin123",
+        password: "#Admin123",
     });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_default" });
     await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_nerd" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_completista" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_platino" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_L" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_W" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre:"icono_cofre" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_estratega" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_magnate" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_totem" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_aventurero" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_esqueleto" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre:"ficha_moneda" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_calcetin" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_tribal" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre:"serpiente_futuro" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre:"escalera_jungla" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_completista" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_platino" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_L" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_W" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_cofre" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_estratega" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_magnate" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_totem" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_aventurero" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_esqueleto" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_moneda" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_calcetin" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_tribal" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_futuro" });
+    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_jungla" });
     await mazosPorDefecto(emailAdmin);
     await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 0, derrotas: 0 });
 }
 
-export async function efectosPoblacion(){
+export async function efectosPoblacion() {
     await loadServices();
-        const efectos = [{
-                nombre: "Efecto 1: Tiras 2 dados",
-                    descripcion: "Tiras 2 dados en tu próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Dados
-            },
-            {
-                    nombre: "Efecto 2: Te saltas un bloqueo",
-                    descripcion: "Te saltas un bloqueo en tu próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 3: Pones una serpiente donde quieras",
-                    descripcion: "Pones una serpiente donde quieras en tu próximo turno",
-                    afecta: Tipo_Afeccion.Casilla,
-                    tipo: Tipo_Efecto.Debufo
-            },
-            {
-                    nombre: "Efecto 4: Pones una escalera donde quieras",
-                    descripcion: "Pones una escalera donde quieras en tu próximo turno",
-                    afecta: Tipo_Afeccion.Casilla,
-                    tipo: Tipo_Efecto.Bufo
-            },
-            {
-                    nombre: "Efecto 5: Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
-                    descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
-                    afecta: Tipo_Afeccion.Casilla,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 6: Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
-                    descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
-                    afecta: Tipo_Afeccion.Casilla,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 7: Robas una carta de la pila de descarte",
-                    descripcion: "Robas una carta de la pila de descarte",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Debufo
-            },
-            {
-                    nombre: "Efecto 8: El rival solo puede tirar dados de 1-3 en su próximo turno",
-                    descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Dados
-            },
-            {
-                    nombre: "Efecto 9: Puedes tirar dados de 4-6 en tu próximo turno",
-                    descripcion: "Puedes tirar dados de 4-6 en tu próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Dados
-            },
-            {
-                    nombre: "Efecto 10: Te saltas un bloqueo",
-                    descripcion: "Te saltas un bloqueo en tu próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 11: Robas una carta al azar a otro jugador",
-                    descripcion: "Robas una carta al azar a otro jugador",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Cartas
-            },
-            {
-                    nombre: "Efecto 12: Mandas una ficha al azar al inicio del tablero",
-                    descripcion: "Mandas una ficha al azar al inicio del tablero",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 13: El rival no puede usar cartas en su próximo turno",
-                    descripcion: "El rival no puede usar cartas en su próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Cartas
-            },
-            {
-                    nombre: "Efecto 14: Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
-                    descripcion: "Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Movimiento
-            },
-            {
-                    nombre: "Efecto 15: Roba dos cartas en tu próximo turno",
-                    descripcion: "Roba dos cartas en tu próximo turno",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Cartas
-            },
-            {
-                    nombre: "Efecto 16: Cancela el próximo turno de un rival",
-                    descripcion: "Cancela el próximo turno de un rival",
-                    afecta: Tipo_Afeccion.Jugador,
-                    tipo: Tipo_Efecto.Debufo
-            }
+    const efectos = [{
+        nombre: "Efecto 1: Tiras 2 dados",
+        descripcion: "Tiras 2 dados en tu próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Dados
+    },
+    {
+        nombre: "Efecto 2: Te saltas un bloqueo",
+        descripcion: "Te saltas un bloqueo en tu próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 3: Pones una serpiente donde quieras",
+        descripcion: "Pones una serpiente donde quieras en tu próximo turno",
+        afecta: Tipo_Afeccion.Casilla,
+        tipo: Tipo_Efecto.Debufo
+    },
+    {
+        nombre: "Efecto 4: Pones una escalera donde quieras",
+        descripcion: "Pones una escalera donde quieras en tu próximo turno",
+        afecta: Tipo_Afeccion.Casilla,
+        tipo: Tipo_Efecto.Bufo
+    },
+    {
+        nombre: "Efecto 5: Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
+        descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
+        afecta: Tipo_Afeccion.Casilla,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 6: Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+        descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+        afecta: Tipo_Afeccion.Casilla,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 7: Robas una carta de la pila de descarte",
+        descripcion: "Robas una carta de la pila de descarte",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Debufo
+    },
+    {
+        nombre: "Efecto 8: El rival solo puede tirar dados de 1-3 en su próximo turno",
+        descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Dados
+    },
+    {
+        nombre: "Efecto 9: Puedes tirar dados de 4-6 en tu próximo turno",
+        descripcion: "Puedes tirar dados de 4-6 en tu próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Dados
+    },
+    {
+        nombre: "Efecto 10: Te saltas un bloqueo",
+        descripcion: "Te saltas un bloqueo en tu próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 11: Robas una carta al azar a otro jugador",
+        descripcion: "Robas una carta al azar a otro jugador",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Cartas
+    },
+    {
+        nombre: "Efecto 12: Mandas una ficha al azar al inicio del tablero",
+        descripcion: "Mandas una ficha al azar al inicio del tablero",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 13: El rival no puede usar cartas en su próximo turno",
+        descripcion: "El rival no puede usar cartas en su próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Cartas
+    },
+    {
+        nombre: "Efecto 14: Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
+        descripcion: "Teletransporta a tu ficha a la posición de la ficha aliada más avanzada",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Movimiento
+    },
+    {
+        nombre: "Efecto 15: Roba dos cartas en tu próximo turno",
+        descripcion: "Roba dos cartas en tu próximo turno",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Cartas
+    },
+    {
+        nombre: "Efecto 16: Cancela el próximo turno de un rival",
+        descripcion: "Cancela el próximo turno de un rival",
+        afecta: Tipo_Afeccion.Jugador,
+        tipo: Tipo_Efecto.Debufo
+    }
 
-        ];
+    ];
     for (const efecto of efectos) {
         await createEffect(efecto);
     }
@@ -525,93 +525,93 @@ export async function logrosPoblacion() {
         {
             nombre: "Primeros pasos",
             descripcion: "Gana tu primera partida",
-            requisito:1,
+            requisito: 1,
             tipo: Tipo_Logro.Victorias,
-            cartaID : "Serpiente en tu bota"
+            cartaID: "Serpiente en tu bota"
         },
         {
             nombre: "En racha",
             descripcion: "Gana 5 partidas",
-            requisito:5,
+            requisito: 5,
             tipo: Tipo_Logro.Victorias,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Imparable",
             descripcion: "Gana 10 partidas",
-            requisito:10,
+            requisito: 10,
             tipo: Tipo_Logro.Victorias,
-            cartaID : "Wild Frank"
+            cartaID: "Wild Frank"
         },
         {
             nombre: "Manos a la obra",
             descripcion: "Juega tu primera carta",
-            requisito:1,
+            requisito: 1,
             tipo: Tipo_Logro.CartasJugadas,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Estratega",
             descripcion: "Juega 15 cartas",
-            requisito:15,
+            requisito: 15,
             tipo: Tipo_Logro.CartasJugadas,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Ahorro inteligente",
             descripcion: "Ahorra 2000 SEP",
-            requisito:2000,
+            requisito: 2000,
             tipo: Tipo_Logro.SEP,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Magnate",
             descripcion: "Ahorra 4000 SEP",
-            requisito:4000,
+            requisito: 4000,
             tipo: Tipo_Logro.SEP,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Derrotado",
             descripcion: "Pierde tu primera partida",
-            requisito:1,
+            requisito: 1,
             tipo: Tipo_Logro.Derrotas,
-            cartaID : "Pickpocket"
+            cartaID: "Pickpocket"
         },
         {
             nombre: "Resiliente",
             descripcion: "Pierde 5 partidas",
-            requisito:5,
+            requisito: 5,
             tipo: Tipo_Logro.Derrotas,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Negado",
             descripcion: "Pierde 10 partidas",
-            requisito:10,
+            requisito: 10,
             tipo: Tipo_Logro.Derrotas,
-            cartaID : "Carpintero"
+            cartaID: "Carpintero"
         },
         {
             nombre: "Coleccionista",
             descripcion: "Obtén todas las cartas",
-            requisito:20,
+            requisito: 20,
             tipo: Tipo_Logro.CartasColeccionadas,
-            cartaID : null
+            cartaID: null
         },
         {
             nombre: "Completista",
             descripcion: "Completa 8 logros",
-            requisito:8,
+            requisito: 8,
             tipo: Tipo_Logro.LogrosDesbloqueados,
-            cartaID : "Mal de ojo"
+            cartaID: "Mal de ojo"
         },
         {
             nombre: "Platino",
             descripcion: "Completa todos los logros",
-            requisito:9,
+            requisito: 9,
             tipo: Tipo_Logro.LogrosDesbloqueados,
-            cartaID : null
+            cartaID: null
         }
     ];
     for (const logro of logros) {

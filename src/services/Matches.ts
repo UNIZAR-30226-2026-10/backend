@@ -487,11 +487,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     if (jugadorActual.username !== player) {
         throw new Error("No es tu turno");
     }
-    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
-        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
-        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
 
-    }
 
     if (jugadorActual.fase !== "Cartas") {
         throw new Error("No puedes tirar el dado en esta fase");
@@ -585,6 +581,9 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
             if (casilla.tipo === "Escalera") {
                 return { casilla: casilla.saltoA!, casillaNoTomada: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            }
+            if (casilla.tipo === "Serpiente" && jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                return { casilla: final,  fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
             }
             return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
         }
@@ -767,6 +766,10 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                 if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
                     fichaAActualizar.meta = true;
                 }
+            }
+            if (casillaConEfecto.efecto === "Serpiente en tu bota") {
+                jugadorActual.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+                casillaConEfecto.efecto = undefined;
             }
             if (fichaAActualizar.meta) {
                 if (jugadorActual.fichas.every(f => f.meta)) {
@@ -961,11 +964,14 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         throw new Error("Ya has jugado una carta en este turno");
     }
     const casillaActual = jugadorActual.fichas.find(f => !f.meta)!.casilla;
-    const casillaTablero = tableroPartida.casillas[casillaActual];
+    const casillaObjetivoIndex = (inicio !== undefined && inicio !== null) ? inicio : casillaActual;
+    const casillaObjetivo = tableroPartida.casillas[casillaObjetivoIndex];
     let prohibidas = false;
-    if (casillaTablero.tipo === "Serpiente" || casillaTablero.tipo === "Escalera") {
+    if (casillaObjetivo.tipo === "Serpiente" || casillaObjetivo.tipo === "Escalera") {
         prohibidas = true;
     }
+    const tieneEfecto = (casillaObjetivo.efecto !== undefined && casillaObjetivo.efecto !== null && casillaObjetivo.efecto !== "");
+    const esMetaOVacia = casillaObjetivo.tipo === "Meta" || casillaObjetivo.tipo === "Vacía";
     const indiceCarta = jugadorActual.mano.indexOf(cartaNombre);
     if (indiceCarta === -1) {
         throw new Error("Carta no encontrada en la mano");
@@ -1006,16 +1012,29 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
 
             break;
         case "Día de la marmota"://done 🈴
+        case "Dia de la marmota":
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "-4";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "-4";
             break;
         case "Salto de longitud"://done 🈴
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "+4";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "+4";
             break;
         case "Robo de identidad"://done 🈴
             let posFichas = []
@@ -1089,12 +1108,16 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.efectosActivos.push({ resumenEfecto: "4-6" });
             break;
         case "Serpiente en tu bota"://done 🈴
-            // Pasar una ronda entera
-            const jugadorAfectado = estadoJugadores.jugadores.find(j => j.username === who);
-            if (!jugadorAfectado) {
-                throw new Error("Jugador afectado no encontrado");
+            if (prohibidas) {
+                throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "Serpiente en tu bota";
             break;
         case "Parca"://done 🈴
             let Fichas = [];
@@ -1127,7 +1150,13 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "Agujero de serpiente";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "Agujero de serpiente";
             // Coger posición del tablero aleatoria y teletransportar una ficha ahí
             break;
         case "Bolsillo roto"://done 🈴
@@ -1178,6 +1207,10 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
                 throw new Error("Jugador objetivo no encontrado");
             }
             jugadorObjetivo.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
+                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
+                estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+            }
             break;
     }
     jugadorActual.cartaJugadaEnTurno = true;

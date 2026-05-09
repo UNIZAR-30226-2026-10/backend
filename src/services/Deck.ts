@@ -6,7 +6,7 @@ import { BarajaCartaReturnType, BarajaPartidaReturnType, BarajaReturnType } from
 export async function createDeck(data: { nombre: string, usuario: Usuario, carta: Carta[] }): Promise<BarajaReturnType> {
     try {
         const deck = await prisma.baraja.create({
-            data : {
+            data: {
                 nombre: data.nombre,
                 usuario: { connect: { email: data.usuario.email } }
             },
@@ -41,7 +41,7 @@ export async function createDeck(data: { nombre: string, usuario: Usuario, carta
                         usadaEn: true
                     }
                 });
-            
+
 
                 return updatedDeck;
 
@@ -50,7 +50,7 @@ export async function createDeck(data: { nombre: string, usuario: Usuario, carta
                 throw new Error("Error al asociar las cartas a la baraja después de crearla");
             }
         }
-        
+
         return deck;
     } catch (error) {
         console.error("Error al crear la baraja:", error);
@@ -60,7 +60,7 @@ export async function createDeck(data: { nombre: string, usuario: Usuario, carta
 
 export async function createDefaultDeckForUser(usuario: Usuario): Promise<BarajaReturnType> {
     try {
-        const nombreMazo = "Medios Escamosos";
+        const nombreMazo = "Baraja principante";
         const cartasParaMazo = [
             "Exceso de medios",
             "Salto de longitud",
@@ -226,11 +226,13 @@ export async function getBarajaCartaById(barajaNombre: string, barajaUsuarioEmai
 export async function getBarajaPartidaById(barajaNombre: string, barajaUsuarioEmail: string, partidaID: string): Promise<BarajaPartidaReturnType | null> {
     try {
         const barajaPartida = await prisma.barajaPartida.findUnique({
-            where: { barajaNombre_barajaUsuarioEmail_partidaID: {
-                barajaNombre,
-                barajaUsuarioEmail,
-                partidaID
-            } },
+            where: {
+                barajaNombre_barajaUsuarioEmail_partidaID: {
+                    barajaNombre,
+                    barajaUsuarioEmail,
+                    partidaID
+                }
+            },
             include: {
                 baraja: true,
                 partida: true
@@ -262,11 +264,13 @@ export async function deleteBarajaCarta(barajaNombre: string, barajaUsuarioEmail
 export async function deleteBarajaPartida(barajaNombre: string, barajaUsuarioEmail: string, partidaID: string): Promise<{ message: string }> {
     try {
         await prisma.barajaPartida.delete({
-            where: { barajaNombre_barajaUsuarioEmail_partidaID: {
-                barajaNombre,
-                barajaUsuarioEmail,
-                partidaID
-            } }
+            where: {
+                barajaNombre_barajaUsuarioEmail_partidaID: {
+                    barajaNombre,
+                    barajaUsuarioEmail,
+                    partidaID
+                }
+            }
         });
         return { message: "Partida disociada de la baraja exitosamente" };
     } catch (error) {
@@ -281,24 +285,24 @@ export async function updateDeck(nombre: string, usuarioEmail: string, data: { c
         let arrayOfBarajaPartidaAñadir: BarajaPartida[] = [];
         let arrayOfBarajaCartaEliminar: BarajaCarta[] = [];
         let arrayOfBarajaPartidaEliminar: BarajaPartida[] = [];
-        if(data.cartaAñadir) {
+        if (data.cartaAñadir) {
             for (const carta of data.cartaAñadir) {
                 const barajaCarta = await createBarajaCarta({ baraja: { nombre, usuarioEmail } as Baraja, carta });
                 arrayOfBarajaCartaAñadir.push(barajaCarta);
             }
         }
 
-        if(data.partidasAñadir) {
+        if (data.partidasAñadir) {
             for (const partida of data.partidasAñadir) {
                 const barajaPartida = await createBarajaPartida({ baraja: { nombre, usuarioEmail } as Baraja, partidaID: partida.ID });
                 arrayOfBarajaPartidaAñadir.push(barajaPartida);
             }
         }
 
-        if(data.cartaEliminar) {
+        if (data.cartaEliminar) {
             for (const carta of data.cartaEliminar) {
                 const barajaCarta = await getBarajaCartaById(nombre, usuarioEmail, carta.nombre);
-                if(barajaCarta) {
+                if (barajaCarta) {
                     arrayOfBarajaCartaEliminar.push(barajaCarta[0]);
                     await deleteBarajaCarta(nombre, usuarioEmail, carta.nombre);
                 } else {
@@ -308,10 +312,10 @@ export async function updateDeck(nombre: string, usuarioEmail: string, data: { c
             }
         }
 
-        if(data.partidasEliminar) {
+        if (data.partidasEliminar) {
             for (const partida of data.partidasEliminar) {
                 const barajaPartida = await getBarajaPartidaById(nombre, usuarioEmail, partida.ID);
-                if(barajaPartida) {
+                if (barajaPartida) {
                     arrayOfBarajaPartidaEliminar.push(barajaPartida);
                     await deleteBarajaPartida(nombre, usuarioEmail, partida.ID);
                 } else {
@@ -323,12 +327,17 @@ export async function updateDeck(nombre: string, usuarioEmail: string, data: { c
 
         const updatedDeck = await prisma.baraja.update({
             where: { nombre_usuarioEmail: { nombre, usuarioEmail } },
-            data: { barajaCartas: { connect: arrayOfBarajaCartaAñadir.map((bc) => ({ Id: bc.Id })) },
-                usadaEn: { connect: arrayOfBarajaPartidaAñadir.map((bp) => ({ barajaNombre_barajaUsuarioEmail_partidaID: {
-                    barajaNombre: nombre,
-                    barajaUsuarioEmail: usuarioEmail,
-                    partidaID: bp.partidaID
-                } })) }
+            data: {
+                barajaCartas: { connect: arrayOfBarajaCartaAñadir.map((bc) => ({ Id: bc.Id })) },
+                usadaEn: {
+                    connect: arrayOfBarajaPartidaAñadir.map((bp) => ({
+                        barajaNombre_barajaUsuarioEmail_partidaID: {
+                            barajaNombre: nombre,
+                            barajaUsuarioEmail: usuarioEmail,
+                            partidaID: bp.partidaID
+                        }
+                    }))
+                }
             },
             include: {
                 usuario: true,
