@@ -669,8 +669,8 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     const permitido = jugadorActual.movimientosPermitidos.some(m =>
         (m.casilla === casillaDestino || m.casillaNoTomada === casillaDestino) &&
         m.fichaId === fichaId &&
-        m.esBifurcacion === (pasosRestantes !== undefined) &&
-        (m.pasosRestantes ?? undefined) === pasosRestantes
+        m.esBifurcacion === (pasosRestantes !== 0 && pasosRestantes !== undefined) &&
+        (m.pasosRestantes ?? 0) === (pasosRestantes ?? 0)
     );
 
     const movimientoDesdeBifurcacionValido =
