@@ -71,8 +71,8 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             jugadorJson.mazoRestante = nombresCartas;
         }
         if (jugadorJson.mazoRestante.length >= 4) {
-            jugadorJson.mano = jugadorJson.mazoRestante.slice(0, 4);
-            jugadorJson.mazoRestante = jugadorJson.mazoRestante.slice(4);
+            jugadorJson.mano = jugadorJson.mazoRestante.slice(0, 1);
+            jugadorJson.mazoRestante = jugadorJson.mazoRestante.slice(1);
         }
     }
 
@@ -552,6 +552,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
                     if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
                         pasos++;
+                        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
                     } else {
                         break;
                     }
@@ -692,6 +693,8 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         if (!tieneSaltarBloqueo) {
             throw new Error("Movimiento no permitido, casilla bloqueada");
         }
+    }
+    if (tieneSaltarBloqueo) {
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
     }
 
@@ -968,6 +971,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         throw new Error("Carta no encontrada en la mano");
     }
     jugadorActual.mano.splice(indiceCarta, 1);
+    let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
     switch (cartaNombre) {
         case "Exceso de medios"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
@@ -1055,7 +1059,6 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
 
             break;
         case "Mal de ojo"://done 🈴
-            let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
