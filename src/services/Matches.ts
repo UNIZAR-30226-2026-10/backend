@@ -589,8 +589,16 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                     continue;
                 }
                 if (casillaTablero.tipo === "Bifurcacion") {
-                    esBifurcacion = true;
-                    break;
+                    if (casillaTablero.siguientes.length > 1) {
+                        esBifurcacion = true;
+                        break;
+                    } else if (casillaTablero.siguientes.length === 1) {
+                        casillaActual = casillaTablero.siguientes[0];
+                        pasos--;
+                        continue;
+                    } else {
+                        break;
+                    }
                 }
                 if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
                     if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
@@ -630,10 +638,10 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         }
         if (casilla.tipo === "Serpiente") {
             if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
-                return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
-            } else {
-                return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
-            }
+                    return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+                } else {
+                    return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+                }
         }
         return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
     });
@@ -718,7 +726,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     );
 
     const movimientoDesdeBifurcacionValido =
-        pasosRestantes !== undefined &&
+        pasosRestantes !== undefined && (checkBlockInBox(estadoJugadores, casillaDestino) === false || jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")&&checkBlockInBox(estadoJugadores, casillaDestino)) &&
         jugadorActual.movimientosPermitidos.some(m =>
             m.fichaId === fichaId &&
             m.esBifurcacion &&
@@ -728,7 +736,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             tablero.casillas[m.casilla].siguientes.includes(casillaDestino)
         );
 
-    if (!permitido && !movimientoDesdeBifurcacionValido) {
+    if (!permitido && !movimientoDesdeBifurcacionValido&&!(pasosRestantes ===-1)) {
         throw new Error("Movimiento no permitido");
     }
     const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
@@ -773,11 +781,24 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                         continue;
                     }
                     if (casillaTablero.tipo === "Bifurcacion") {
-                        esBifurcacion = true;
-                        break;
+                        if (casillaTablero.siguientes.length > 1) {
+                            esBifurcacion = true;
+                            break;
+                        } else if (casillaTablero.siguientes.length === 1) {
+                            casillaActual = casillaTablero.siguientes[0];
+                            pasosRestantes--;
+                            continue;
+                        } else {
+                            break;
+                        }
                     }
                     if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
-                        break;
+                        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
+                            pasosRestantes++;
+                            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
+                        } else {
+                            break;
+                        }
                     }
                     casillaActual = casillaTablero.siguientes[0];
                     pasosRestantes--;
@@ -789,6 +810,13 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     casillaActual = casillaAnterior;
                     pasosRestantes--;
                 }
+            }
+            if(tablero.casillas[casillaActual].tipo === "Serpiente"&& !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")){
+                casillaActual = tablero.casillas[casillaActual].saltoA ?? casillaActual;
+            }
+            
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
             }
             fichaAActualizar.casilla = casillaActual;
         }
