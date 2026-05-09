@@ -277,7 +277,7 @@ export async function cartasPoblación() {
             nombre: "Serpiente en tu bota",
             tipo: Tipo_Carta.Entorno,
             calidad: Rareza.Comun,
-            descripcion: "Creas una casilla que hace perder un turno al caer en ella",
+            descripcion: "Creas una casilla que impide al jugador que caiga en ella tirar dados en su próximo turno",
         },
         {
             nombre: "Parca",
@@ -319,7 +319,7 @@ export async function cartasPoblación() {
             nombre: "Noqueo",
             tipo: Tipo_Carta.Defensiva,
             calidad: Rareza.Epica,
-            descripcion: "Cancela el próximo turno de un rival",
+            descripcion: "Cancela la tirada de dados de un jugador",
         },
 
     ];

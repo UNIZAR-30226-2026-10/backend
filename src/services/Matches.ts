@@ -488,9 +488,56 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         throw new Error("No es tu turno");
     }
 
-
     if (jugadorActual.fase !== "Cartas") {
         throw new Error("No puedes tirar el dado en esta fase");
+    }
+
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
+        jugadorActual.fase = "Cartas";
+        jugadorActual.ultimaTirada = undefined;
+        jugadorActual.movimientosPermitidos = [];
+        jugadorActual.cartaJugadaEnTurno = false;
+
+        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+        let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+        siguienteJugador.fase = "Cartas";
+        if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+            const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+            if (cartaRobada) {
+                siguienteJugador.mano.push(cartaRobada);
+            }
+        }
+        if (estadoJugadores.turnoActual === 0) {
+            estadoJugadores.ronda++;
+        }
+
+        const partidaUpdated = await prisma.partida.update({
+            where: { ID: partidaId },
+            data: { snapshotJugadores: estadoJugadores },
+            include: {
+                partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+                },
+                ganador: {
+                    select: {
+                        nombre: true
+                    }
+                }
+            }
+        });
+        return {
+            partida: partidaUpdated,
+            tirada: 0,
+            movimientos: [],
+            tiradaExtra: 0
+        };
     }
 
 
@@ -578,21 +625,18 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     jugadorActual.movimientosPermitidos = movimientos.map(m => {
         let final = m.casillaDestino;
         let casilla = tablero.casillas[final];
-        if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
-            if (casilla.tipo === "Escalera") {
-                return { casilla: casilla.saltoA!, casillaNoTomada: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+        if (casilla.tipo === "Escalera") {
+            return { casilla: casilla.saltoA!, casillaNoTomada: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+        }
+        if (casilla.tipo === "Serpiente") {
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            } else {
+                return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
             }
-            if (casilla.tipo === "Serpiente" && jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
-                return { casilla: final,  fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
-            }
-            return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
         }
         return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
     });
-
-    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
-        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
-    }
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
@@ -699,6 +743,11 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
 
     let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
+    if (tablero.casillas[casillaDestino].tipo === "Serpiente") {
+        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+        }
+    }
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
         fichaAActualizar.meta = true;
     }
