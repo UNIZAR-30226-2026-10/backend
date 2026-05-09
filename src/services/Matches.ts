@@ -638,10 +638,10 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         }
         if (casilla.tipo === "Serpiente") {
             if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
-                    return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
-                } else {
-                    return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
-                }
+                return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            } else {
+                return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            }
         }
         return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
     });
@@ -725,8 +725,16 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
         (m.pasosRestantes ?? 0) === (pasosRestantes ?? 0)
     );
 
+    const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
+    const estaEnBifurcacion = casillaDestino === fichaAActualizar.casilla && tablero.casillas[casillaDestino].tipo === "Bifurcacion";
+    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino);
+    const bloqueoValidoParaEsteMovimiento =
+        !destinoBloqueado ||
+        tieneSaltarBloqueo ||
+        estaEnBifurcacion;
+
     const movimientoDesdeBifurcacionValido =
-        pasosRestantes !== undefined && (checkBlockInBox(estadoJugadores, casillaDestino) === false || jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")&&checkBlockInBox(estadoJugadores, casillaDestino)) &&
+        pasosRestantes !== undefined && bloqueoValidoParaEsteMovimiento &&
         jugadorActual.movimientosPermitidos.some(m =>
             m.fichaId === fichaId &&
             m.esBifurcacion &&
@@ -736,11 +744,10 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             tablero.casillas[m.casilla].siguientes.includes(casillaDestino)
         );
 
-    if (!permitido && !movimientoDesdeBifurcacionValido&&!(pasosRestantes ===-1)) {
+    if (!permitido && !movimientoDesdeBifurcacionValido && !(pasosRestantes === -1)) {
         throw new Error("Movimiento no permitido");
     }
-    const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
-    if (checkBlockInBox(estadoJugadores, casillaDestino)) {
+    if (destinoBloqueado && !estaEnBifurcacion) {
         if (!tieneSaltarBloqueo) {
             throw new Error("Movimiento no permitido, casilla bloqueada");
         }
@@ -811,10 +818,9 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     pasosRestantes--;
                 }
             }
-            if(tablero.casillas[casillaActual].tipo === "Serpiente"&& !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")){
+            if (tablero.casillas[casillaActual].tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
                 casillaActual = tablero.casillas[casillaActual].saltoA ?? casillaActual;
             }
-            
             if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
                 jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
             }
@@ -872,7 +878,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                         if (cartaRobada2) {
                             siguienteJugador.mano.push(cartaRobada2);
                         }
-
+                        siguienteJugador.efectosActivos = siguienteJugador.efectosActivos.filter(e => e.resumenEfecto !== "Coleccionista");
                     }
                 }
 
