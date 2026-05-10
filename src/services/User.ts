@@ -129,7 +129,7 @@ const Relaciones : Record<string, RelacionConfig> = {
             await prisma.usuario.update({
                 where: { email: userEmail },
                 data: { 
-                    logrosConseguidos: {
+                    logros: {
                         disconnect: { nombre: relatedId }
                     }
                 }
@@ -139,7 +139,7 @@ const Relaciones : Record<string, RelacionConfig> = {
             await prisma.usuario.update({
                 where: { email: userEmail },
                 data: {
-                    logrosConseguidos: {
+                    logros: {
                         connect: { nombre: relatedId }
                     }
                 }
