@@ -209,7 +209,7 @@ export async function cartasPoblación() {
         },
         {
             nombre: "Moises",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Rara,
             descripcion:"Te saltas un bloqueo",
         },
@@ -221,7 +221,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Carpintero",
-            tipo:Tipo_Carta.Ofensiva,
+            tipo:Tipo_Carta.Entorno,
             calidad:Rareza.Legendaria,
             descripcion:"Pones una escalera donde quieras",
         },
@@ -233,7 +233,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Salto de longitud",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Entorno,
             calidad:Rareza.Comun,
             descripcion:"Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
         },
@@ -245,7 +245,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Mal de ojo",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Epica,
             descripcion:"Le restas a un jugador 3 en su próxima tirada",
         },
@@ -263,7 +263,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Dado envenenado",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Epica,
             descripcion:"El rival solo puede tirar dados de 1-3 en su próximo turno",
         },
@@ -271,7 +271,7 @@ export async function cartasPoblación() {
             nombre:"Dado dorado",
             tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Legendaria,
-            descripcion:"Puedes tirar dados de 4-6 en tu próximo turno",
+            descripcion:"Solo podrás sacar entre 4-6 en tu próxima tirada",
         },
         {
             nombre:"Serpiente en tu bota",
@@ -281,7 +281,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Parca",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Rara,
             descripcion:"Mandas una ficha al azar al inicio del tablero",
         },
@@ -299,7 +299,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Bolsillo roto",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Comun,
             descripcion:"Le quitas todas las cartas a un jugador y solo podrá robar 1 carta",
         },
@@ -317,7 +317,7 @@ export async function cartasPoblación() {
         },
         {
             nombre:"Noqueo",
-            tipo:Tipo_Carta.Defensiva,
+            tipo:Tipo_Carta.Ofensiva,
             calidad:Rareza.Epica,
             descripcion:"Cancela el próximo turno de un rival",
         },
@@ -336,7 +336,7 @@ export async function cartasPoblación() {
 }
 export async function mazosPorDefecto(usuarioEmail = "admin@gmail.com") {
     await loadServices();
-    const nombreMazo = "MazoPorDefecto";
+    const nombreMazo = "Mazo Básico";
     const cartasParaMazo = [
         "Exceso de medios",
         "Salto de longitud",
