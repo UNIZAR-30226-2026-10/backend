@@ -174,6 +174,8 @@ const Relaciones : Record<string, RelacionConfig> = {
 }
 
 export async function createUser(data: { email:string, password:string, nombre:string }) : Promise<UsuarioReturnType> {
+    data.email = data.email.toLowerCase().trim()
+    data.nombre = data.nombre.trim()
     // Verificar correctitud del email
     if(!await emailHelper(data.email)) throw new Error("Email no valido o ya registrado")
 
@@ -272,13 +274,17 @@ export async function createUser(data: { email:string, password:string, nombre:s
         });
 
         return user;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error al crear el usuario:", error)
+        if (error.code === 'P2002') {
+            throw new Error("El email o nombre de usuario ya está registrado.")
+        }
         throw new Error("Error al crear el usuario: " + (error instanceof Error ? error.message : "Desconocido"))
     }
 }
 
 export async function getUserByEmail(email:string) : Promise<CompleteUserReturnType | null> {
+    email = email.toLowerCase().trim()
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -612,6 +618,7 @@ export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cos
 }
 
 export async function authenticateUser(email:string, password:string) : Promise<AuthUserReturnType> {
+    email = email.toLowerCase().trim()
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -700,6 +707,36 @@ export async function getUserByName(nombre:string) : Promise<UsuarioReturnType |
     }
 }
 
+export async function getPartidasNoTerminadas(email:string) {
+    try {
+        const partidas = await prisma.usuario.findUnique({
+            where: { email },
+            include: {
+                partidas: {
+                    where: {
+                        ganadorEmail: null
+                    },
+                    select: {
+                        ID: true,
+                        fechaInicio: true,
+                        fechaFin: true,
+                        tableroInicialNombre: true,
+                        partidaJugadores: {
+                            select: {
+                                nombre: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return partidas?.partidas || [];
+    } catch (error) {
+        console.error("Error al obtener las partidas no terminadas:", error)
+        throw new Error("Error al obtener las partidas no terminadas")
+    }
+}
+
 export default {
     createUser,
     getUserByEmail,
@@ -716,5 +753,6 @@ export default {
     disconnectRelacion,
     updateCosmeticOnUser,
     authenticateUser,
+    getPartidasNoTerminadas,
     getUserByName
 }
