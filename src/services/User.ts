@@ -722,7 +722,7 @@ export async function getPartidasNoTerminadas(email:string, deckId:string) {
                 barajas: {
                     some: {
                         barajaNombre: deckId,
-                        usuarioEmail: email
+                        barajaUsuarioEmail: email
                     }
                 }
             },
