@@ -784,7 +784,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             const returnData = {
                 matches: matches.partidas.map(p => ({
                     jugadores: p.partidaJugadores.map(j => j.nombre),
-                    fecha: p.fechaFin ? p.fechaFin.toISOString() : "Partida en curso",
+                    fecha: p.fechaInicio ? p.fechaInicio.toISOString() : "Partida en curso",
                     mapa: p.tableroInicialNombre,
                     ID: p.ID
                 }))
