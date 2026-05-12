@@ -279,78 +279,65 @@ export async function deleteBarajaPartida(barajaNombre: string, barajaUsuarioEma
     }
 }
 
-export async function updateDeck(nombre: string, usuarioEmail: string, data: { cartaAñadir?: Carta[], cartaEliminar?: Carta[], partidasAñadir?: Partida[], partidasEliminar?: Partida[] }): Promise<BarajaReturnType> {
+export async function updateDeck(nombre: string, usuarioEmail: string, data: { nuevoNombre?: string, cartaAñadir?: Carta[], cartaEliminar?: Carta[], partidasAñadir?: Partida[], partidasEliminar?: Partida[] }): Promise<BarajaReturnType> {
     try {
-        let arrayOfBarajaCartaAñadir: BarajaCarta[] = [];
-        let arrayOfBarajaPartidaAñadir: BarajaPartida[] = [];
-        let arrayOfBarajaCartaEliminar: BarajaCarta[] = [];
-        let arrayOfBarajaPartidaEliminar: BarajaPartida[] = [];
-        if (data.cartaAñadir) {
-            for (const carta of data.cartaAñadir) {
-                const barajaCarta = await createBarajaCarta({ baraja: { nombre, usuarioEmail } as Baraja, carta });
-                arrayOfBarajaCartaAñadir.push(barajaCarta);
-            }
-        }
-
-        if (data.partidasAñadir) {
-            for (const partida of data.partidasAñadir) {
-                const barajaPartida = await createBarajaPartida({ baraja: { nombre, usuarioEmail } as Baraja, partidaID: partida.ID });
-                arrayOfBarajaPartidaAñadir.push(barajaPartida);
-            }
-        }
-
-        if (data.cartaEliminar) {
-            for (const carta of data.cartaEliminar) {
-                const barajaCarta = await getBarajaCartaById(nombre, usuarioEmail, carta.nombre);
-                if (barajaCarta) {
-                    arrayOfBarajaCartaEliminar.push(barajaCarta[0]);
-                    await deleteBarajaCarta(nombre, usuarioEmail, carta.nombre);
-                } else {
-                    console.warn(`La carta ${carta.nombre} no se encuentra en la baraja, no se puede eliminar`);
-                    throw new Error(`La carta ${carta.nombre} no se encuentra en la baraja, no se puede eliminar`);
+        return await prisma.$transaction(async (tx) => {
+            if (data.cartaEliminar) {
+                for (const carta of data.cartaEliminar) {
+                    const barajaCartas = await tx.barajaCarta.findMany({
+                        where: { barajaNombre: nombre, barajaUsuarioEmail: usuarioEmail, cartaNombre: carta.nombre }
+                    });
+                    if (barajaCartas.length > 0) {
+                        await tx.barajaCarta.delete({ where: { Id: barajaCartas[0].Id } });
+                    } else {
+                        throw new Error(`La carta ${carta.nombre} no se encuentra en la baraja, no se puede eliminar`);
+                    }
                 }
             }
-        }
 
-        if (data.partidasEliminar) {
-            for (const partida of data.partidasEliminar) {
-                const barajaPartida = await getBarajaPartidaById(nombre, usuarioEmail, partida.ID);
-                if (barajaPartida) {
-                    arrayOfBarajaPartidaEliminar.push(barajaPartida);
-                    await deleteBarajaPartida(nombre, usuarioEmail, partida.ID);
-                } else {
-                    console.warn(`La partida ${partida.ID} no se encuentra asociada a la baraja, no se puede eliminar`);
-                    throw new Error(`La partida ${partida.ID} no se encuentra asociada a la baraja, no se puede eliminar`);
-                }
-            }
-        }
-
-        const updatedDeck = await prisma.baraja.update({
-            where: { nombre_usuarioEmail: { nombre, usuarioEmail } },
-            data: {
-                barajaCartas: { connect: arrayOfBarajaCartaAñadir.map((bc) => ({ Id: bc.Id })) },
-                usadaEn: {
-                    connect: arrayOfBarajaPartidaAñadir.map((bp) => ({
-                        barajaNombre_barajaUsuarioEmail_partidaID: {
-                            barajaNombre: nombre,
-                            barajaUsuarioEmail: usuarioEmail,
-                            partidaID: bp.partidaID
+            if (data.partidasEliminar) {
+                for (const partida of data.partidasEliminar) {
+                    const barajaPartida = await tx.barajaPartida.findUnique({
+                        where: {
+                            barajaNombre_barajaUsuarioEmail_partidaID: { barajaNombre: nombre, barajaUsuarioEmail: usuarioEmail, partidaID: partida.ID }
                         }
-                    }))
+                    });
+                    if (barajaPartida) {
+                        await tx.barajaPartida.delete({
+                            where: {
+                                barajaNombre_barajaUsuarioEmail_partidaID: { barajaNombre: nombre, barajaUsuarioEmail: usuarioEmail, partidaID: partida.ID }
+                            }
+                        });
+                    } else {
+                        throw new Error(`La partida ${partida.ID} no se encuentra asociada a la baraja, no se puede eliminar`);
+                    }
                 }
-            },
-            include: {
-                usuario: true,
-                barajaCartas: {
-                    include: {
-                        carta: true
+            }
+
+            const updatedDeck = await tx.baraja.update({
+                where: { nombre_usuarioEmail: { nombre, usuarioEmail } },
+                data: {
+                    ...(data.nuevoNombre && { nombre: data.nuevoNombre }),
+                    barajaCartas: {
+                        create: data.cartaAñadir?.map(carta => ({ cartaNombre: carta.nombre })) || []
+                    },
+                    usadaEn: {
+                        create: data.partidasAñadir?.map(partida => ({ partidaID: partida.ID })) || []
                     }
                 },
-                usadaEn: true
-            }
-        });
+                include: {
+                    usuario: true,
+                    barajaCartas: {
+                        include: {
+                            carta: true
+                        }
+                    },
+                    usadaEn: true
+                }
+            });
 
-        return updatedDeck;
+            return updatedDeck;
+        });
     } catch (error) {
         console.error("Error al actualizar la baraja:", error);
         throw new Error("Error al actualizar la baraja");

@@ -552,7 +552,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
 
         try {
-            await User.connectRelacion(email, achievement_id, "logros");
+            await Achievements.giveAchievementReward(email, logro);
             return reply.status(200).send({ message: "Logro conectado al usuario correctamente" });
         } catch (error) {
             return reply.status(404).send({ error: error instanceof Error ? error.message : "Usuario o logro no encontrado" });
@@ -988,13 +988,7 @@ export default function userRoutes(app: FastifyInstance) : void {
             }),
             body: Type.Object({
                 nombre: Type.String(),
-                cartaAñadir: Type.Array(Type.Object({
-                    nombre: Type.String(),
-                    calidad: Type.Enum(Rareza),
-                    tipo: Type.Enum(Tipo_Carta),
-                    descripcion: Type.String(),
-                })),
-                cartaEliminar: Type.Array(Type.Object({
+                cartas: Type.Array(Type.Object({
                     nombre: Type.String(),
                     calidad: Type.Enum(Rareza),
                     tipo: Type.Enum(Tipo_Carta),
@@ -1013,17 +1007,10 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        try {
         const { email, "deckId": deckId } = request.params as { email: string, "deckId": string };
-        const { nombre, cartaAñadir, cartaEliminar } = request.body as {
+        const { nombre, cartas } = request.body as {
             nombre: string;
-            cartaAñadir: {
-                nombre: string;
-                calidad: Rareza;
-                tipo: Tipo_Carta;
-                descripcion: string;
-            }[];
-            cartaEliminar: {
+            cartas: {
                 nombre: string;
                 calidad: Rareza;
                 tipo: Tipo_Carta;
@@ -1031,42 +1018,36 @@ export default function userRoutes(app: FastifyInstance) : void {
             }[];
         };
 
-            const usuario = await User.getUserByEmail(email);
-            if (!usuario) {
+        //Contamos si hay más de 2 cartas con el mismo nombre por que eso no se puede
+        const cartaCount: Record<string, number> = {};
+        for (const carta of cartas) {
+            cartaCount[carta.nombre] = (cartaCount[carta.nombre] || 0) + 1;
+            if (cartaCount[carta.nombre] > 2) {
+                return reply.status(400).send({ error: `El mazo no puede contener más de 2 copias de la carta ${carta.nombre}` });
+            }
+        }
+
+        try {
+            const user = await User.getUserByEmail(email);
+
+            if (!user) {
                 return reply.status(400).send({ error: "Usuario no encontrado" });
             }
 
-            const currentCards = await Deck.getAllCardsFromADeck(deckId, email);
-            const cardCounts = new Map<string, number>();
+            const partidas_no_terminadas = await User.getPartidasNoTerminadas(email, deckId);
 
-            // Contar cartas actuales
-            for (const carta of currentCards) {
-                cardCounts.set(carta.nombre, (cardCounts.get(carta.nombre) || 0) + 1);
+            if (partidas_no_terminadas.length > 0) {
+                return reply.status(400).send({ error: "No puedes modificar un mazo si tienes partidas en curso" });
             }
 
-            // Restar cartas a eliminar
-            if (cartaEliminar) {
-                for (const carta of cartaEliminar) {
-                    const count = cardCounts.get(carta.nombre) || 0;
-                    cardCounts.set(carta.nombre, Math.max(0, count - 1));
-                }
-            }
+            Deck.deleteDeck(deckId, email);
 
-            // Sumar y verificar cartas a añadir
-            if (cartaAñadir) {
-                for (const carta of cartaAñadir) {
-                    const count = cardCounts.get(carta.nombre) || 0;
-                    if (count + 1 > 2) {
-                        return reply.status(400).send({ error: `El mazo no puede tener más de 2 copias de la misma carta (${carta.nombre})` });
-                    }
-                    cardCounts.set(carta.nombre, count + 1);
-                }
-            }
+            Deck.createDeck({ nombre, usuario: user, carta: cartas });
 
-            await Deck.updateDeck(deckId, email, { cartaAñadir, cartaEliminar });
-            await Deck.updateDeckName(deckId, email, nombre);
             return reply.status(200).send({ message: "Mazo actualizado correctamente" });
-        } catch (error) {
+
+        }
+        catch (error) {
             return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al actualizar el mazo" });
         }
     });

@@ -966,7 +966,7 @@ async function finishMatch(partidaId: string, ganador: string): Promise<PartidaR
             derrotas: jugadorJuego.derrotas + (esGanador ? 0 : 1),
             cartasJugadas: jugador.cartasJugadas,
         });
-        let LogrosAnt = checkAchievementsForCompletion(jugadorJuego.email);
+        checkAchievementsForCompletion(jugadorJuego.email);
     }
     if (!jugadorGanador) {
         throw new Error("El jugador ganador no pertenece a esta partida");
