@@ -274,12 +274,9 @@ export async function createUser(data: { email:string, password:string, nombre:s
         });
 
         return user;
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error al crear el usuario:", error)
-        if (error.code === 'P2002') {
-            throw new Error("El email o nombre de usuario ya está registrado.")
-        }
-        throw new Error("Error al crear el usuario: " + (error instanceof Error ? error.message : "Desconocido"))
+        throw new Error("Error al crear el usuario")
     }
 }
 

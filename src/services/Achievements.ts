@@ -2,7 +2,7 @@ import { Logros, Carta, Tipo_Logro } from "../generated/prisma/client.js";
 import prisma from "../prismaClient.js";
 import { LogrosReturnType } from "./ReturnTypes.js";
 
-export async function createAchievement(data: { nombre: string, descripcion: string, tipo: Tipo_Logro, carta?: Carta, requisito: number }): Promise<LogrosReturnType> {
+export async function createAchievement(data: { nombre: string, descripcion: string, tipo: Tipo_Logro, carta?: Carta, requisito: number, recompensaMonetaria?: number }): Promise<LogrosReturnType> {
     try {
         const achievement = await prisma.logros.create({
             data : {
@@ -10,7 +10,8 @@ export async function createAchievement(data: { nombre: string, descripcion: str
                 descripcion: data.descripcion,
                 tipo: data.tipo,
                 carta: data.carta ? { connect: { nombre: data.carta.nombre } } : undefined,
-                requisito: data.requisito
+                requisito: data.requisito,
+                recompensaMonetaria: data.recompensaMonetaria
             },
             include: {
                 carta: true,
@@ -55,7 +56,7 @@ export async function getAllAchievements(): Promise<LogrosReturnType[]> {
     }
 }
 
-export async function updateAchievement(nombre: string, data: { descripcion?: string, tipo?: Tipo_Logro, carta?: Carta, requisito?: number }): Promise<LogrosReturnType> {
+export async function updateAchievement(nombre: string, data: { descripcion?: string, tipo?: Tipo_Logro, carta?: Carta, requisito?: number, recompensaMonetaria?: number }): Promise<LogrosReturnType> {
     try {
         const achievement = await prisma.logros.update({
             where: { nombre },
@@ -63,7 +64,8 @@ export async function updateAchievement(nombre: string, data: { descripcion?: st
                 descripcion: data.descripcion,
                 tipo: data.tipo,
                 carta: data.carta ? { connect: { nombre: data.carta.nombre } } : undefined,
-                requisito: data.requisito
+                requisito: data.requisito,
+                recompensaMonetaria: data.recompensaMonetaria
             },
             include: {
                 carta: true,
