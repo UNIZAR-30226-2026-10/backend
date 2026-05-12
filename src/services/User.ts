@@ -174,6 +174,8 @@ const Relaciones : Record<string, RelacionConfig> = {
 }
 
 export async function createUser(data: { email:string, password:string, nombre:string }) : Promise<UsuarioReturnType> {
+    data.email = data.email.toLowerCase().trim()
+    data.nombre = data.nombre.trim()
     // Verificar correctitud del email
     if(!await emailHelper(data.email)) throw new Error("Email no valido o ya registrado")
 
@@ -274,11 +276,12 @@ export async function createUser(data: { email:string, password:string, nombre:s
         return user;
     } catch (error) {
         console.error("Error al crear el usuario:", error)
-        throw new Error("Error al crear el usuario: " + (error instanceof Error ? error.message : "Desconocido"))
+        throw new Error("Error al crear el usuario")
     }
 }
 
 export async function getUserByEmail(email:string) : Promise<CompleteUserReturnType | null> {
+    email = email.toLowerCase().trim()
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -571,9 +574,11 @@ export async function disconnectRelacion(userEmail:string, relatedId:string, rel
 export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cosmetico, nombre: string }): Promise<UsuarioReturnType> {
     try {
         let updateData:any = {}
+        let updateLobbyIcon = false
         switch (data.tipo) {
             case Tipo_Cosmetico.Icono:
                 updateData.iconoActual = { connect: { nombre: data.nombre } }
+                updateLobbyIcon = true
                 break
             case Tipo_Cosmetico.Skin_Ficha:
                 updateData.fichaActual = { connect: { nombre: data.nombre } }
@@ -604,6 +609,14 @@ export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cos
                     }
                 })
 
+        if (updateLobbyIcon) {
+            try {
+                lobbyManager.updateIcon(user.nombre, user.iconoActualField);
+            } catch (error) {
+                console.error("Error al actualizar el icono de usuario en el lobby manager:", error)
+            }
+        }
+
         return user
     } catch (error) {
         console.error("Error al actualizar el cosmético equipado:", error)
@@ -612,6 +625,7 @@ export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cos
 }
 
 export async function authenticateUser(email:string, password:string) : Promise<AuthUserReturnType> {
+    email = email.toLowerCase().trim()
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
@@ -700,6 +714,26 @@ export async function getUserByName(nombre:string) : Promise<UsuarioReturnType |
     }
 }
 
+export async function getPartidasNoTerminadas(email:string, deckId:string) {
+    try {
+        const partidasNoTerminadas = await prisma.partida.findMany({
+            where: {
+                ganadorEmail: null,
+                barajas: {
+                    some: {
+                        barajaNombre: deckId,
+                        barajaUsuarioEmail: email
+                    }
+                }
+            },
+        })
+        return partidasNoTerminadas || [];
+    } catch (error) {
+        console.error("Error al obtener las partidas no terminadas:", error)
+        throw new Error("Error al obtener las partidas no terminadas")
+    }
+}
+
 export default {
     createUser,
     getUserByEmail,
@@ -716,5 +750,6 @@ export default {
     disconnectRelacion,
     updateCosmeticOnUser,
     authenticateUser,
+    getPartidasNoTerminadas,
     getUserByName
 }

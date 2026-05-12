@@ -129,6 +129,16 @@ export default function authRoutes(app: FastifyInstance) : void {
         try {
         const decoded = app.jwt.verify<{ email: string; username: string }>(autologin);
         
+        const userExists = await User.getUserByEmailBasic(decoded.email);
+
+        if(!userExists) {
+            return reply.status(401).send({ error: "User not found" });
+        }
+
+        if(userExists.borrado) {
+            return reply.status(401).send({ error: "User account is deleted" });
+        }
+
         // Añadimos cookie de sesion como en el login normal
         reply.setCookie("session", autologin, {
             httpOnly: true,
