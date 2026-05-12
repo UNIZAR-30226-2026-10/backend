@@ -611,7 +611,7 @@ export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cos
 
         if (updateLobbyIcon) {
             try {
-                lobbyManager.updateIcon(user.nombre, user.iconoActual?.nombre)
+                lobbyManager.updateIcon(user.nombre, user.iconoActualField);
             } catch (error) {
                 console.error("Error al actualizar el icono de usuario en el lobby manager:", error)
             }
