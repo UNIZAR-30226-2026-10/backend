@@ -552,7 +552,7 @@ export default function userRoutes(app: FastifyInstance) : void {
         }
 
         try {
-            await User.connectRelacion(email, achievement_id, "logros");
+            await Achievements.giveAchievementReward(email, logro);
             return reply.status(200).send({ message: "Logro conectado al usuario correctamente" });
         } catch (error) {
             return reply.status(404).send({ error: error instanceof Error ? error.message : "Usuario o logro no encontrado" });

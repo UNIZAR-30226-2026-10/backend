@@ -93,80 +93,102 @@ export async function deleteAchievement(nombre: string): Promise<{ message: stri
 
 export async function checkAchievementsForCompletion(userEmail: string): Promise<Logros[]> {
     try {
-        // Excluir logros que ya estén completados por el usuario (usuarios con ese email)
-        const incompleteAchievements = await prisma.logros.findMany({
-            where: {
-                usuarios: {
-                    none: {
-                        email: userEmail
-                    }
-                }
-            },
-            include: {
-                carta: true,
-                usuarios: true
-            }
-        });
-        
-        const statsUser = await prisma.usuario.findUnique({
-            where: { email: userEmail },
-            select: {
-                SEP: true,
-                victorias: true,
-                partidasJugadas: true,
-                derrotas: true,
-                logros: true,
-                cartas: true,
-                cartasJugadas: true
-            }
-        });
-
-        if (!statsUser) {
-            throw new Error("Usuario no encontrado");
-        }
-
-        let arrCompleted : Logros[] = [];
-
-        for (const achievement of incompleteAchievements) {
-            let isCompleted = false;
-            switch (achievement.tipo) {
-                case Tipo_Logro.SEP:
-                    isCompleted = statsUser.SEP >= achievement.requisito;
-                    break;
-                case Tipo_Logro.Victorias:
-                    isCompleted = statsUser.victorias >= achievement.requisito;
-                    break;
-                case Tipo_Logro.Partidas:
-                    isCompleted = statsUser.partidasJugadas >= achievement.requisito;
-                    break;
-                case Tipo_Logro.Derrotas:
-                    isCompleted = statsUser.derrotas >= achievement.requisito;
-                    break;
-                case Tipo_Logro.LogrosDesbloqueados:
-                    isCompleted = statsUser.logros.length >= achievement.requisito;
-                    break;
-                case Tipo_Logro.CartasColeccionadas:
-                    isCompleted = statsUser.cartas.length >= achievement.requisito;
-                    break;
-                case Tipo_Logro.CartasJugadas:
-                    isCompleted = statsUser.cartasJugadas >= achievement.requisito;
-                    break;
-            }
-
-            if (isCompleted) {
-                arrCompleted.push(achievement);
-                await prisma.usuario.update({
-                    where: { email: userEmail },
-                    data: {
-                        logros: {
-                            connect: { nombre: achievement.nombre }
+        return await prisma.$transaction(async (tx) => {
+            // Excluir logros que ya estén completados por el usuario (usuarios con ese email)
+            const incompleteAchievements = await tx.logros.findMany({
+                where: {
+                    usuarios: {
+                        none: {
+                            email: userEmail
                         }
                     }
-                });
-            }
-        }
+                },
+                include: {
+                    carta: true,
+                    usuarios: true
+                }
+            });
+            
+            const statsUser = await tx.usuario.findUnique({
+                where: { email: userEmail },
+                select: {
+                    SEP: true,
+                    victorias: true,
+                    partidasJugadas: true,
+                    derrotas: true,
+                    logros: true,
+                    cartas: true,
+                    cartasJugadas: true
+                }
+            });
 
-        return arrCompleted;
+            if (!statsUser) {
+                throw new Error("Usuario no encontrado");
+            }
+
+            let arrCompleted : Logros[] = [];
+
+            for (const achievement of incompleteAchievements) {
+                let isCompleted = false;
+                switch (achievement.tipo) {
+                    case Tipo_Logro.SEP:
+                        isCompleted = statsUser.SEP >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.Victorias:
+                        isCompleted = statsUser.victorias >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.Partidas:
+                        isCompleted = statsUser.partidasJugadas >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.Derrotas:
+                        isCompleted = statsUser.derrotas >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.LogrosDesbloqueados:
+                        isCompleted = statsUser.logros.length >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.CartasColeccionadas:
+                        isCompleted = statsUser.cartas.length >= achievement.requisito;
+                        break;
+                    case Tipo_Logro.CartasJugadas:
+                        isCompleted = statsUser.cartasJugadas >= achievement.requisito;
+                        break;
+                }
+
+                if (isCompleted) {
+                    arrCompleted.push(achievement);
+                    await tx.usuario.update({
+                        where: { email: userEmail },
+                        data: {
+                            logros: {
+                                connect: { nombre: achievement.nombre }
+                            }
+                        }
+                    });
+                    if(achievement.cartaID) {
+                        await tx.usuario.update({
+                            where: { email: userEmail },
+                            data: {
+                                cartas: {
+                                    connect: { nombre: achievement.cartaID }
+                                }
+                            }
+                        });
+                    }
+                    if(achievement.recompensaMonetaria) {
+                        await tx.usuario.update({
+                            where: { email: userEmail },
+                            data: {
+                                SEP: {
+                                    increment: achievement.recompensaMonetaria
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+
+            return arrCompleted;
+        });
     } catch (error) {
         console.error("Error al verificar los logros para finalización:", error);
         throw new Error("Error al verificar los logros para finalización");
@@ -204,6 +226,46 @@ export async function giveAchievementsRewards(userEmail: string, achievements: L
     }
 }
 
+export async function giveAchievementReward(userEmail: string, achievement: Logros): Promise<void> {
+    try {
+        await prisma.$transaction(async (tx) => {
+            await tx.usuario.update({
+                where: { email: userEmail },
+                data: {
+                    logros: {
+                        connect: { nombre: achievement.nombre }
+                    }
+                }
+            });
+
+            if (achievement.cartaID) {
+                await tx.usuario.update({
+                    where: { email: userEmail },
+                    data: {
+                        cartas: {
+                            connect: { nombre: achievement.cartaID }
+                        }
+                    }
+                });
+            }
+
+            if (achievement.recompensaMonetaria) {
+                await tx.usuario.update({
+                    where: { email: userEmail },
+                    data: {
+                        SEP: {
+                            increment: achievement.recompensaMonetaria
+                        }
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Error al otorgar recompensa por logro:", error);
+        throw new Error("Error al otorgar recompensa por logro");
+    }
+}
+
 export default {
     createAchievement,
     getAchievementById,
@@ -211,5 +273,6 @@ export default {
     updateAchievement,
     deleteAchievement,
     checkAchievementsForCompletion,
-    giveAchievementsRewards
+    giveAchievementsRewards,
+    giveAchievementReward
 };
