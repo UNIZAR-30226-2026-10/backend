@@ -1034,7 +1034,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                 return reply.status(400).send({ error: "Usuario no encontrado" });
             }
 
-            const partidas_no_terminadas = await User.getPartidasNoTerminadas(email);
+            const partidas_no_terminadas = await User.getPartidasNoTerminadas(email, deckId);
 
             if (partidas_no_terminadas.length > 0) {
                 return reply.status(400).send({ error: "No puedes modificar un mazo si tienes partidas en curso" });

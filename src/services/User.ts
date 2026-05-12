@@ -704,30 +704,20 @@ export async function getUserByName(nombre:string) : Promise<UsuarioReturnType |
     }
 }
 
-export async function getPartidasNoTerminadas(email:string) {
+export async function getPartidasNoTerminadas(email:string, deckId:string) {
     try {
-        const partidas = await prisma.usuario.findUnique({
-            where: { email },
-            include: {
-                partidas: {
-                    where: {
-                        ganadorEmail: null
-                    },
-                    select: {
-                        ID: true,
-                        fechaInicio: true,
-                        fechaFin: true,
-                        tableroInicialNombre: true,
-                        partidaJugadores: {
-                            select: {
-                                nombre: true
-                            }
-                        }
+        const partidasNoTerminadas = await prisma.partida.findMany({
+            where: {
+                ganadorEmail: null,
+                barajas: {
+                    some: {
+                        barajaNombre: deckId,
+                        usuarioEmail: email
                     }
                 }
-            }
-        });
-        return partidas?.partidas || [];
+            },
+        })
+        return partidasNoTerminadas || [];
     } catch (error) {
         console.error("Error al obtener las partidas no terminadas:", error)
         throw new Error("Error al obtener las partidas no terminadas")
