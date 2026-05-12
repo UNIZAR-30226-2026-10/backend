@@ -574,9 +574,11 @@ export async function disconnectRelacion(userEmail:string, relatedId:string, rel
 export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cosmetico, nombre: string }): Promise<UsuarioReturnType> {
     try {
         let updateData:any = {}
+        let updateLobbyIcon = false
         switch (data.tipo) {
             case Tipo_Cosmetico.Icono:
                 updateData.iconoActual = { connect: { nombre: data.nombre } }
+                updateLobbyIcon = true
                 break
             case Tipo_Cosmetico.Skin_Ficha:
                 updateData.fichaActual = { connect: { nombre: data.nombre } }
@@ -606,6 +608,14 @@ export async function updateCosmeticOnUser(email: string, data: { tipo: Tipo_Cos
                         escaleraActual: true,
                     }
                 })
+
+        if (updateLobbyIcon) {
+            try {
+                lobbyManager.updateIcon(user.nombre, user.iconoActual?.nombre)
+            } catch (error) {
+                console.error("Error al actualizar el icono de usuario en el lobby manager:", error)
+            }
+        }
 
         return user
     } catch (error) {

@@ -222,6 +222,7 @@ export class LobbyManager {
         jugador.estaListo = ready
         return lobby
     }
+
     updateUsername(oldUsername: string, newUsername: string): void {
         const lobbyId = this.jugadoresEnCola.get(oldUsername)
         if (lobbyId) {
@@ -246,6 +247,19 @@ export class LobbyManager {
             invitesUpdated.push([player === oldUsername ? newUsername : player, updatedInvites])
         }
         this.invitaciones = new Map(invitesUpdated)
+    }
+
+    updateIcon (username: string, icono: string): void {
+        const lobbyId = this.jugadoresEnCola.get(username)
+        if (lobbyId) {
+            const lobby = this.lobbies.get(lobbyId)
+            if (!lobby) throw new Error("LOBBY_NOT_FOUND")
+            const jugador = lobby.jugadores.find(i => i.nombre === username)
+            if (!jugador) throw new Error("PLAYER_NOT_FOUND")
+            jugador.icono = icono
+        } else {
+            throw new Error("NOT_IN_A_LOBBY")
+        }
     }
 }
 
