@@ -390,7 +390,7 @@ export async function cuentaAdminPorDefecto() {
         nombre: "Admin",
         password: "#Admin123",
     });
-    await modifyUserByEmail(emailAdmin, { SEP: 1000000, victorias: 0, derrotas: 0 });
+    await modifyUserByEmail(emailAdmin, { SEP: 1000000, victorias: 10, derrotas: 10, cartasJugadas: 1000, partidasJugadas: 20 });
     await purchaseCosmetic(emailAdmin, "icono_nerd" );
     await purchaseCosmetic(emailAdmin, "icono_completista" );
     await purchaseCosmetic(emailAdmin, "icono_platino" );

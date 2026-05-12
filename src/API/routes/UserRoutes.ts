@@ -1040,9 +1040,9 @@ export default function userRoutes(app: FastifyInstance) : void {
                 return reply.status(400).send({ error: "No puedes modificar un mazo si tienes partidas en curso" });
             }
 
-            Deck.deleteDeck(deckId, email);
+            await Deck.deleteDeck(deckId, email);
 
-            Deck.createDeck({ nombre, usuario: user, carta: cartas });
+            await Deck.createDeck({ nombre, usuario: user, carta: cartas });
 
             return reply.status(200).send({ message: "Mazo actualizado correctamente" });
 
