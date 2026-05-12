@@ -1063,8 +1063,7 @@ export default function userRoutes(app: FastifyInstance) : void {
                 }
             }
 
-            await Deck.updateDeck(deckId, email, { cartaAñadir, cartaEliminar });
-            await Deck.updateDeckName(deckId, email, nombre);
+            await Deck.updateDeck(deckId, email, { nuevoNombre: nombre, cartaAñadir, cartaEliminar });
             return reply.status(200).send({ message: "Mazo actualizado correctamente" });
         } catch (error) {
             return reply.status(400).send({ error: error instanceof Error ? error.message : "Error al actualizar el mazo" });
