@@ -31,6 +31,18 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 
     const jugadores = lobby.jugadores;
     const tablero = lobby.tablero;
+
+    // Resolver emails de los jugadores no-IA antes de construir los mazos
+    let jugadoresEmail = new Map<string, string>();
+    for (let jugador of jugadores) {
+        if (!jugador.esIA) {
+            const user = await getUserByName(jugador.nombre);
+            if (!user) {
+                throw new Error(`Usuario ${jugador.nombre} no encontrado`);
+            }
+            jugadoresEmail.set(jugador.nombre, user.email);
+        }
+    }
     let jsonJugadores: SnapshotJugadoresJSON = {
         turnoActual: 0,
         ronda: 1,
@@ -56,8 +68,9 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     for (let jugador of jugadores) {
         let jugadorJson = jsonJugadores.jugadores.find(j => j.username === jugador.nombre)!;
         if (!jugador.esIA) {
+            const usuarioEmail = jugadoresEmail.get(jugador.nombre);
             const cartas = await prisma.barajaCarta.findMany({
-                where: { barajaNombre: jugador.nombreMazo },
+                where: { barajaNombre: jugador.nombreMazo, barajaUsuarioEmail: usuarioEmail },
                 select: { cartaNombre: true }
             });
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
@@ -71,8 +84,8 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             jugadorJson.mazoRestante = nombresCartas;
         }
         if (jugadorJson.mazoRestante.length >= 4) {
-            jugadorJson.mano = jugadorJson.mazoRestante.slice(0, 4);
-            jugadorJson.mazoRestante = jugadorJson.mazoRestante.slice(4);
+            jugadorJson.mano = jugadorJson.mazoRestante.slice(0, 1);
+            jugadorJson.mazoRestante = jugadorJson.mazoRestante.slice(1);
         }
     }
 
@@ -84,17 +97,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         throw new Error("Tablero no encontrado");
     }
 
-    let jugadoresEmail = new Map<string, string>();
-    for (let jugador of jugadores) {
-        if (!jugador.esIA) {
-            const user = await getUserByName(jugador.nombre);
-            if (!user) {
-                throw new Error(`Usuario ${jugador.nombre} no encontrado`);
-            }
-            jugadoresEmail.set(jugador.nombre, user.email);
-        }
-    }
-
+    
     const jsonTablero: SnapshotTableroJSON = tableroAUtilizar.snapshotTableroInicial as SnapshotTableroJSON;
     let chat: ChatPartidaJSON = [{
         mandadoPor: "Sistema",
@@ -487,14 +490,57 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     if (jugadorActual.username !== player) {
         throw new Error("No es tu turno");
     }
-    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
-        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
-        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
-
-    }
 
     if (jugadorActual.fase !== "Cartas") {
         throw new Error("No puedes tirar el dado en esta fase");
+    }
+
+    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
+        jugadorActual.fase = "Cartas";
+        jugadorActual.ultimaTirada = undefined;
+        jugadorActual.movimientosPermitidos = [];
+        jugadorActual.cartaJugadaEnTurno = false;
+
+        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+        let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+        siguienteJugador.fase = "Cartas";
+        if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+            const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+            if (cartaRobada) {
+                siguienteJugador.mano.push(cartaRobada);
+            }
+        }
+        if (estadoJugadores.turnoActual === 0) {
+            estadoJugadores.ronda++;
+        }
+
+        const partidaUpdated = await prisma.partida.update({
+            where: { ID: partidaId },
+            data: { snapshotJugadores: estadoJugadores },
+            include: {
+                partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+                },
+                ganador: {
+                    select: {
+                        nombre: true
+                    }
+                }
+            }
+        });
+        return {
+            partida: partidaUpdated,
+            tirada: 0,
+            movimientos: [],
+            tiradaExtra: 0
+        };
     }
 
 
@@ -546,12 +592,21 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                     continue;
                 }
                 if (casillaTablero.tipo === "Bifurcacion") {
-                    esBifurcacion = true;
-                    break;
+                    if (casillaTablero.siguientes.length > 1) {
+                        esBifurcacion = true;
+                        break;
+                    } else if (casillaTablero.siguientes.length === 1) {
+                        casillaActual = casillaTablero.siguientes[0];
+                        pasos--;
+                        continue;
+                    } else {
+                        break;
+                    }
                 }
                 if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
                     if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
                         pasos++;
+                        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
                     } else {
                         break;
                     }
@@ -567,9 +622,6 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 pasos--;
             }
         }
-        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
-            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
-        }
         casillaTablero = tablero.casillas[casillaActual];
         let movimiento: Movimiento = {
             fichaId: ficha.id,
@@ -584,15 +636,18 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     jugadorActual.movimientosPermitidos = movimientos.map(m => {
         let final = m.casillaDestino;
         let casilla = tablero.casillas[final];
-        if (casilla.tipo === "Escalera" || (casilla.tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto"))) {
-            return casilla.saltoA!;
+        if (casilla.tipo === "Escalera") {
+            return { casilla: casilla.saltoA!, casillaNoTomada: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
         }
-        return final;
+        if (casilla.tipo === "Serpiente") {
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            } else {
+                return { casilla: casilla.saltoA!, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
+            }
+        }
+        return { casilla: final, fichaId: m.fichaId, esBifurcacion: m.esBifurcacion, pasosRestantes: m.pasosRestantes };
     });
-
-    if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
-        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
-    }
     const partidaUpdated = await prisma.partida.update({
         where: { ID: partidaId },
         data: { snapshotJugadores: estadoJugadores },
@@ -666,17 +721,51 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (!fichaAActualizar) {
         throw new Error("Ficha no encontrada");
     }
-    const casillaFicha = fichaAActualizar.casilla;
-    const movimientoDesdeBifurcacionValido =
-        tablero.casillas[casillaFicha].tipo === "Bifurcacion" &&
-        tablero.casillas[casillaFicha].siguientes.includes(casillaDestino);
+    const permitido = jugadorActual.movimientosPermitidos.some(m =>
+        (m.casilla === casillaDestino || m.casillaNoTomada === casillaDestino) &&
+        m.fichaId === fichaId &&
+        m.esBifurcacion === (pasosRestantes !== 0 && pasosRestantes !== undefined) &&
+        (m.pasosRestantes ?? 0) === (pasosRestantes ?? 0)
+    );
 
-    if (!jugadorActual.movimientosPermitidos.includes(casillaDestino) && !movimientoDesdeBifurcacionValido) {
+    const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
+    const estaEnBifurcacion = casillaDestino === fichaAActualizar.casilla && tablero.casillas[casillaDestino].tipo === "Bifurcacion";
+    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino);
+    const bloqueoValidoParaEsteMovimiento =
+        !destinoBloqueado ||
+        tieneSaltarBloqueo ||
+        estaEnBifurcacion;
+
+    const movimientoDesdeBifurcacionValido =
+        pasosRestantes !== undefined && bloqueoValidoParaEsteMovimiento &&
+        jugadorActual.movimientosPermitidos.some(m =>
+            m.fichaId === fichaId &&
+            m.esBifurcacion &&
+            m.pasosRestantes === pasosRestantes &&
+            m.casilla === fichaAActualizar.casilla &&
+            tablero.casillas[m.casilla].tipo === "Bifurcacion" &&
+            tablero.casillas[m.casilla].siguientes.includes(casillaDestino)
+        );
+
+    if (!permitido && !movimientoDesdeBifurcacionValido && !(pasosRestantes === -1)) {
         throw new Error("Movimiento no permitido");
+    }
+    if (destinoBloqueado && !estaEnBifurcacion) {
+        if (!tieneSaltarBloqueo) {
+            throw new Error("Movimiento no permitido, casilla bloqueada");
+        }
+    }
+    if (tieneSaltarBloqueo) {
+        jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
     }
 
     let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
+    if (tablero.casillas[casillaDestino].tipo === "Serpiente") {
+        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
+        }
+    }
     if (tablero.casillas[casillaDestino].tipo === "Meta") {
         fichaAActualizar.meta = true;
     }
@@ -702,11 +791,24 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                         continue;
                     }
                     if (casillaTablero.tipo === "Bifurcacion") {
-                        esBifurcacion = true;
-                        break;
+                        if (casillaTablero.siguientes.length > 1) {
+                            esBifurcacion = true;
+                            break;
+                        } else if (casillaTablero.siguientes.length === 1) {
+                            casillaActual = casillaTablero.siguientes[0];
+                            pasosRestantes--;
+                            continue;
+                        } else {
+                            break;
+                        }
                     }
                     if (checkBlockInBox(estadoJugadores, casillaTablero.siguientes[0])) {
-                        break;
+                        if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo")) {
+                            pasosRestantes++;
+                            jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
+                        } else {
+                            break;
+                        }
                     }
                     casillaActual = casillaTablero.siguientes[0];
                     pasosRestantes--;
@@ -718,6 +820,12 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     casillaActual = casillaAnterior;
                     pasosRestantes--;
                 }
+            }
+            if (tablero.casillas[casillaActual].tipo === "Serpiente" && !jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                casillaActual = tablero.casillas[casillaActual].saltoA ?? casillaActual;
+            }
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Antidoto")) {
+                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Antidoto");
             }
             fichaAActualizar.casilla = casillaActual;
         }
@@ -745,11 +853,19 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                     fichaAActualizar.meta = true;
                 }
             }
+            if (casillaConEfecto.efecto === "Serpiente en tu bota") {
+                jugadorActual.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+                casillaConEfecto.efecto = undefined;
+            }
             if (fichaAActualizar.meta) {
                 if (jugadorActual.fichas.every(f => f.meta)) {
                     return await finishMatch(partidaId, jugadorActual.username);
                 }
             }
+            jugadorActual.fase = "Cartas";
+            jugadorActual.ultimaTirada = undefined;
+            jugadorActual.movimientosPermitidos = [];
+            jugadorActual.cartaJugadaEnTurno = false;
             estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
             let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
             siguienteJugador.fase = "Cartas";
@@ -765,7 +881,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
                         if (cartaRobada2) {
                             siguienteJugador.mano.push(cartaRobada2);
                         }
-
+                        siguienteJugador.efectosActivos = siguienteJugador.efectosActivos.filter(e => e.resumenEfecto !== "Coleccionista");
                     }
                 }
 
@@ -934,16 +1050,20 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
         throw new Error("Ya has jugado una carta en este turno");
     }
     const casillaActual = jugadorActual.fichas.find(f => !f.meta)!.casilla;
-    const casillaTablero = tableroPartida.casillas[casillaActual];
+    const casillaObjetivoIndex = (inicio !== undefined && inicio !== null) ? inicio : casillaActual;
+    const casillaObjetivo = tableroPartida.casillas[casillaObjetivoIndex];
     let prohibidas = false;
-    if (casillaTablero.tipo === "Serpiente" || casillaTablero.tipo === "Escalera") {
+    if (casillaObjetivo.tipo === "Serpiente" || casillaObjetivo.tipo === "Escalera") {
         prohibidas = true;
     }
+    const tieneEfecto = (casillaObjetivo.efecto !== undefined && casillaObjetivo.efecto !== null && casillaObjetivo.efecto !== "");
+    const esMetaOVacia = casillaObjetivo.tipo === "Meta" || casillaObjetivo.tipo === "Vacía";
     const indiceCarta = jugadorActual.mano.indexOf(cartaNombre);
     if (indiceCarta === -1) {
         throw new Error("Carta no encontrada en la mano");
     }
     jugadorActual.mano.splice(indiceCarta, 1);
+    let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
     switch (cartaNombre) {
         case "Exceso de medios"://done 🈴
             jugadorActual.efectosActivos.push({ resumenEfecto: "+1 dado" });
@@ -978,16 +1098,29 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
 
             break;
         case "Día de la marmota"://done 🈴
+        case "Dia de la marmota":
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "-4";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "-4";
             break;
         case "Salto de longitud"://done 🈴
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "+4";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "+4";
             break;
         case "Robo de identidad"://done 🈴
             let posFichas = []
@@ -1031,7 +1164,6 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
 
             break;
         case "Mal de ojo"://done 🈴
-            let jugadorObjetivo = estadoJugadores.jugadores.find(j => j.username === who);
             if (!jugadorObjetivo) {
                 throw new Error("Jugador objetivo no encontrado");
             }
@@ -1062,12 +1194,16 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             jugadorActual.efectosActivos.push({ resumenEfecto: "4-6" });
             break;
         case "Serpiente en tu bota"://done 🈴
-            // Pasar una ronda entera
-            const jugadorAfectado = estadoJugadores.jugadores.find(j => j.username === who);
-            if (!jugadorAfectado) {
-                throw new Error("Jugador afectado no encontrado");
+            if (prohibidas) {
+                throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            jugadorAfectado.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "Serpiente en tu bota";
             break;
         case "Parca"://done 🈴
             let Fichas = [];
@@ -1100,7 +1236,13 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             if (prohibidas) {
                 throw new Error("No puedes jugar esta carta en una serpiente o escalera");
             }
-            casillaTablero.efecto = "Agujero de serpiente";
+            if (tieneEfecto) {
+                throw new Error("No puedes jugar esta carta en una casilla que ya tiene un efecto");
+            }
+            if (esMetaOVacia) {
+                throw new Error("No puedes jugar esta carta en la meta o en una casilla vacía");
+            }
+            casillaObjetivo.efecto = "Agujero de serpiente";
             // Coger posición del tablero aleatoria y teletransportar una ficha ahí
             break;
         case "Bolsillo roto"://done 🈴
@@ -1151,6 +1293,10 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
                 throw new Error("Jugador objetivo no encontrado");
             }
             jugadorObjetivo.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+            if (jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Salto de turno")) {
+                jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Salto de turno");
+                estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+            }
             break;
     }
     jugadorActual.cartaJugadaEnTurno = true;

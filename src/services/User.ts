@@ -129,7 +129,7 @@ const Relaciones : Record<string, RelacionConfig> = {
             await prisma.usuario.update({
                 where: { email: userEmail },
                 data: { 
-                    logrosConseguidos: {
+                    logros: {
                         disconnect: { nombre: relatedId }
                     }
                 }
@@ -139,7 +139,7 @@ const Relaciones : Record<string, RelacionConfig> = {
             await prisma.usuario.update({
                 where: { email: userEmail },
                 data: {
-                    logrosConseguidos: {
+                    logros: {
                         connect: { nombre: relatedId }
                     }
                 }
@@ -199,58 +199,82 @@ export async function createUser(data: { email:string, password:string, nombre:s
 
     // Creamos el usuario
     try {
-        const user = await prisma.usuario.create({
-            data: {
-                email: data.email,
-                passwordHash: passwordHash,
-                nombre: data.nombre,
-            },
-            include: {
-                amigos: true,
-                cartas: true,
-                cosmeticos: true,
-                logros: true,
-                barajas: true,
-                partidas: true,
-                partidasGanadas: true,
-                iconoActual: true,
-                fichaActual: true,
-                serpienteActual: true,
-                escaleraActual: true
-            }
-        })
-        await Deck.createDefaultDeckForUser(user)
-
-        await prisma.usuario.update({
-            where: { email: user.email },
-            data: {
-                cosmeticos: {
-                    connect: [
-                        { nombre: "icono_default" },
-                        { nombre: "ficha_default" },
-                        { nombre: "serpiente_default" },
-                        { nombre: "escalera_default" }
-                    ]
+        const user = await prisma.$transaction(async (tx) => {
+            // 1. Crear usuario con sus cosméticos y cartas en una sola pasada usando "create"
+            const newUser = await tx.usuario.create({
+                data: {
+                    email: data.email,
+                    passwordHash: passwordHash,
+                    nombre: data.nombre,
+                    cosmeticos: {
+                        connect: [
+                            { nombre: "icono_default" },
+                            { nombre: "ficha_default" },
+                            { nombre: "serpiente_default" },
+                            { nombre: "escalera_default" }
+                        ]
+                    },
+                    cartas: {
+                        connect: [
+                            { nombre: "Exceso de medios" },
+                            { nombre: "Moises" },
+                            { nombre: "Dia de la marmota" },
+                            { nombre: "Salto de longitud" },
+                            { nombre: "Robo de identidad" },
+                            { nombre: "Antidoto" },
+                            { nombre: "Dado envenenado" },
+                            { nombre: "Dado dorado" },
+                            { nombre: "Parca" },
+                            { nombre: "Cambiar de idea" },
+                            { nombre: "Agujero de serpiente" },
+                            { nombre: "Bolsillo roto" },
+                            { nombre: "Compañerismo obligado" },
+                            { nombre: "Coleccionista" },
+                            { nombre: "Noqueo" }
+                        ]
+                    }
                 },
-                iconoActual: {
-                    connect: { nombre: "icono_default" }
-                },
-                fichaActual: {
-                    connect: { nombre: "ficha_default" }
-                },
-                serpienteActual: {
-                    connect: { nombre: "serpiente_default" }
-                },
-                escaleraActual: {
-                    connect: { nombre: "escalera_default" }
+                include: {
+                    amigos: true,
+                    cartas: true,
+                    cosmeticos: true,
+                    logros: true,
+                    barajas: true,
+                    partidas: true,
+                    partidasGanadas: true,
+                    iconoActual: true,
+                    fichaActual: true,
+                    serpienteActual: true,
+                    escaleraActual: true
                 }
-            }
-        })
+            });
 
-        return user
+            // 2. Crear la baraja por defecto
+            const cartasExistentes = newUser.cartas.filter(c => [
+                "Exceso de medios", "Salto de longitud", "Dia de la marmota", "Antidoto",
+                "Bolsillo roto", "Moises", "Robo de identidad", "Agujero de serpiente",
+                "Coleccionista", "Noqueo"
+            ].includes(c.nombre));
+
+            const deck = await tx.baraja.create({
+                data: {
+                    nombre: "Baraja principante",
+                    usuario: { connect: { email: newUser.email } },
+                    barajaCartas: {
+                        create: cartasExistentes.map(carta => ({
+                            cartaNombre: carta.nombre
+                        }))
+                    }
+                }
+            });
+
+            return newUser;
+        });
+
+        return user;
     } catch (error) {
         console.error("Error al crear el usuario:", error)
-        throw new Error("Error al crear el usuario")
+        throw new Error("Error al crear el usuario: " + (error instanceof Error ? error.message : "Desconocido"))
     }
 }
 
@@ -294,28 +318,24 @@ export async function getUserMatches(email:string) {
             where: { email },
             include: {
                 partidas: {
-                    select: {
-                        configuracion: false,
-                        ID: true,
-                        fechaInicio: true,
-                        tableroInicialNombre: true
-                    },
-
-                    include: {
-                        partidaJugadores: {
-                            select: {
-                                nombre: true,
-                            }
-                        }
-                    },
-                
                     where: {
                         ganadorEmail: null
+                    },
+                    select: {
+                        ID: true,
+                        fechaInicio: true,
+                        fechaFin: true,
+                        tableroInicialNombre: true,
+                        partidaJugadores: {
+                            select: {
+                                nombre: true
+                            }
+                        }
                     }
                 }
             }
-        })
-        return matches
+        });
+        return matches;
     } catch (error) {
         console.error("Error al obtener el usuario:", error)
         throw new Error("Error al obtener el usuario")
