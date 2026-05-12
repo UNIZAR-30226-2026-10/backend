@@ -31,6 +31,18 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 
     const jugadores = lobby.jugadores;
     const tablero = lobby.tablero;
+
+    // Resolver emails de los jugadores no-IA antes de construir los mazos
+    let jugadoresEmail = new Map<string, string>();
+    for (let jugador of jugadores) {
+        if (!jugador.esIA) {
+            const user = await getUserByName(jugador.nombre);
+            if (!user) {
+                throw new Error(`Usuario ${jugador.nombre} no encontrado`);
+            }
+            jugadoresEmail.set(jugador.nombre, user.email);
+        }
+    }
     let jsonJugadores: SnapshotJugadoresJSON = {
         turnoActual: 0,
         ronda: 1,
@@ -56,8 +68,9 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
     for (let jugador of jugadores) {
         let jugadorJson = jsonJugadores.jugadores.find(j => j.username === jugador.nombre)!;
         if (!jugador.esIA) {
+            const usuarioEmail = jugadoresEmail.get(jugador.nombre);
             const cartas = await prisma.barajaCarta.findMany({
-                where: { barajaNombre: jugador.nombreMazo },
+                where: { barajaNombre: jugador.nombreMazo, barajaUsuarioEmail: usuarioEmail },
                 select: { cartaNombre: true }
             });
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
@@ -84,17 +97,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         throw new Error("Tablero no encontrado");
     }
 
-    let jugadoresEmail = new Map<string, string>();
-    for (let jugador of jugadores) {
-        if (!jugador.esIA) {
-            const user = await getUserByName(jugador.nombre);
-            if (!user) {
-                throw new Error(`Usuario ${jugador.nombre} no encontrado`);
-            }
-            jugadoresEmail.set(jugador.nombre, user.email);
-        }
-    }
-
+    
     const jsonTablero: SnapshotTableroJSON = tableroAUtilizar.snapshotTableroInicial as SnapshotTableroJSON;
     let chat: ChatPartidaJSON = [{
         mandadoPor: "Sistema",
