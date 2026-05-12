@@ -685,6 +685,15 @@ export default function userRoutes(app: FastifyInstance) : void {
                 descripcion: string;
             }[];
         };
+
+        //Contamos si hay más de 2 cartas con el mismo nombre por que eso no se puede
+        const cartaCount: Record<string, number> = {};
+        for (const carta of cartas) {
+            cartaCount[carta.nombre] = (cartaCount[carta.nombre] || 0) + 1;
+            if (cartaCount[carta.nombre] > 2) {
+                return reply.status(400).send({ error: `El mazo no puede contener más de 2 copias de la carta ${carta.nombre}` });
+            }
+        }
         
         try {
             const usuario = await User.getUserByEmail(email);
@@ -1026,6 +1035,34 @@ export default function userRoutes(app: FastifyInstance) : void {
             if (!usuario) {
                 return reply.status(400).send({ error: "Usuario no encontrado" });
             }
+
+            const currentCards = await Deck.getAllCardsFromADeck(deckId, email);
+            const cardCounts = new Map<string, number>();
+
+            // Contar cartas actuales
+            for (const carta of currentCards) {
+                cardCounts.set(carta.nombre, (cardCounts.get(carta.nombre) || 0) + 1);
+            }
+
+            // Restar cartas a eliminar
+            if (cartaEliminar) {
+                for (const carta of cartaEliminar) {
+                    const count = cardCounts.get(carta.nombre) || 0;
+                    cardCounts.set(carta.nombre, Math.max(0, count - 1));
+                }
+            }
+
+            // Sumar y verificar cartas a añadir
+            if (cartaAñadir) {
+                for (const carta of cartaAñadir) {
+                    const count = cardCounts.get(carta.nombre) || 0;
+                    if (count + 1 > 2) {
+                        return reply.status(400).send({ error: `El mazo no puede tener más de 2 copias de la misma carta (${carta.nombre})` });
+                    }
+                    cardCounts.set(carta.nombre, count + 1);
+                }
+            }
+
             await Deck.updateDeck(deckId, email, { cartaAñadir, cartaEliminar });
             await Deck.updateDeckName(deckId, email, nombre);
             return reply.status(200).send({ message: "Mazo actualizado correctamente" });

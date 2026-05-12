@@ -243,6 +243,26 @@ export async function createUser(data: { email:string, password:string, nombre:s
                 },
                 escaleraActual: {
                     connect: { nombre: "escalera_default" }
+                },
+
+                cartas: {
+                    connect: [
+                        { nombre: "Exceso de medios" },
+                        { nombre: "Moises" },
+                        { nombre: "Dia de la marmota" },
+                        { nombre: "Salto de longitud"},
+                        { nombre: "Robo de identidad"},
+                        { nombre: "Antidoto"},
+                        { nombre: "Dado envenenado"},
+                        { nombre: "Dado dorado"},
+                        { nombre: "Parca"},
+                        { nombre: "Cambiar de idea"},
+                        { nombre: "Agujero de serpiente"},
+                        { nombre: "Bolsillo roto"},
+                        { nombre: "Compañerismo obligado"},
+                        { nombre: "Coleccionista"},
+                        { nombre: "Noqueo"}
+                    ]
                 }
             }
         })
