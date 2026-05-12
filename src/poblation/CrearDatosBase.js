@@ -12,6 +12,7 @@ let createDeck;
 let getDeckById;
 let updateDeck;
 let createCosmetic;
+let purchaseCosmetic;
 let createUser;
 let getUserByEmail;
 let modifyUserByEmail;
@@ -54,7 +55,7 @@ async function loadServices() {
 
     ({ createCard, getCardById, getCardByIdBasic } = cards);
     ({ createDeck, getDeckById, updateDeck } = deck);
-    ({ createCosmetic } = cosmetics);
+    ({ createCosmetic,purchaseCosmetic } = cosmetics);
     ({ createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } = user);
     ({ createEffect } = effects);
     ({ createAchievement } = achievements);
@@ -155,7 +156,7 @@ export async function cosmeticosPorDefecto() {
             tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 900,
             descripcion: "Ficha con diseño de calavera"
-        },
+        },  
         {
             nombre: "ficha_moneda",
             tipo: Tipo_Cosmetico.Skin_Ficha,
@@ -389,28 +390,28 @@ export async function cuentaAdminPorDefecto() {
         nombre: "Admin",
         password: "#Admin123",
     });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_default" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_default" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_default" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_default" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_nerd" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_completista" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_platino" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_L" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_W" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Icono, nombre: "icono_cofre" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_estratega" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_magnate" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_totem" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_aventurero" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_esqueleto" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Ficha, nombre: "ficha_moneda" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_calcetin" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_tribal" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Serpiente, nombre: "serpiente_futuro" });
-    await updateCosmeticOnUser(emailAdmin, { tipo: Tipo_Cosmetico.Skin_Escalera, nombre: "escalera_jungla" });
+    await modifyUserByEmail(emailAdmin, { SEP: 1000000, victorias: 0, derrotas: 0 });
+    await purchaseCosmetic(emailAdmin, "icono_nerd" );
+    await purchaseCosmetic(emailAdmin, "icono_completista" );
+    await purchaseCosmetic(emailAdmin, "icono_platino" );
+    await purchaseCosmetic(emailAdmin, "icono_L" );
+    await purchaseCosmetic(emailAdmin, "icono_W" );
+    await purchaseCosmetic(emailAdmin, "icono_cofre" );
+    await purchaseCosmetic(emailAdmin, "escalera_estratega" );
+    await purchaseCosmetic(emailAdmin, "escalera_magnate" );
+    await purchaseCosmetic(emailAdmin, "ficha_totem" );
+    await purchaseCosmetic(emailAdmin, "ficha_esqueleto" );
+    await purchaseCosmetic(emailAdmin, "serpiente_calcetin" );
+    await purchaseCosmetic(emailAdmin, "serpiente_tribal" );
+    await purchaseCosmetic(emailAdmin, "serpiente_futuro" );
+    await purchaseCosmetic(emailAdmin, "escalera_jungla" );
+    await updateCosmeticOnUser(emailAdmin, "icono_default", { equipado: true });
+    await updateCosmeticOnUser(emailAdmin, "ficha_default", { equipado: true });
+    await updateCosmeticOnUser(emailAdmin, "serpiente_default", { equipado: true });
+    await updateCosmeticOnUser(emailAdmin, "escalera_default", { equipado: true });
+
     await mazosPorDefecto(emailAdmin);
-    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 0, derrotas: 0 });
+    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 100, derrotas: 100,cartasJugadas: 500 });
 }
 
 export async function efectosPoblacion() {
