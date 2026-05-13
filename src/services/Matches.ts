@@ -758,7 +758,9 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (tieneSaltarBloqueo) {
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
     }
-
+    
+    let casillaAnterior;
+    casillaAnterior = fichaAActualizar.casilla;
     let casillaActual = fichaAActualizar.casilla;
     fichaAActualizar.casilla = casillaDestino;
     if (tablero.casillas[casillaDestino].tipo === "Serpiente") {
@@ -773,6 +775,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (jugadorActual.fichas.every(f => f.meta)) {
         return await finishMatch(partidaId, jugadorActual.username);
     } else {
+        
         if (pasosRestantes !== undefined && pasosRestantes > 0) {
             if (movimientoDesdeBifurcacionValido) {
                 pasosRestantes--;
@@ -829,73 +832,74 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             }
             fichaAActualizar.casilla = casillaActual;
         }
-
-        if (tablero.casillas[casillaDestino].tipo !== "Bifurcacion" || (tablero.casillas[casillaDestino].tipo === "Bifurcacion" && (pasosRestantes === undefined || pasosRestantes === 0))) {
-            const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
-            if (casillaConEfecto.efecto === "-4") {
-                const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
-                fichaAActualizar.casilla = nuevaCasilla;
-                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
-                    fichaAActualizar.meta = true;
-                }
-            }
-            if (casillaConEfecto.efecto === "+4") {
-                const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
-                fichaAActualizar.casilla = nuevaCasilla;
-                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
-                    fichaAActualizar.meta = true;
-                }
-            }
-            if (casillaConEfecto.efecto === "Agujero de serpiente") {
-                const nuevaCasilla = aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
-                fichaAActualizar.casilla = nuevaCasilla;
-                if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
-                    fichaAActualizar.meta = true;
-                }
-            }
-            if (casillaConEfecto.efecto === "Serpiente en tu bota") {
-                jugadorActual.efectosActivos.push({ resumenEfecto: "Salto de turno" });
-                casillaConEfecto.efecto = undefined;
-            }
-            if (fichaAActualizar.meta) {
-                if (jugadorActual.fichas.every(f => f.meta)) {
-                    return await finishMatch(partidaId, jugadorActual.username);
-                }
-            }
-            jugadorActual.fase = "Cartas";
-            jugadorActual.ultimaTirada = undefined;
-            jugadorActual.movimientosPermitidos = [];
-            jugadorActual.cartaJugadaEnTurno = false;
-            estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
-            let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
-            siguienteJugador.fase = "Cartas";
-            if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
-                const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-                if (cartaRobada) {
-                    siguienteJugador.mano.push(cartaRobada);
-                }
-
-                if (siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")) {
-                    if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
-                        const cartaRobada2 = siguienteJugador.mazoRestante.shift()!;
-                        if (cartaRobada2) {
-                            siguienteJugador.mano.push(cartaRobada2);
-                        }
-                        siguienteJugador.efectosActivos = siguienteJugador.efectosActivos.filter(e => e.resumenEfecto !== "Coleccionista");
+        if(tablero.casillas[fichaAActualizar.casilla].tipo === "Escalera" && tablero.casillas[casillaAnterior].tipo === "Bifurcacion"){}else{
+            if (tablero.casillas[casillaDestino].tipo !== "Bifurcacion" || (tablero.casillas[casillaDestino].tipo === "Bifurcacion" && (pasosRestantes === undefined || pasosRestantes === 0))) {
+                const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
+                if (casillaConEfecto.efecto === "-4") {
+                    const nuevaCasilla = aplicarEfectoMenosCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
+                    fichaAActualizar.casilla = nuevaCasilla;
+                    if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                        fichaAActualizar.meta = true;
                     }
                 }
-
-            } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
-                siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
-                siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
-                siguienteJugador.cementerio = [];
-                const cartaRobada = siguienteJugador.mazoRestante.shift()!;
-                if (cartaRobada) {
-                    siguienteJugador.mano.push(cartaRobada);
+                if (casillaConEfecto.efecto === "+4") {
+                    const nuevaCasilla = aplicarEfectoMasCuatro(tablero, jugadorActual, fichaAActualizar.casilla, estadoJugadores);
+                    fichaAActualizar.casilla = nuevaCasilla;
+                    if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                        fichaAActualizar.meta = true;
+                    }
                 }
-            }
-            if (estadoJugadores.turnoActual === 0) {
-                estadoJugadores.ronda++;
+                if (casillaConEfecto.efecto === "Agujero de serpiente") {
+                    const nuevaCasilla = aplicarEfectoAgujeroSerpiente(tablero, jugadorActual, estadoJugadores);
+                    fichaAActualizar.casilla = nuevaCasilla;
+                    if (tablero.casillas[nuevaCasilla].tipo === "Meta") {
+                        fichaAActualizar.meta = true;
+                    }
+                }
+                if (casillaConEfecto.efecto === "Serpiente en tu bota") {
+                    jugadorActual.efectosActivos.push({ resumenEfecto: "Salto de turno" });
+                    casillaConEfecto.efecto = undefined;
+                }
+                if (fichaAActualizar.meta) {
+                    if (jugadorActual.fichas.every(f => f.meta)) {
+                        return await finishMatch(partidaId, jugadorActual.username);
+                    }
+                }
+                jugadorActual.fase = "Cartas";
+                jugadorActual.ultimaTirada = undefined;
+                jugadorActual.movimientosPermitidos = [];
+                jugadorActual.cartaJugadaEnTurno = false;
+                estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+                let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+                siguienteJugador.fase = "Cartas";
+                if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+                    const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+                    if (cartaRobada) {
+                        siguienteJugador.mano.push(cartaRobada);
+                    }
+
+                    if (siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")) {
+                        if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+                            const cartaRobada2 = siguienteJugador.mazoRestante.shift()!;
+                            if (cartaRobada2) {
+                                siguienteJugador.mano.push(cartaRobada2);
+                            }
+                            siguienteJugador.efectosActivos = siguienteJugador.efectosActivos.filter(e => e.resumenEfecto !== "Coleccionista");
+                        }
+                    }
+
+                } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
+                    siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
+                    siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
+                    siguienteJugador.cementerio = [];
+                    const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+                    if (cartaRobada) {
+                        siguienteJugador.mano.push(cartaRobada);
+                    }
+                }
+                if (estadoJugadores.turnoActual === 0) {
+                    estadoJugadores.ronda++;
+                }
             }
         }
     }

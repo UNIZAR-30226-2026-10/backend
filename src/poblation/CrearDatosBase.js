@@ -617,7 +617,7 @@ export async function logrosPoblacion() {
         {
             nombre: "Platino",
             descripcion: "Completa todos los logros",
-            requisito: 9,
+            requisito: 12,
             tipo: Tipo_Logro.LogrosDesbloqueados,
             cartaID: null,
             recompensaMonetaria: 5000
