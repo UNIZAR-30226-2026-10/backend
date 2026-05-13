@@ -55,7 +55,7 @@ async function loadServices() {
 
     ({ createCard, getCardById, getCardByIdBasic } = cards);
     ({ createDeck, getDeckById, updateDeck } = deck);
-    ({ createCosmetic,purchaseCosmetic } = cosmetics);
+    ({ createCosmetic, purchaseCosmetic } = cosmetics);
     ({ createUser, getUserByEmail, modifyUserByEmail, updateCosmeticOnUser } = user);
     ({ createEffect } = effects);
     ({ createAchievement } = achievements);
@@ -156,7 +156,7 @@ export async function cosmeticosPorDefecto() {
             tipo: Tipo_Cosmetico.Skin_Ficha,
             precio: 900,
             descripcion: "Ficha con diseño de calavera"
-        },  
+        },
         {
             nombre: "ficha_moneda",
             tipo: Tipo_Cosmetico.Skin_Ficha,
@@ -210,9 +210,9 @@ export async function cartasPoblación() {
         },
         {
             nombre: "Moises",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Te saltas un bloqueo",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Te saltas un bloqueo",
         },
         {
             nombre: "Wild Frank",
@@ -221,10 +221,10 @@ export async function cartasPoblación() {
             descripcion: "Pones una serpiente donde quieras",
         },
         {
-            nombre:"Carpintero",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Legendaria,
-            descripcion:"Pones una escalera donde quieras",
+            nombre: "Carpintero",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Legendaria,
+            descripcion: "Pones una escalera donde quieras",
         },
         {
             nombre: "Dia de la marmota",
@@ -233,10 +233,10 @@ export async function cartasPoblación() {
             descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas atrás",
         },
         {
-            nombre:"Salto de longitud",
-            tipo:Tipo_Carta.Entorno,
-            calidad:Rareza.Comun,
-            descripcion:"Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
+            nombre: "Salto de longitud",
+            tipo: Tipo_Carta.Entorno,
+            calidad: Rareza.Comun,
+            descripcion: "Cambias la casilla para que quien caiga se mueva 4 casillas adelante",
         },
         {
             nombre: "Robo de identidad",
@@ -245,10 +245,10 @@ export async function cartasPoblación() {
             descripcion: "Cambias la posicion de una de tus fichas por otra al azar",
         },
         {
-            nombre:"Mal de ojo",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Epica,
-            descripcion:"Le restas a un jugador 3 en su próxima tirada",
+            nombre: "Mal de ojo",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Epica,
+            descripcion: "Le restas a un jugador 3 en su próxima tirada",
         },
         {
             nombre: "Antidoto",
@@ -263,16 +263,16 @@ export async function cartasPoblación() {
             descripcion: "Robas una carta al azar a otro jugador",
         },
         {
-            nombre:"Dado envenenado",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Epica,
-            descripcion:"El rival solo puede tirar dados de 1-3 en su próximo turno",
+            nombre: "Dado envenenado",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Epica,
+            descripcion: "El rival solo puede tirar dados de 1-3 en su próximo turno",
         },
         {
-            nombre:"Dado dorado",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Legendaria,
-            descripcion:"Solo podrás sacar entre 4-6 en tu próxima tirada",
+            nombre: "Dado dorado",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Legendaria,
+            descripcion: "Solo podrás sacar entre 4-6 en tu próxima tirada",
         },
         {
             nombre: "Serpiente en tu bota",
@@ -281,10 +281,10 @@ export async function cartasPoblación() {
             descripcion: "Creas una casilla que impide al jugador que caiga en ella tirar dados en su próximo turno",
         },
         {
-            nombre:"Parca",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Rara,
-            descripcion:"Mandas una ficha al azar al inicio del tablero",
+            nombre: "Parca",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Rara,
+            descripcion: "Mandas una ficha al azar al inicio del tablero",
         },
         {
             nombre: 'Cambiar de idea',
@@ -299,10 +299,10 @@ export async function cartasPoblación() {
             descripcion: 'Crea una casilla que te teletransporta a una casilla aleatoria del tablero al caer en ella',
         },
         {
-            nombre:"Bolsillo roto",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Comun,
-            descripcion:"Le quitas todas las cartas a un jugador y solo podrá robar 1 carta",
+            nombre: "Bolsillo roto",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Comun,
+            descripcion: "Le quitas todas las cartas a un jugador y solo podrá robar 1 carta",
         },
         {
             nombre: "Compañerismo obligado",
@@ -317,10 +317,10 @@ export async function cartasPoblación() {
             descripcion: "Roba dos cartas en tu próximo turno",
         },
         {
-            nombre:"Noqueo",
-            tipo:Tipo_Carta.Ofensiva,
-            calidad:Rareza.Epica,
-            descripcion:"Cancela el próximo turno de un rival",
+            nombre: "Noqueo",
+            tipo: Tipo_Carta.Ofensiva,
+            calidad: Rareza.Epica,
+            descripcion: "Cancela el próximo turno de un rival",
         },
 
     ];
@@ -382,6 +382,66 @@ export async function mazosPorDefecto(usuarioEmail = "admin@gmail.com") {
     }
 }
 
+export async function mazoIA(usuarioEmail = "admin@gmail.com") {
+    await loadServices();
+    const nombreMazo = "Mazo IA";
+    const cartasParaMazo = [
+        "Exceso de medios",
+        "Exceso de medios",
+        "Dado dorado",
+        "Dado dorado",
+        "Mal de ojo",
+        "Mal de ojo",
+        "Dado envenenado",
+        "Dado envenenado",
+        "Noqueo",
+        "Bolsillo roto",
+    ];
+
+    const usuario = await getUserByEmail(usuarioEmail);
+
+    if (!usuario) {
+        throw new Error(`No existe el usuario ${usuarioEmail} para crear su mazo de IA`);
+    }
+
+    const cartasExistentes = [];
+    for (const nombreCarta of cartasParaMazo) {
+        const carta = await getCardById(nombreCarta);
+        if (carta) cartasExistentes.push(carta);
+    }
+
+    const mazo = await getDeckById(nombreMazo, usuarioEmail);
+
+    if (!mazo) {
+        await createDeck({
+            nombre: nombreMazo,
+            usuario,
+            carta: cartasExistentes
+        });
+        return;
+    }
+
+    const conteoActual = new Map();
+    for (const bc of mazo.barajaCartas) {
+        const nombre = bc.cartaNombre;
+        conteoActual.set(nombre, (conteoActual.get(nombre) || 0) + 1);
+    }
+
+    const faltantes = [];
+    for (const carta of cartasExistentes) {
+        const actual = conteoActual.get(carta.nombre) || 0;
+        if (actual > 0) {
+            conteoActual.set(carta.nombre, actual - 1);
+            continue;
+        }
+        faltantes.push(carta);
+    }
+
+    if (faltantes.length > 0) {
+        await updateDeck(nombreMazo, usuarioEmail, { cartaAñadir: faltantes });
+    }
+}
+
 export async function cuentaAdminPorDefecto() {
     await loadServices();
     const emailAdmin = "admin@gmail.com";
@@ -391,27 +451,27 @@ export async function cuentaAdminPorDefecto() {
         password: "#Admin123",
     });
     await modifyUserByEmail(emailAdmin, { SEP: 1000000, victorias: 10, derrotas: 10, cartasJugadas: 1000, partidasJugadas: 20 });
-    await purchaseCosmetic(emailAdmin, "icono_nerd" );
-    await purchaseCosmetic(emailAdmin, "icono_completista" );
-    await purchaseCosmetic(emailAdmin, "icono_platino" );
-    await purchaseCosmetic(emailAdmin, "icono_L" );
-    await purchaseCosmetic(emailAdmin, "icono_W" );
-    await purchaseCosmetic(emailAdmin, "icono_cofre" );
-    await purchaseCosmetic(emailAdmin, "escalera_estratega" );
-    await purchaseCosmetic(emailAdmin, "escalera_magnate" );
-    await purchaseCosmetic(emailAdmin, "ficha_totem" );
-    await purchaseCosmetic(emailAdmin, "ficha_esqueleto" );
-    await purchaseCosmetic(emailAdmin, "serpiente_calcetin" );
-    await purchaseCosmetic(emailAdmin, "serpiente_tribal" );
-    await purchaseCosmetic(emailAdmin, "serpiente_futuro" );
-    await purchaseCosmetic(emailAdmin, "escalera_jungla" );
+    await purchaseCosmetic(emailAdmin, "icono_nerd");
+    await purchaseCosmetic(emailAdmin, "icono_completista");
+    await purchaseCosmetic(emailAdmin, "icono_platino");
+    await purchaseCosmetic(emailAdmin, "icono_L");
+    await purchaseCosmetic(emailAdmin, "icono_W");
+    await purchaseCosmetic(emailAdmin, "icono_cofre");
+    await purchaseCosmetic(emailAdmin, "escalera_estratega");
+    await purchaseCosmetic(emailAdmin, "escalera_magnate");
+    await purchaseCosmetic(emailAdmin, "ficha_totem");
+    await purchaseCosmetic(emailAdmin, "ficha_esqueleto");
+    await purchaseCosmetic(emailAdmin, "serpiente_calcetin");
+    await purchaseCosmetic(emailAdmin, "serpiente_tribal");
+    await purchaseCosmetic(emailAdmin, "serpiente_futuro");
+    await purchaseCosmetic(emailAdmin, "escalera_jungla");
     await updateCosmeticOnUser(emailAdmin, "icono_default", { equipado: true });
     await updateCosmeticOnUser(emailAdmin, "ficha_default", { equipado: true });
     await updateCosmeticOnUser(emailAdmin, "serpiente_default", { equipado: true });
     await updateCosmeticOnUser(emailAdmin, "escalera_default", { equipado: true });
 
     await mazosPorDefecto(emailAdmin);
-    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 100, derrotas: 100,cartasJugadas: 500 });
+    await modifyUserByEmail(emailAdmin, { SEP: 10000, victorias: 100, derrotas: 100, cartasJugadas: 500 });
 }
 
 export async function efectosPoblacion() {

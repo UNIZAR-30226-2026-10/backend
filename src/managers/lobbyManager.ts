@@ -122,7 +122,7 @@ export class LobbyManager {
         if (lobby.numJugadores >= 4) throw new Error("LOBBY_IS_FULL")
         if (lobby.usernameCreador !== requestBy) throw new Error("CANT_ADD")
         const nombre = 'BOT ' + nombresBots[Math.floor(Math.random() * nombresBots.length)]
-        lobby.jugadores.push({ nombre: nombre, esIA: true, estaListo: true, nombreMazo: "mazoPorDefecto" })
+        lobby.jugadores.push({ nombre: nombre, esIA: true, estaListo: true, nombreMazo: "Mazo IA" })
         lobby.numBots++
         lobby.numJugadores++
         return lobby
