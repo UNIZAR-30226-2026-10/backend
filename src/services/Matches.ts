@@ -979,7 +979,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
 
     const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
     const estaEnBifurcacion = casillaDestino === fichaAActualizar.casilla && tablero.casillas[casillaDestino].tipo === "Bifurcacion";
-    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino);
+    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino) && fichaAActualizar.casilla !== casillaDestino;
     const bloqueoValidoParaEsteMovimiento =
         !destinoBloqueado ||
         tieneSaltarBloqueo ||
