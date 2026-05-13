@@ -395,8 +395,9 @@ export default function userRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email } = request.params as { email: string };
+        let { email } = request.params as { email: string };
         const { username } = request.body as { username: string };
+        email = email.toLowerCase(); // Normalizamos el email a minúsculas
 
         try {
             await User.modifyUserByEmail(email, { nombre: username });
