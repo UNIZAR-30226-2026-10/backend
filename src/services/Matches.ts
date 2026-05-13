@@ -76,12 +76,21 @@ async function runBotTurn(partidaId: string): Promise<void> {
     }
 
     if (jugadorActual.fase === "Cartas") {
-        const carta = selectBotCard(jugadorActual.mano);
-        if (carta) {
-            const objetivo = selectBotTarget(estado, botUsername, carta);
-            await useCard(partidaId, botUsername, carta, objetivo);
+        if (!jugadorActual.cartaJugadaEnTurno) {
+            const carta = selectBotCard(jugadorActual.mano);
+            if (carta) {
+                try {
+                    const objetivo = selectBotTarget(estado, botUsername, carta);
+                    await useCard(partidaId, botUsername, carta, objetivo);
+                } catch (err) {
+                }
+            }
         }
-        await throwDice(partidaId, botUsername);
+        try {
+            await throwDice(partidaId, botUsername);
+        } catch (err) {
+            await advanceTurn(partidaId, estado);
+        }
     }
 
     const partidaAfter = await prisma.partida.findUnique({
