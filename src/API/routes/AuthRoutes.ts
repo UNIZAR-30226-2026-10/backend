@@ -80,7 +80,8 @@ export default function authRoutes(app: FastifyInstance) : void {
             }
         }
     }, async (request, reply) => {
-        const { email, password } = request.body as { email: string, password: string };
+        let { email, password } = request.body as { email: string, password: string };
+        email = email.toLowerCase(); // Normalizamos el email a minúsculas
 
         try {
             const user = await User.authenticateUser(email, password);
@@ -127,7 +128,8 @@ export default function authRoutes(app: FastifyInstance) : void {
             return reply.status(401).send({ error: "No autologin cookie found" });
         }
         try {
-        const decoded = app.jwt.verify<{ email: string; username: string }>(autologin);
+        let decoded = app.jwt.verify<{ email: string; username: string }>(autologin);
+        decoded.email = decoded.email.toLowerCase(); // Normalizamos el email a minúsculas
         
         const userExists = await User.getUserByEmailBasic(decoded.email);
 
