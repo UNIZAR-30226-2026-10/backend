@@ -100,25 +100,25 @@ export async function cosmeticosPorDefecto() {
         {
             nombre: "icono_completista",
             tipo: Tipo_Cosmetico.Icono,
-            precio: 0,
+            precio: 100,
             descripcion: "Icono con diseño de trofeo de completista"
         },
         {
             nombre: "icono_platino",
             tipo: Tipo_Cosmetico.Icono,
-            precio: 0,
+            precio: 2000,
             descripcion: "Icono con diseño de trofeo de platino"
         },
         {
             nombre: "icono_L",
             tipo: Tipo_Cosmetico.Icono,
-            precio: 0,
+            precio: 300,
             descripcion: "Icono con diseño de letra L"
         },
         {
             nombre: "icono_W",
             tipo: Tipo_Cosmetico.Icono,
-            precio: 0,
+            precio: 400,
             descripcion: "Icono con diseño de letra W"
         },
         {
@@ -130,13 +130,13 @@ export async function cosmeticosPorDefecto() {
         {
             nombre: "escalera_estratega",
             tipo: Tipo_Cosmetico.Skin_Escalera,
-            precio: 0,
+            precio: 300,
             descripcion: "Escalera con diseño de tablero de ajedrez"
         },
         {
             nombre: "escalera_magnate",
             tipo: Tipo_Cosmetico.Skin_Escalera,
-            precio: 0,
+            precio: 400,
             descripcion: "Escalera con diseño de billetes de dinero"
         },
         {
@@ -148,7 +148,7 @@ export async function cosmeticosPorDefecto() {
         {
             nombre: "ficha_aventurero",
             tipo: Tipo_Cosmetico.Skin_Ficha,
-            precio: 1000,
+            precio: 0,
             descripcion: "Ficha con diseño de sombrero de aventurero"
         },
         {
@@ -160,7 +160,7 @@ export async function cosmeticosPorDefecto() {
         {
             nombre: "ficha_moneda",
             tipo: Tipo_Cosmetico.Skin_Ficha,
-            precio: 700,
+            precio: 0,
             descripcion: "Ficha con diseño de moneda"
         },
         {

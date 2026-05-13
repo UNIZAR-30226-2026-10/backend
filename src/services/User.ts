@@ -371,7 +371,9 @@ export async function deleteUserByEmail(email:string) : Promise<{ message: strin
 
 export async function deleteUserByEmailForApiUsage(email:string) : Promise<{ message: string }> {
     try {
-        const partidas = await prisma.usuario.findMany({
+        email = email.toLowerCase().trim();
+
+        const user = await prisma.usuario.findUnique({
             where: { email },
             include: {
                 partidas: {
@@ -379,9 +381,13 @@ export async function deleteUserByEmailForApiUsage(email:string) : Promise<{ mes
                     where: { ganadorEmail: null }
                 }
             }
-        })
+        });
 
-        if(partidas.length > 0) {
+        if (!user) {
+            throw new Error("Usuario no encontrado");
+        }
+
+        if (user.partidas.length > 0) {
             throw new Error("Error al eliminar el usuario: El usuario tiene partidas activas")
         }
 
