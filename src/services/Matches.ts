@@ -76,12 +76,21 @@ async function runBotTurn(partidaId: string): Promise<void> {
     }
 
     if (jugadorActual.fase === "Cartas") {
-        const carta = selectBotCard(jugadorActual.mano);
-        if (carta) {
-            const objetivo = selectBotTarget(estado, botUsername, carta);
-            await useCard(partidaId, botUsername, carta, objetivo);
+        if (!jugadorActual.cartaJugadaEnTurno) {
+            const carta = selectBotCard(jugadorActual.mano);
+            if (carta) {
+                try {
+                    const objetivo = selectBotTarget(estado, botUsername, carta);
+                    await useCard(partidaId, botUsername, carta, objetivo);
+                } catch (err) {
+                }
+            }
         }
-        await throwDice(partidaId, botUsername);
+        try {
+            await throwDice(partidaId, botUsername);
+        } catch (err) {
+            await advanceTurn(partidaId, estado);
+        }
     }
 
     const partidaAfter = await prisma.partida.findUnique({
@@ -125,6 +134,9 @@ async function runBotTurn(partidaId: string): Promise<void> {
                     if (opciones.length > 0) {
                         const opcionIndex = Math.floor(Math.random() * opciones.length);
                         await moveToken(partidaId, botUsername, fichaBif.id, opciones[opcionIndex], movimiento.pasosRestantes);
+                        if (tableroBif.casillas[fichaBif.casilla].tipo === "Escalera") {
+                            await moveToken(partidaId, botUsername, fichaBif.id, tableroBif.casillas[fichaBif.casilla].saltoA!, -1);
+                        }
                     }
                 }
                 return;
@@ -979,7 +991,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
 
     const tieneSaltarBloqueo = jugadorActual.efectosActivos.some(e => e.resumenEfecto === "Saltar bloqueo");
     const estaEnBifurcacion = casillaDestino === fichaAActualizar.casilla && tablero.casillas[casillaDestino].tipo === "Bifurcacion";
-    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino);
+    const destinoBloqueado = checkBlockInBox(estadoJugadores, casillaDestino) && fichaAActualizar.casilla !== casillaDestino;
     const bloqueoValidoParaEsteMovimiento =
         !destinoBloqueado ||
         tieneSaltarBloqueo ||
