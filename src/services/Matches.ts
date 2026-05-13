@@ -134,6 +134,9 @@ async function runBotTurn(partidaId: string): Promise<void> {
                     if (opciones.length > 0) {
                         const opcionIndex = Math.floor(Math.random() * opciones.length);
                         await moveToken(partidaId, botUsername, fichaBif.id, opciones[opcionIndex], movimiento.pasosRestantes);
+                        if (tableroBif.casillas[fichaBif.casilla].tipo === "Escalera") {
+                            await moveToken(partidaId, botUsername, fichaBif.id, tableroBif.casillas[fichaBif.casilla].saltoA!, -1);
+                        }
                     }
                 }
                 return;
