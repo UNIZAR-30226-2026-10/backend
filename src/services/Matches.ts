@@ -1141,20 +1141,26 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             //Pillar posicion random de las fichas y teletransportar una ficha del jugador actual ahí
             const posicionAleatoria = Math.floor(Math.random() * posFichas.length);
+            const casillaDestinoRobo = posFichas[posicionAleatoria];
             // Lógica para teletransportar la ficha
             // Cambiar la ficha del jugador en la posicion aleatoria por una ficha del jugador actual
             if (typeof who !== "number") {
                 throw new Error("Debes indicar el id de la ficha a mover para Robo de identidad");
             }
-            jugadorActual.fichas[who].casilla = posFichas[posicionAleatoria];
+            const fichaOrigen = jugadorActual.fichas[who];
+            if (!fichaOrigen || fichaOrigen.meta) {
+                throw new Error("La ficha seleccionada no es válida para Robo de identidad");
+            }
+            const casillaOrigen = fichaOrigen.casilla;
+            fichaOrigen.casilla = casillaDestinoRobo;
             let numFicha = 0;
             for (let jugador of estadoJugadores.jugadores) {
                 if (jugador.username === player) {
                     continue;
                 }
                 for (let ficha of jugador.fichas) {
-                    if (!ficha.meta && ficha.casilla === posFichas[posicionAleatoria] && numFicha === 0) {
-                        ficha.casilla = casillaActual;
+                    if (!ficha.meta && ficha.casilla === casillaDestinoRobo && numFicha === 0) {
+                        ficha.casilla = casillaOrigen;
                         numFicha++;
                         break;
                     }
