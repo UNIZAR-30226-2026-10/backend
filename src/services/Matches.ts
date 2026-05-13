@@ -68,8 +68,7 @@ async function runBotTurn(partidaId: string): Promise<void> {
     }
 
     const botUsername = jugadorRaw.username;
-    const partida = await getMatchState(partidaId, botUsername);
-    let estado = partida.snapshotJugadores as SnapshotJugadoresJSON;
+    let estado = estadoRaw;
     let jugadorActual = estado.jugadores[estado.turnoActual];
 
     if (jugadorActual.username !== botUsername || !isBotPlayer(estado, botUsername)) {
@@ -85,7 +84,11 @@ async function runBotTurn(partidaId: string): Promise<void> {
         await throwDice(partidaId, botUsername);
     }
 
-    const partidaAfter = await getMatchState(partidaId, botUsername);
+    const partidaAfter = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        select: { snapshotJugadores: true }
+    });
+    if (!partidaAfter) return;
     estado = partidaAfter.snapshotJugadores as SnapshotJugadoresJSON;
     jugadorActual = estado.jugadores[estado.turnoActual];
 
