@@ -67,13 +67,10 @@ jobs:
         working-directory: ./src
         run: |
           npx prisma generate
+          npm run build
           npx prisma db push --accept-data-loss
           npm run seed
 
       - name: 7. EJECUTAR TESTS
         working-directory: ./src
         run: npm run test
-
-      - name: 8. Intentar Build de Producción
-        working-directory: ./src
-        run: npm run build
