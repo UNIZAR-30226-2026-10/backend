@@ -629,9 +629,9 @@ export async function authenticateUser(email:string, password:string) : Promise<
     try {
         const user = await prisma.usuario.findUnique({
             where: { email },
-            select: { passwordHash: true, nombre: true, email: true }
+            select: { passwordHash: true, nombre: true, email: true, borrado: true }
         })
-        if(!user) return { email, nombre: "", authenticated: false }
+        if(!user || user.borrado) return { email, nombre: "", authenticated: false }
         const passwordMatch = await bcrypt.compare(password, user.passwordHash)
         return { ...user, authenticated: passwordMatch }
     } catch (error) {
