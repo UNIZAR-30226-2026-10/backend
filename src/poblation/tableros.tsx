@@ -335,7 +335,7 @@ export function generarTableros(tipo: number): SnapshotTablero {
             sparseCasillasArray[34] = { esCurva: true, rotacion: 270, tipo: "Escalera", siguientes: [44], saltoA: 75 };
             sparseCasillasArray[48] = { esCurva: false, rotacion: 90, tipo: "Escalera", siguientes: [49], saltoA: 77 };
             //serpientes
-            sparseCasillasArray[16] = { esCurva: false, rotacion: 90, tipo: "Serpiente", siguientes: [26], saltoA: 4 };
+            sparseCasillasArray[16] = { esCurva: false, rotacion: 90, tipo: "Serpiente", siguientes: [15], saltoA: 4 };
             sparseCasillasArray[45] = { esCurva: false, rotacion: 90, tipo: "Serpiente", siguientes: [46], saltoA: 39 };
             sparseCasillasArray[76] = { esCurva: false, rotacion: 90, tipo: "Serpiente", siguientes: [75], saltoA: 55 };
             sparseCasillasArray[84] = { esCurva: false, rotacion: 0, tipo: "Serpiente", siguientes: [94], saltoA: 78 };

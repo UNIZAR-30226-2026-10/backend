@@ -6,6 +6,203 @@ import { MovimientoReturnType, PartidaReturnType, PartidasActivasReturnType, Mov
 import { randomInt } from "node:crypto";
 import { modifyUserByEmail, getUserByName } from "./User.js";
 import { checkAchievementsForCompletion } from "./Achievements.js";
+import { isBotPlayer, selectBotCard, selectBotMove, selectBotTarget } from "./Bot.js";
+
+function isPlayerInMatch(partida: { partidaJugadores: { nombre: string }[]; snapshotJugadores: unknown }, player: string): boolean {
+    const inDbPlayers = partida.partidaJugadores.some(j => j.nombre === player);
+    const snapshot = partida.snapshotJugadores as SnapshotJugadoresJSON;
+    const inSnapshot = snapshot.jugadores.some(j => j.username === player);
+    return inDbPlayers || inSnapshot;
+}
+
+const botTurnRunning = new Set<string>();
+const botTurnQueue = new Map<string, number>();
+
+function queueBotTurn(partidaId: string): void {
+    const pending = botTurnQueue.get(partidaId) ?? 0;
+    botTurnQueue.set(partidaId, pending + 1);
+
+    if (botTurnRunning.has(partidaId)) {
+        return;
+    }
+
+    runNextBotTurn(partidaId);
+}
+
+function runNextBotTurn(partidaId: string): void {
+    const pending = botTurnQueue.get(partidaId) ?? 0;
+    if (pending <= 0) {
+        botTurnQueue.delete(partidaId);
+        return;
+    }
+
+    botTurnQueue.set(partidaId, pending - 1);
+
+
+    const timeout =Math.floor(Math.random() * 2000) + 1500;
+    botTurnRunning.add(partidaId);
+    setTimeout(() => {
+        runBotTurn(partidaId)
+            .catch(err => console.error("Bot error:", err))
+            .finally(() => {
+                botTurnRunning.delete(partidaId);
+                runNextBotTurn(partidaId);
+            });
+    }, timeout);
+}
+
+async function runBotTurn(partidaId: string): Promise<void> {
+    const partidaRaw = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        select: { snapshotJugadores: true }
+    });
+
+    if (!partidaRaw) {
+        return;
+    }
+
+    const estadoRaw = partidaRaw.snapshotJugadores as SnapshotJugadoresJSON;
+    const jugadorRaw = estadoRaw.jugadores[estadoRaw.turnoActual];
+    if (!jugadorRaw || !jugadorRaw.esIA) {
+        return;
+    }
+
+    const botUsername = jugadorRaw.username;
+    let estado = estadoRaw;
+    let jugadorActual = estado.jugadores[estado.turnoActual];
+
+    if (jugadorActual.username !== botUsername || !isBotPlayer(estado, botUsername)) {
+        return;
+    }
+
+    if (jugadorActual.fase === "Cartas") {
+        const carta = selectBotCard(jugadorActual.mano);
+        if (carta) {
+            const objetivo = selectBotTarget(estado, botUsername, carta);
+            await useCard(partidaId, botUsername, carta, objetivo);
+        }
+        await throwDice(partidaId, botUsername);
+    }
+
+    const partidaAfter = await prisma.partida.findUnique({
+        where: { ID: partidaId },
+        select: { snapshotJugadores: true }
+    });
+    if (!partidaAfter) return;
+    estado = partidaAfter.snapshotJugadores as SnapshotJugadoresJSON;
+    jugadorActual = estado.jugadores[estado.turnoActual];
+
+    if (jugadorActual.username !== botUsername || jugadorActual.fase !== "Movimiento") {
+        return;
+    }
+
+    const movimientos = jugadorActual.movimientosPermitidos || [];
+    const hayMovimientoReal = movimientos.some(m => {
+        const ficha = jugadorActual.fichas.find(f => f.id === m.fichaId);
+        if (!ficha) {
+            return false;
+        }
+        return m.esBifurcacion || m.casilla !== ficha.casilla;
+    });
+
+    if (!hayMovimientoReal) {
+        await advanceTurn(partidaId, estado);
+        return;
+    }
+
+    const movimiento = selectBotMove(movimientos);
+    if (movimiento) {
+        try {
+            if (movimiento.esBifurcacion && movimiento.pasosRestantes !== undefined) {
+                const partidaBif = await moveToken(partidaId, botUsername, movimiento.fichaId, movimiento.casilla, movimiento.pasosRestantes);
+                const estadoBif = partidaBif.snapshotJugadores as SnapshotJugadoresJSON;
+                const tableroBif = partidaBif.snapshotTablero as SnapshotTableroJSON;
+                const jugadorBif = estadoBif.jugadores[estadoBif.turnoActual];
+                const fichaBif = jugadorBif.fichas.find(f => f.id === movimiento.fichaId) || jugadorBif.fichas[0];
+                if (fichaBif) {
+                    const casillaBif = tableroBif.casillas[fichaBif.casilla];
+                    const opciones = casillaBif?.siguientes || [];
+                    if (opciones.length > 0) {
+                        const opcionIndex = Math.floor(Math.random() * opciones.length);
+                        await moveToken(partidaId, botUsername, fichaBif.id, opciones[opcionIndex], movimiento.pasosRestantes);
+                    }
+                }
+                return;
+            }
+            await moveToken(partidaId, botUsername, movimiento.fichaId, movimiento.casilla, movimiento.pasosRestantes);
+            return;
+        } catch (err) {
+            console.error("Bot move error:", err);
+            await advanceTurn(partidaId, estado);
+            return;
+        }
+    }
+
+    await advanceTurn(partidaId, estado);
+}
+
+async function advanceTurn(partidaId: string, estadoJugadores: SnapshotJugadoresJSON): Promise<void> {
+    const jugadorActual = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+    jugadorActual.fase = "Cartas";
+    jugadorActual.ultimaTirada = undefined;
+    jugadorActual.movimientosPermitidos = [];
+    jugadorActual.cartaJugadaEnTurno = false;
+
+    estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+    const siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+    siguienteJugador.fase = "Cartas";
+
+    if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+        const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+        if (cartaRobada) {
+            siguienteJugador.mano.push(cartaRobada);
+        }
+
+        if (siguienteJugador.efectosActivos.some(e => e.resumenEfecto === "Coleccionista")) {
+            if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+                const cartaRobada2 = siguienteJugador.mazoRestante.shift()!;
+                if (cartaRobada2) {
+                    siguienteJugador.mano.push(cartaRobada2);
+                }
+                siguienteJugador.efectosActivos = siguienteJugador.efectosActivos.filter(e => e.resumenEfecto !== "Coleccionista");
+            }
+        }
+    } else if (siguienteJugador.cementerio.length > 0 && siguienteJugador.mano.length < 4 && siguienteJugador.mazoRestante.length === 0) {
+        siguienteJugador.mazoRestante = [...siguienteJugador.cementerio];
+        siguienteJugador.mazoRestante.sort(() => Math.random() - 0.5);
+        siguienteJugador.cementerio = [];
+        const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+        if (cartaRobada) {
+            siguienteJugador.mano.push(cartaRobada);
+        }
+    }
+
+    if (estadoJugadores.turnoActual === 0) {
+        estadoJugadores.ronda++;
+    }
+
+    await prisma.partida.update({
+        where: { ID: partidaId },
+        data: { snapshotJugadores: estadoJugadores },
+        include: {
+            partidaJugadores: {
+                select: {
+                    nombre: true,
+                    iconoActualField: true,
+                    fichaActualField: true,
+                    serpienteActualField: true,
+                    escaleraActualField: true,
+                }
+            },
+            ganador: {
+                select: {
+                    nombre: true
+                }
+            }
+        }
+    });
+    queueBotTurn(partidaId);
+}
 
 export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
 
@@ -48,13 +245,14 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         ronda: 1,
         jugadores: jugadores.map(jugador => ({
             username: jugador.nombre,
+            esIA: jugador.esIA,
             fase: "Cartas",
             fichas: [
                 { id: 1, casilla: 0, meta: false },
                 { id: 2, casilla: 0, meta: false },
                 { id: 3, casilla: 0, meta: false }
             ],
-            mazo: jugador.nombreMazo || "mazoPorDefecto",
+            mazo: jugador.nombreMazo || "Mazo IA",
             mano: [],
             mazoRestante: [],
             cementerio: [],
@@ -77,7 +275,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
             jugadorJson.mazoRestante = nombresCartas;
         } else {
             const cartas = await prisma.barajaCarta.findMany({
-                where: { barajaNombre: "mazoPorDefecto" },
+                where: { barajaNombre: "Mazo IA" },
                 select: { cartaNombre: true }
             });
             const nombresCartas = cartas.map(c => c.cartaNombre).sort(() => Math.random() - 0.5);
@@ -97,7 +295,7 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         throw new Error("Tablero no encontrado");
     }
 
-    
+
     const jsonTablero: SnapshotTableroJSON = tableroAUtilizar.snapshotTableroInicial as SnapshotTableroJSON;
     let chat: ChatPartidaJSON = [{
         mandadoPor: "Sistema",
@@ -159,6 +357,9 @@ export async function startMatch(lobbyId: string): Promise<PartidaReturnType> {
         }
     });
     lobby.idPartida = partidaCreada.ID;
+    if (jsonJugadores.jugadores[0].esIA) {
+        queueBotTurn(partidaCreada.ID);
+    }
     setTimeout(() => {
         try {
             lobbyManager.deleteLobby(lobbyId);
@@ -182,7 +383,7 @@ export async function sendMessage(partidaId: string, player: string, mensaje: st
         if (!partida) {
             throw new Error("Partida no encontrada");
         }
-        if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+        if (!isPlayerInMatch(partida, player)) {
             throw new Error("El jugador no pertenece a esta partida");
         }
         let chat = partida.chat as ChatPartidaJSON;
@@ -215,7 +416,7 @@ export async function getChat(partidaId: string, player: string): Promise<ChatRe
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+    if (!isPlayerInMatch(partida, player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     return {
@@ -246,7 +447,7 @@ export async function getMatchState(partidaId: string, player: string): Promise<
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+    if (!isPlayerInMatch(partida, player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
@@ -477,7 +678,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+    if (!isPlayerInMatch(partida, player)) {
         throw new Error("El jugador no está jugando esta partida");
     }
 
@@ -535,6 +736,7 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
                 }
             }
         });
+        queueBotTurn(partidaId);
         return {
             partida: partidaUpdated,
             tirada: 0,
@@ -574,6 +776,53 @@ export async function throwDice(partidaId: string, player: string): Promise<Movi
         tiradaExtra = -3;
         tirada = tirada + tiradaExtra;
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "-3");
+    }
+    if (tirada <= 0) {
+        jugadorActual.fase = "Cartas";
+        jugadorActual.ultimaTirada = tirada;
+        jugadorActual.movimientosPermitidos = [];
+        jugadorActual.cartaJugadaEnTurno = false;
+
+        estadoJugadores.turnoActual = (estadoJugadores.turnoActual + 1) % estadoJugadores.jugadores.length;
+        let siguienteJugador = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+        siguienteJugador.fase = "Cartas";
+        if (siguienteJugador.mazoRestante.length > 0 && siguienteJugador.mano.length < 4) {
+            const cartaRobada = siguienteJugador.mazoRestante.shift()!;
+            if (cartaRobada) {
+                siguienteJugador.mano.push(cartaRobada);
+            }
+        }
+        if (estadoJugadores.turnoActual === 0) {
+            estadoJugadores.ronda++;
+        }
+
+        const partidaUpdated = await prisma.partida.update({
+            where: { ID: partidaId },
+            data: { snapshotJugadores: estadoJugadores },
+            include: {
+                partidaJugadores: {
+                    select: {
+                        nombre: true,
+                        iconoActualField: true,
+                        fichaActualField: true,
+                        serpienteActualField: true,
+                        escaleraActualField: true,
+                    }
+                },
+                ganador: {
+                    select: {
+                        nombre: true
+                    }
+                }
+            }
+        });
+        queueBotTurn(partidaId);
+        return {
+            partida: partidaUpdated,
+            tirada: tirada,
+            movimientos: [],
+            tiradaExtra: tiradaExtra
+        };
     }
     jugadorActual.ultimaTirada = tirada;
     for (let ficha of jugadorActual.fichas) {
@@ -701,7 +950,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+    if (!isPlayerInMatch(partida, player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     if (casillaDestino < 0 || casillaDestino > 100) {
@@ -758,7 +1007,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (tieneSaltarBloqueo) {
         jugadorActual.efectosActivos = jugadorActual.efectosActivos.filter(e => e.resumenEfecto !== "Saltar bloqueo");
     }
-    
+
     let casillaAnterior;
     casillaAnterior = fichaAActualizar.casilla;
     let casillaActual = fichaAActualizar.casilla;
@@ -775,7 +1024,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
     if (jugadorActual.fichas.every(f => f.meta)) {
         return await finishMatch(partidaId, jugadorActual.username);
     } else {
-        
+
         if (pasosRestantes !== undefined && pasosRestantes > 0) {
             if (movimientoDesdeBifurcacionValido) {
                 pasosRestantes--;
@@ -832,7 +1081,7 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             }
             fichaAActualizar.casilla = casillaActual;
         }
-        if(tablero.casillas[fichaAActualizar.casilla].tipo === "Escalera" && tablero.casillas[casillaAnterior].tipo === "Bifurcacion"){}else{
+        if (tablero.casillas[fichaAActualizar.casilla].tipo === "Escalera" && tablero.casillas[casillaAnterior].tipo === "Bifurcacion") { } else {
             if (tablero.casillas[casillaDestino].tipo !== "Bifurcacion" || (tablero.casillas[casillaDestino].tipo === "Bifurcacion" && (pasosRestantes === undefined || pasosRestantes === 0))) {
                 const casillaConEfecto = tablero.casillas[fichaAActualizar.casilla];
                 if (casillaConEfecto.efecto === "-4") {
@@ -923,6 +1172,10 @@ export async function moveToken(partidaId: string, player: string, fichaId: numb
             }
         }
     });
+    const nextPlayer = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+    if (nextPlayer) {
+        queueBotTurn(partidaId);
+    }
     return partidaUpdated;
 }
 
@@ -1035,7 +1288,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
     if (!partida) {
         throw new Error("Partida no encontrada");
     }
-    if (!partida.partidaJugadores.some(j => j.nombre === player)) {
+    if (!isPlayerInMatch(partida, player)) {
         throw new Error("El jugador no pertenece a esta partida");
     }
     const estadoJugadores = partida.snapshotJugadores as SnapshotJugadoresJSON;
@@ -1332,5 +1585,9 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
         }
     });
+    const nextPlayer = estadoJugadores.jugadores[estadoJugadores.turnoActual];
+    if (nextPlayer && nextPlayer.esIA) {
+        queueBotTurn(partidaId);
+    }
     return partidaUpdated;
 }

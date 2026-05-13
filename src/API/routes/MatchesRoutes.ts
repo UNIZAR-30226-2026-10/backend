@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { Type } from "@sinclair/typebox";
 import { UnauthorizedSessionToken, ForbiddenSessionToken } from "./AuxFunctionsAPI.js";
-import { getMatchState, moveToken, sendMessage, getChat, startMatch, throwDice, useCard }  from "../../services/Matches.js";
+import { getMatchState, moveToken, sendMessage, getChat, startMatch, throwDice, useCard } from "../../services/Matches.js";
 import { SnapshotJugadoresSchema, snapshotTableroSchema, chatPartidaSchema } from "../../services/JsonTypes.js";
 
 const partidaJugadorSchema = Type.Object({
@@ -55,7 +55,7 @@ const throwDiceResponseSchema = Type.Object({
     tiradaExtra: Type.Optional(Type.Number())
 });
 
-export default function matchesRoutes(app: FastifyInstance) : void {
+export default function matchesRoutes(app: FastifyInstance): void {
     //Llamada ping pong para test
     app.get("/ping", async (request, reply) => {
         return reply.status(200).send("pong");
@@ -93,7 +93,7 @@ export default function matchesRoutes(app: FastifyInstance) : void {
         } catch (error) {
             if ((error as Error).message === "Lobby no encontrado") {
                 return reply.status(404).send({ error: (error as Error).message });
-            } 
+            }
             return reply.status(409).send({ error: (error as Error).message });
         }
     });
@@ -359,10 +359,10 @@ export default function matchesRoutes(app: FastifyInstance) : void {
             return reply.status(200).send(partida);
         } catch (error) {
             const msg = (error as Error).message;
-            if (msg === "Partida no encontrada" || msg === "Ficha no encontrada" ) {
+            if (msg === "Partida no encontrada" || msg === "Ficha no encontrada") {
                 return reply.status(404).send({ error: msg });
             }
-            if (msg.includes("Destino")){
+            if (msg.includes("Destino")) {
                 return reply.status(400).send({ error: msg });
             }
             if (msg === "No es tu turno" || msg.includes("fase") || msg.includes("No permitido")) {

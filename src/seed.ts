@@ -8,7 +8,8 @@ import {
     //getEffectById,
     tablerosPoblacion,
     logrosPoblacion,
-    mazosPorDefecto
+    mazosPorDefecto,
+    mazoIA
 } from "./poblation/CrearDatosBase.js";
 import { getBoardByName } from "./dist/services/Boards.js";
 import { getCosmeticByName } from "./dist/services/Cosmetics.js";
@@ -70,6 +71,9 @@ async function main() {
 
     console.log("Mazo por defecto: creando o actualizando");
     await mazosPorDefecto();
+
+    console.log("Mazo IA: creando o actualizando");
+    await mazoIA();
 
     await seedIfMissing(
         "Tableros",
