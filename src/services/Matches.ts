@@ -1346,7 +1346,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
             validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
-            if (fin % 10 >= inicio % 10) {
+            if (fin >= inicio) {
                 throw new Error("La casilla fin debe ser menor que la casilla inicio");
             }
             tableroPartida.casillas[inicio].tipo = "Serpiente";
@@ -1359,7 +1359,7 @@ export async function useCard(partidaId: string, player: string, cartaNombre: st
             }
             validarCasillaParaSalto(tableroPartida, inicio, "Casilla inicio");
             validarCasillaParaSalto(tableroPartida, fin, "Casilla fin");
-            if (fin % 10 <= inicio % 10) {
+            if (fin <= inicio) {
                 throw new Error("La casilla fin debe ser mayor que la casilla inicio");
             }
             tableroPartida.casillas[inicio].tipo = "Escalera";
